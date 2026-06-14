@@ -1,3 +1,5 @@
+import { JSONContent } from '@tiptap/react'
+
 export type BoardViewType = 'kanban' | 'table' | 'calendar' | 'timeline'
 
 export interface Card {
@@ -5,6 +7,7 @@ export interface Card {
   list_id: number
   title: string
   description?: string | null
+  description_json?: JSONContent | null
   position: number
   start_date?: string | null
   due_date?: string | null

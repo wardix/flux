@@ -95,6 +95,7 @@ const createCardRoute = createRoute({
             story_points: z.number().nullable().optional().openapi({ example: 5 }),
             start_date: z.string().nullable().optional().openapi({ example: '2026-06-25T00:00:00.000Z' }),
             is_recurring: z.boolean().optional(),
+            description_json: z.any().nullable().optional(),
           }),
         },
       },
@@ -221,6 +222,7 @@ const updateCardRoute = createRoute({
               .nullable()
               .optional()
               .openapi({ example: 'Updated Description' }),
+            description_json: z.any().nullable().optional(),
             list_id: z.number().optional().openapi({ example: 1 }),
             position: z.number().optional().openapi({ example: 1 }),
             start_date: z

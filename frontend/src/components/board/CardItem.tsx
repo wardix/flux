@@ -29,6 +29,9 @@ import { SubtaskList } from './SubtaskList'
 import { SubtaskProgress } from './SubtaskProgress'
 import { TimeLogList } from './TimeLogList'
 import { TimeTracker } from './TimeTracker'
+import { TiptapEditor } from './TiptapEditor'
+import { extractTextFromJSON } from '../../lib/tiptapHelpers'
+import { JSONContent } from '@tiptap/react'
 import { VoteButton } from './VoteButton'
 import { VoteCount } from './VoteCount'
 import { VoterList } from './VoterList'
@@ -62,6 +65,7 @@ export function CardItem({
   const [isOpen, setIsOpen] = useState(false)
   const [title, setTitle] = useState(card.title)
   const [description, setDescription] = useState(card.description || '')
+  const [descriptionJson, setDescriptionJson] = useState<JSONContent | null>(card.description_json || null)
   const [dueDate, setDueDate] = useState(card.due_date ? card.due_date.split('T')[0] : '')
   const [storyPoints, setStoryPoints] = useState<number | null>(card.story_points ?? null)
 
@@ -385,13 +389,17 @@ export function CardItem({
   }
 
   const handleUpdate = async () => {
-    await updateCard(card.id, {
+    const updatedCard = {
+      list_id: card.list_id,
       title,
       description: description || null,
+      description_json: descriptionJson || null,
       due_date: dueDate ? new Date(dueDate).toISOString() : null,
       story_points: storyPoints,
       assignee_id: assigneeId,
-    })
+    }
+
+    await updateCard(card.id, updatedCard)
 
     // Assign to Epic
     if (selectedEpicId !== card.epic_id) {
@@ -532,7 +540,7 @@ export function CardItem({
             <div className="flex justify-between items-baseline mb-1">
               <div className="flex items-center gap-2">
                 <span className="text-xs text-base-content/50 font-bold uppercase">
-                  Description (Markdown)
+                  Description
                 </span>
                 {aiFeaturesEnabled && !isObserver && (
                   <AISuggestButton
@@ -543,41 +551,15 @@ export function CardItem({
                   />
                 )}
               </div>
-              {!isObserver && (
-                <button
-                  type="button"
-                  onClick={() => setIsEditingDescription(!isEditingDescription)}
-                  className="text-xs text-primary hover:underline font-semibold"
-                >
-                  {isEditingDescription ? '👁️ Preview' : '✏️ Edit'}
-                </button>
-              )}
             </div>
-            {isEditingDescription && !isObserver ? (
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Tulis deskripsi menggunakan Markdown..."
-                className="textarea textarea-bordered textarea-sm w-full h-24 focus:outline-none focus:textarea-primary font-mono text-xs"
-              />
-            ) : (
-              <div
-                role="button"
-                tabIndex={0}
-                className="border border-base-200 rounded-lg p-3 bg-base-50 min-h-[6rem] hover:bg-base-100 transition-colors cursor-pointer"
-                onClick={() => !isObserver && setIsEditingDescription(true)}
-                onKeyDown={(e) => e.key === 'Enter' && !isObserver && setIsEditingDescription(true)}
-              >
-                <MarkdownRenderer
-                  content={
-                    description ||
-                    (isObserver
-                      ? '*Tidak ada deskripsi.*'
-                      : '*Tidak ada deskripsi. Klik untuk menulis.*')
-                  }
-                />
-              </div>
-            )}
+            <TiptapEditor
+              content={descriptionJson || (description ? { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: description }] }] } : null)}
+              onUpdate={(json, text) => {
+                setDescriptionJson(json)
+                setDescription(text)
+              }}
+              editable={!isObserver}
+            />
           </div>
 
           {/* SubtaskList rendering for parent cards only */}
