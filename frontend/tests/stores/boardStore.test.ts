@@ -184,4 +184,49 @@ describe('boardStore', () => {
 
     putSpy.mockRestore()
   })
+
+  test('should toggle star state of a board and trigger API call', async () => {
+    // biome-ignore lint/suspicious/noExplicitAny: Mocking API response for test spy
+    const postSpy = vi.spyOn(api, 'post').mockResolvedValue({ success: true } as any)
+    // biome-ignore lint/suspicious/noExplicitAny: Mocking API response for test spy
+    const deleteSpy = vi.spyOn(api, 'delete').mockResolvedValue({ success: true } as any)
+
+    useBoardStore.setState({
+      boards: [
+        {
+          id: 1,
+          workspace_id: 1,
+          title: 'Board 1',
+          created_at: '',
+          updated_at: '',
+          is_starred: false,
+        },
+      ],
+      activeBoard: {
+        id: 1,
+        workspace_id: 1,
+        title: 'Board 1',
+        created_at: '',
+        updated_at: '',
+        is_starred: false,
+      },
+    })
+
+    // Star the board
+    await useBoardStore.getState().toggleStarBoard(1)
+    let state = useBoardStore.getState()
+    expect(state.boards[0].is_starred).toBe(true)
+    expect(state.activeBoard?.is_starred).toBe(true)
+    expect(postSpy).toHaveBeenCalledWith('/boards/1/star', {})
+
+    // Unstar the board
+    await useBoardStore.getState().toggleStarBoard(1)
+    state = useBoardStore.getState()
+    expect(state.boards[0].is_starred).toBe(false)
+    expect(state.activeBoard?.is_starred).toBe(false)
+    expect(deleteSpy).toHaveBeenCalledWith('/boards/1/star')
+
+    postSpy.mockRestore()
+    deleteSpy.mockRestore()
+  })
 })

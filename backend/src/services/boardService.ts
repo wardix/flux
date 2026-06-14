@@ -2,16 +2,31 @@ import { db } from '../db'
 
 export async function getAll(userId: number) {
   return await db`
-    SELECT DISTINCT b.* FROM boards b
+    SELECT DISTINCT b.*,
+      CASE WHEN bs.board_id IS NOT NULL THEN TRUE ELSE FALSE END as is_starred
+    FROM boards b
     LEFT JOIN workspace_members wm ON b.workspace_id = wm.workspace_id
+    LEFT JOIN board_stars bs ON b.id = bs.board_id AND bs.user_id = ${userId}
     WHERE (wm.user_id = ${userId} OR b.created_by = ${userId})
       AND b.archived_at IS NULL AND b.deleted_at IS NULL
     ORDER BY b.created_at DESC
   `
 }
 
-export async function getById(id: number) {
-  const boards = await db`SELECT * FROM boards WHERE id = ${id} AND deleted_at IS NULL`
+export async function getById(id: number, userId?: number) {
+  let boards
+  if (userId) {
+    boards = await db`
+      SELECT b.*,
+        CASE WHEN bs.board_id IS NOT NULL THEN TRUE ELSE FALSE END as is_starred
+      FROM boards b
+      LEFT JOIN board_stars bs ON b.id = bs.board_id AND bs.user_id = ${userId}
+      WHERE b.id = ${id} AND b.deleted_at IS NULL
+    `
+  } else {
+    boards = await db`SELECT * FROM boards WHERE id = ${id} AND deleted_at IS NULL`
+  }
+
   if (boards.length === 0) return null
   const board = boards[0]
 
@@ -209,4 +224,20 @@ export async function getBoardRole(boardId: number, userId: number): Promise<str
 
   return null
 }
+
+export async function starBoard(boardId: number, userId: number) {
+  await db`
+    INSERT INTO board_stars (board_id, user_id)
+    VALUES (${boardId}, ${userId})
+    ON CONFLICT DO NOTHING
+  `
+}
+
+export async function unstarBoard(boardId: number, userId: number) {
+  await db`
+    DELETE FROM board_stars
+    WHERE board_id = ${boardId} AND user_id = ${userId}
+  `
+}
+
 

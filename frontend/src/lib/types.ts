@@ -58,6 +58,7 @@ export interface Board {
   created_at: string
   updated_at: string
   lists?: List[]
+  is_starred?: boolean
 }
 
 export interface Workspace {

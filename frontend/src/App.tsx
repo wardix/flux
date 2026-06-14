@@ -40,6 +40,7 @@ function App() {
     boardMembers,
     userRole,
     inviteBoardMember,
+    toggleStarBoard,
   } = useBoardStore()
 
   const [newBoardTitle, setNewBoardTitle] = useState('')
@@ -97,6 +98,7 @@ function App() {
 
   // Filter boards based on selected workspace
   const filteredBoards = boards.filter((b) => b.workspace_id === activeWorkspace?.id)
+  const starredBoards = filteredBoards.filter((b) => b.is_starred)
 
   useEffect(() => {
     if (filteredBoards.length > 0 && !activeBoard) {
@@ -273,6 +275,46 @@ function App() {
 
         {/* Boards Section */}
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
+          {starredBoards.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between px-2">
+                <span className="text-xs font-semibold uppercase tracking-wider text-base-content/50 flex items-center gap-1">
+                  ★ Starred Boards
+                </span>
+              </div>
+              <ul className="menu menu-sm p-0 gap-1">
+                {starredBoards.map((b) => (
+                  <li key={`starred-${b.id}`}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShow2FASettings(false)
+                        fetchBoard(b.id)
+                      }}
+                      className={`flex items-center justify-between py-2 px-3 rounded-lg text-left ${
+                        !show2FASettings && activeBoard?.id === b.id
+                          ? 'active bg-primary text-primary-content font-semibold'
+                          : 'hover:bg-base-200'
+                      }`}
+                    >
+                      <span className="truncate">📋 {b.title}</span>
+                      <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          type="button"
+                          onClick={() => toggleStarBoard(b.id)}
+                          className="text-xs text-yellow-500 hover:text-yellow-600 focus:outline-none hover:scale-110 transition-transform"
+                          title="Unstar Board"
+                        >
+                          ★
+                        </button>
+                      </div>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           <div className="space-y-2">
             <div className="flex items-center justify-between px-2">
               <span className="text-xs font-semibold uppercase tracking-wider text-base-content/50">
@@ -333,9 +375,21 @@ function App() {
                     }`}
                   >
                     <span className="truncate">📋 {b.title}</span>
-                    <span className="text-[9px] uppercase opacity-60 ml-2 px-1 border border-base-content/20 rounded">
-                      {b.visibility === 'workspace-only' ? 'WS' : b.visibility}
-                    </span>
+                    <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        type="button"
+                        onClick={() => toggleStarBoard(b.id)}
+                        className={`text-xs focus:outline-none hover:scale-110 transition-transform ${
+                          b.is_starred ? 'text-yellow-500' : 'text-base-content/30 hover:text-yellow-500'
+                        }`}
+                        title={b.is_starred ? 'Unstar Board' : 'Star Board'}
+                      >
+                        {b.is_starred ? '★' : '☆'}
+                      </button>
+                      <span className="text-[9px] uppercase opacity-60 px-1 border border-base-content/20 rounded">
+                        {b.visibility === 'workspace-only' ? 'WS' : b.visibility}
+                      </span>
+                    </div>
                   </button>
                 </li>
               ))}
@@ -497,9 +551,23 @@ function App() {
             {/* Top Board Bar */}
             <header className="navbar bg-base-100 border-b border-base-200/50 px-6 justify-between z-10 shadow-sm">
               <div className="flex items-center gap-3">
-                <h2 className="text-xl font-bold tracking-tight text-base-content/90">
-                  {activeBoard ? activeBoard.title : 'Loading Board...'}
-                </h2>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-xl font-bold tracking-tight text-base-content/90">
+                    {activeBoard ? activeBoard.title : 'Loading Board...'}
+                  </h2>
+                  {activeBoard && (
+                    <button
+                      type="button"
+                      onClick={() => toggleStarBoard(activeBoard.id)}
+                      className={`text-lg focus:outline-none hover:scale-110 transition-transform ${
+                        activeBoard.is_starred ? 'text-yellow-500' : 'text-base-content/30 hover:text-yellow-500'
+                      }`}
+                      title={activeBoard.is_starred ? 'Unstar Board' : 'Star Board'}
+                    >
+                      {activeBoard.is_starred ? '★' : '☆'}
+                    </button>
+                  )}
+                </div>
 
                 {/* Board Visibility Selector */}
                 {activeBoard && (

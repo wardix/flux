@@ -1,4 +1,5 @@
 -- Drop tables if they exist (for easy migration reset)
+DROP TABLE IF EXISTS board_stars CASCADE;
 DROP TABLE IF EXISTS board_members CASCADE;
 DROP TABLE IF EXISTS activity_logs CASCADE;
 DROP TABLE IF EXISTS comments CASCADE;
@@ -248,6 +249,17 @@ CREATE TABLE board_members (
 CREATE TRIGGER update_board_members_updated_at BEFORE UPDATE ON board_members FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE INDEX idx_board_members_user_id ON board_members(user_id);
+
+-- Board Stars Table
+CREATE TABLE board_stars (
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    board_id INTEGER NOT NULL REFERENCES boards(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (user_id, board_id)
+);
+
+CREATE INDEX idx_board_stars_user_id ON board_stars(user_id);
+
 
 
 

@@ -50,6 +50,7 @@ interface BoardState {
   fetchBoardMembers: (boardId: number) => Promise<void>
   fetchUserRole: (boardId: number) => Promise<void>
   inviteBoardMember: (boardId: number, email: string, role: string) => Promise<void>
+  toggleStarBoard: (boardId: number) => Promise<void>
   activeCardId: number | null
   setActiveCardId: (id: number | null) => void
 }
@@ -789,6 +790,47 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     } catch (err) {
       console.error(err)
       throw err
+    }
+  },
+
+  toggleStarBoard: async (boardId: number) => {
+    const boards = get().boards
+    const board = boards.find((b) => b.id === boardId)
+    if (!board) return
+
+    const isStarredNow = !board.is_starred
+
+    // Optimistic update
+    set((state) => {
+      const updatedBoards = state.boards.map((b) =>
+        b.id === boardId ? { ...b, is_starred: isStarredNow } : b
+      )
+      const updatedActive =
+        state.activeBoard?.id === boardId
+          ? { ...state.activeBoard, is_starred: isStarredNow }
+          : state.activeBoard
+      return { boards: updatedBoards, activeBoard: updatedActive }
+    })
+
+    try {
+      if (isStarredNow) {
+        await api.post(`/boards/${boardId}/star`, {})
+      } else {
+        await api.delete(`/boards/${boardId}/star`)
+      }
+    } catch (err) {
+      console.error(err)
+      // Rollback on failure
+      set((state) => {
+        const updatedBoards = state.boards.map((b) =>
+          b.id === boardId ? { ...b, is_starred: !isStarredNow } : b
+        )
+        const updatedActive =
+          state.activeBoard?.id === boardId
+            ? { ...state.activeBoard, is_starred: !isStarredNow }
+            : state.activeBoard
+        return { boards: updatedBoards, activeBoard: updatedActive }
+      })
     }
   },
 
