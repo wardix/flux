@@ -1,0 +1,75 @@
+{
+  "auth": {
+    "login": "Sign In",
+    "register": "Sign Up",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot Password?",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "loginWith": "Login with {{provider}}",
+    "welcomeBack": "Welcome back!",
+    "createAccount": "Create an account"
+  },
+  "board": {
+    "title": "Board",
+    "create": "Create Board",
+    "edit": "Edit Board",
+    "delete": "Delete Board",
+    "deleteConfirm": "Are you sure you want to delete \"{{title}}\"?",
+    "noBoards": "No boards yet. Create your first board!",
+    "addList": "Add List",
+    "addCard": "Add Card",
+    "members": "Members",
+    "settings": "Board Settings",
+    "archive": "Archive",
+    "export": "Export"
+  },
+  "card": {
+    "title": "Card",
+    "description": "Description",
+    "addDescription": "Add a description...",
+    "labels": "Labels",
+    "dueDate": "Due Date",
+    "assignees": "Assignees",
+    "checklist": "Checklist",
+    "attachments": "Attachments",
+    "comments": "Comments",
+    "activity": "Activity",
+    "addComment": "Write a comment...",
+    "archive": "Archive Card",
+    "delete": "Delete Card",
+    "move": "Move Card"
+  },
+  "workspace": {
+    "title": "Workspace",
+    "create": "Create Workspace",
+    "settings": "Workspace Settings",
+    "members": "Members",
+    "invite": "Invite Member",
+    "leave": "Leave Workspace"
+  },
+  "settings": {
+    "title": "Settings",
+    "profile": "Profile",
+    "account": "Account",
+    "security": "Security",
+    "language": "Language",
+    "theme": "Theme",
+    "notifications": "Notifications"
+  },
+  "notification": {
+    "title": "Notifications",
+    "markAllRead": "Mark all as read",
+    "noNotifications": "No notifications",
+    "assigned": "{{user}} assigned you to \"{{card}}\"",
+    "commented": "{{user}} commented on \"{{card}}\"",
+    "mentioned": "{{user}} mentioned you in \"{{card}}\""
+  },
+  "error": {
+    "generic": "Something went wrong. Please try again.",
+    "notFound": "Page not found",
+    "unauthorized": "You need to log in",
+    "forbidden": "You don't have permission"
+  }
+}

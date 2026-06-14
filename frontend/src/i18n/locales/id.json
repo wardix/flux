@@ -1,0 +1,75 @@
+{
+  "auth": {
+    "login": "Masuk",
+    "register": "Daftar",
+    "email": "Email",
+    "password": "Kata Sandi",
+    "forgotPassword": "Lupa Kata Sandi?",
+    "noAccount": "Belum punya akun?",
+    "hasAccount": "Sudah punya akun?",
+    "loginWith": "Masuk dengan {{provider}}",
+    "welcomeBack": "Selamat datang kembali!",
+    "createAccount": "Buat akun baru"
+  },
+  "board": {
+    "title": "Papan",
+    "create": "Buat Papan",
+    "edit": "Edit Papan",
+    "delete": "Hapus Papan",
+    "deleteConfirm": "Anda yakin ingin menghapus \"{{title}}\"?",
+    "noBoards": "Belum ada papan. Buat papan pertama Anda!",
+    "addList": "Tambah Daftar",
+    "addCard": "Tambah Kartu",
+    "members": "Anggota",
+    "settings": "Pengaturan Papan",
+    "archive": "Arsip",
+    "export": "Ekspor"
+  },
+  "card": {
+    "title": "Kartu",
+    "description": "Deskripsi",
+    "addDescription": "Tambahkan deskripsi...",
+    "labels": "Label",
+    "dueDate": "Tenggat Waktu",
+    "assignees": "Penerima Tugas",
+    "checklist": "Daftar Periksa",
+    "attachments": "Lampiran",
+    "comments": "Komentar",
+    "activity": "Aktivitas",
+    "addComment": "Tulis komentar...",
+    "archive": "Arsipkan Kartu",
+    "delete": "Hapus Kartu",
+    "move": "Pindahkan Kartu"
+  },
+  "workspace": {
+    "title": "Ruang Kerja",
+    "create": "Buat Ruang Kerja",
+    "settings": "Pengaturan Ruang Kerja",
+    "members": "Anggota",
+    "invite": "Undang Anggota",
+    "leave": "Keluar dari Ruang Kerja"
+  },
+  "settings": {
+    "title": "Pengaturan",
+    "profile": "Profil",
+    "account": "Akun",
+    "security": "Keamanan",
+    "language": "Bahasa",
+    "theme": "Tema",
+    "notifications": "Notifikasi"
+  },
+  "notification": {
+    "title": "Notifikasi",
+    "markAllRead": "Tandai semua sudah dibaca",
+    "noNotifications": "Tidak ada notifikasi",
+    "assigned": "{{user}} menugaskan Anda ke \"{{card}}\"",
+    "commented": "{{user}} berkomentar di \"{{card}}\"",
+    "mentioned": "{{user}} menyebut Anda di \"{{card}}\""
+  },
+  "error": {
+    "generic": "Terjadi kesalahan. Silakan coba lagi.",
+    "notFound": "Halaman tidak ditemukan",
+    "unauthorized": "Anda perlu masuk",
+    "forbidden": "Anda tidak memiliki izin"
+  }
+}

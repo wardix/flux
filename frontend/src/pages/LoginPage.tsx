@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react'
 import { api } from '../lib/api'
 import { OAuthButtons } from '../components/auth/OAuthButtons'
 import { TwoFactorLoginForm } from '../components/auth/TwoFactorLoginForm'
+import { useTranslation } from 'react-i18next'
 
 interface LoginPageProps {
   onLoginSuccess: (token: string, user: any) => void
 }
 
 export function LoginPage({ onLoginSuccess }: LoginPageProps) {
+  const { t } = useTranslation()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -74,8 +76,8 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
         ) : (
           <>
             <div className="space-y-2 text-center">
-              <h2 className="text-2xl font-bold tracking-tight">Welcome to Flux</h2>
-              <p className="text-xs text-base-content/60">Log in to manage your workspaces and boards.</p>
+              <h2 className="text-2xl font-bold tracking-tight">{t('auth.welcomeBack')}</h2>
+              <p className="text-xs text-base-content/60">{t('auth.login')}</p>
             </div>
 
             {error && (
@@ -88,7 +90,7 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text font-semibold">Email</span>
+                  <span className="label-text font-semibold">{t('auth.email')}</span>
                 </label>
                 <input
                   type="email"
@@ -102,7 +104,7 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
 
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text font-semibold">Password</span>
+                  <span className="label-text font-semibold">{t('auth.password')}</span>
                 </label>
                 <input
                   type="password"
@@ -115,13 +117,13 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
               </div>
 
               <button type="submit" className="btn btn-primary text-white w-full">
-                Log In
+                {t('auth.login')}
               </button>
             </form>
 
             <div className="relative flex py-2 items-center">
               <div className="flex-grow border-t border-base-300"></div>
-              <span className="flex-shrink mx-4 text-base-content/40 text-xs font-semibold uppercase">Or continue with</span>
+              <span className="flex-shrink mx-4 text-base-content/40 text-xs font-semibold uppercase">{t('auth.loginWith', { provider: 'OAuth' })}</span>
               <div className="flex-grow border-t border-base-300"></div>
             </div>
 
