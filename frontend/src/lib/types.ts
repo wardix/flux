@@ -22,6 +22,7 @@ export interface Card {
   vote_count?: number
   user_voted?: boolean
   sprint_id?: number | null
+  epic_id?: number | null
 }
 
 export interface Voter {
@@ -185,7 +186,35 @@ export interface Sprint {
   updated_at: string
 }
 
+export interface Epic {
+  id: number
+  workspace_id: number
+  title: string
+  description?: string | null
+  color: string
+  status: 'open' | 'done'
+  created_by?: number | null
+  created_at: string
+  updated_at: string
+  progress?: {
+    total_cards: number
+    completed_cards: number
+    percentage: number
+  }
+}
 
+export interface EpicDetailCard {
+  id: number
+  title: string
+  board_id: number
+  board_title: string
+  list_id: number
+  list_title: string
+  due_date: string | null
+  is_completed: boolean
+  assignees: { id: number; name: string }[]
+}
 
-
-
+export interface EpicDetail extends Epic {
+  cards: EpicDetailCard[]
+}

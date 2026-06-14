@@ -19,6 +19,9 @@ import { SprintBoard } from './components/board/SprintBoard'
 import { BurndownChart } from './components/board/BurndownChart'
 import { api } from './lib/api'
 import type { Sprint } from './lib/types'
+import { EpicList } from './components/board/EpicList'
+import { EpicDetail } from './components/board/EpicDetail'
+
 
 function decodeToken(token: string | null) {
   if (!token) return null
@@ -173,6 +176,11 @@ function App() {
   const [sprintTab, setSprintTab] = useState<'board' | 'planning' | 'burndown'>('board')
   const [sprints, setSprints] = useState<Sprint[]>([])
   const [sprintViewEnabled, setSprintViewEnabled] = useState(false)
+
+  // Epics related States
+  const [epicViewEnabled, setEpicViewEnabled] = useState(false)
+  const [selectedEpicId, setSelectedEpicId] = useState<number | null>(null)
+
 
   const fetchSprints = async () => {
     if (!activeBoard) return
@@ -531,13 +539,15 @@ function App() {
                     type="button"
                     onClick={() => {
                       setShow2FASettings(false)
+                      setEpicViewEnabled(false)
                       fetchBoard(b.id)
                     }}
                     className={`flex items-center justify-between py-2 px-3 rounded-lg text-left ${
-                      !show2FASettings && activeBoard?.id === b.id
+                      !show2FASettings && !epicViewEnabled && activeBoard?.id === b.id
                         ? 'active bg-primary text-primary-content font-semibold'
                         : 'hover:bg-base-200'
                     }`}
+
                   >
                     <span className="truncate">📋 {b.title}</span>
                     <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
@@ -633,8 +643,23 @@ function App() {
             <button
               type="button"
               onClick={() => {
+                setEpicViewEnabled(true)
+                setSelectedEpicId(null)
+                setShow2FASettings(false)
+                setShowAdminPage(false)
+              }}
+              className={`btn btn-sm btn-block justify-start capitalize ${
+                epicViewEnabled ? 'btn-primary text-white' : 'btn-ghost'
+              }`}
+            >
+              💎 Epic Tracking
+            </button>
+            <button
+              type="button"
+              onClick={() => {
                 setShow2FASettings(true)
                 setShowAdminPage(false)
+                setEpicViewEnabled(false)
               }}
               className={`btn btn-sm btn-block justify-start capitalize ${
                 show2FASettings ? 'btn-primary text-white' : 'btn-ghost'
@@ -732,8 +757,24 @@ function App() {
           <div className="flex-1 overflow-y-auto z-10 bg-base-100">
             <SettingsPage onBack={() => setShow2FASettings(false)} />
           </div>
+        ) : epicViewEnabled && activeWorkspace ? (
+          <div className="flex-1 overflow-y-auto z-10 bg-base-100 p-8">
+            {selectedEpicId ? (
+              <EpicDetail
+                workspaceId={activeWorkspace.id}
+                epicId={selectedEpicId}
+                onBack={() => setSelectedEpicId(null)}
+              />
+            ) : (
+              <EpicList
+                workspace={activeWorkspace}
+                onSelectEpic={(id) => setSelectedEpicId(id)}
+              />
+            )}
+          </div>
         ) : (
           <>
+
             {/* Top Board Bar */}
             <header className="navbar bg-base-100 border-b border-base-200/50 px-6 justify-between z-10 shadow-sm">
               <div className="flex items-center gap-3">

@@ -636,4 +636,56 @@ cardRoutes.openapi(assignCardSprintRoute, async (c) => {
   }
 })
 
+// Assign Card to Epic Endpoint
+const assignCardEpicRoute = createRoute({
+  method: 'put',
+  path: '/{id}/epic',
+  tags: ['Cards'],
+  summary: 'Assign card to epic',
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      id: z.string(),
+    }),
+    body: {
+      content: {
+        'application/json': {
+          schema: z.object({
+            epic_id: z.number().nullable(),
+          }),
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Epic assigned successfully',
+      content: {
+        'application/json': {
+          schema: z.object({
+            data: z.any(),
+          }),
+        },
+      },
+    },
+  },
+})
+
+cardRoutes.openapi(assignCardEpicRoute, async (c) => {
+  const cardId = Number(c.req.param('id'))
+  if (Number.isNaN(cardId)) return c.json({ error: 'Invalid ID' }, 400)
+
+  const body = await c.req.json()
+  const epicId = body.epic_id
+
+  try {
+    const epicService = await import('../services/epicService')
+    const card = await epicService.assignCardToEpic(cardId, epicId)
+    return c.json({ data: card }, 200)
+  } catch (err: any) {
+    const status = err.status || 400
+    return c.json({ error: err.message }, status)
+  }
+})
+
 export { cardRoutes }

@@ -22,6 +22,9 @@ import { VoteButton } from './VoteButton'
 import { VoterList } from './VoterList'
 import { CustomFieldValues } from './CustomFieldValues'
 import { CustomFieldBadge } from './CustomFieldBadge'
+import { EpicBadge } from './EpicBadge'
+import type { Epic } from '../../lib/types'
+
 
 
 
@@ -77,7 +80,31 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
   const userRole = useBoardStore((s) => s.userRole)
   const isObserver = userRole === 'observer'
   const boardMembers = useBoardStore((s) => s.boardMembers)
+  const activeWorkspace = useBoardStore((s) => s.activeWorkspace)
   const [assigneeId, setAssigneeId] = useState<number | null>(card.assignee_id ?? null)
+  const [epics, setEpics] = useState<Epic[]>([])
+  const [selectedEpicId, setSelectedEpicId] = useState<number | null>(card.epic_id ?? null)
+
+  const fetchEpics = async () => {
+    if (!activeWorkspace?.id) return
+    try {
+      const res = await api.get<{ data: Epic[] }>(`/workspaces/${activeWorkspace.id}/epics`)
+      setEpics(res.data || [])
+    } catch (err) {
+      console.error('Failed to fetch epics:', err)
+    }
+  }
+
+  useEffect(() => {
+    if (isOpen && activeWorkspace?.id) {
+      fetchEpics()
+    }
+  }, [isOpen, activeWorkspace?.id])
+
+  useEffect(() => {
+    setSelectedEpicId(card.epic_id ?? null)
+  }, [card.epic_id])
+
 
   useEffect(() => {
     if (activeCardId === card.id) {
@@ -182,8 +209,23 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
       story_points: storyPoints,
       assignee_id: assigneeId,
     })
+    
+    // Assign to Epic
+    if (selectedEpicId !== card.epic_id) {
+      try {
+        await api.put(`/cards/${card.id}/epic`, { epic_id: selectedEpicId })
+        const activeBoard = useBoardStore.getState().activeBoard
+        if (activeBoard?.id) {
+          await useBoardStore.getState().fetchBoard(activeBoard.id)
+        }
+      } catch (err) {
+        console.error('Failed to assign epic:', err)
+      }
+    }
+    
     closeOpenedModal()
   }
+
 
   const toggleLabel = async (label: (typeof labels)[0]) => {
     const hasLabel = card.labels?.some((l) => l.id === label.id)
@@ -300,6 +342,28 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
               </select>
             </div>
           </div>
+
+          {!card.parent_card_id && (
+            <div>
+              <span className="text-xs text-base-content/50 font-bold uppercase block mb-1">
+                Epic
+              </span>
+              <select
+                value={selectedEpicId ?? ''}
+                onChange={(e) => setSelectedEpicId(e.target.value ? Number(e.target.value) : null)}
+                disabled={isObserver}
+                className="select select-bordered select-sm w-full focus:outline-none focus:select-primary"
+              >
+                <option value="">No Epic</option>
+                {epics.map((epic) => (
+                  <option key={epic.id} value={epic.id}>
+                    💎 {epic.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
 
           <div>
             <span className="text-xs text-base-content/50 font-bold uppercase block mb-1">
@@ -533,6 +597,14 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
 
         {/* Custom Fields Badge preview */}
         <CustomFieldBadge cardId={card.id} />
+
+        {/* Epic Badge preview */}
+        {card.epic_id && (
+          <div className="flex">
+            <EpicBadge title="Epic" color="#6366f1" />
+          </div>
+        )}
+
 
         <div className="flex items-start justify-between">
           <h4 className="font-medium text-sm text-base-content/90 line-clamp-2 pr-6">
