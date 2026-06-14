@@ -1,4 +1,6 @@
 -- Drop tables if they exist (for easy migration reset)
+DROP TABLE IF EXISTS sprints CASCADE;
+DROP TABLE IF EXISTS automation_rules CASCADE;
 DROP TABLE IF EXISTS card_custom_field_values CASCADE;
 DROP TABLE IF EXISTS custom_fields CASCADE;
 DROP TABLE IF EXISTS card_votes CASCADE;
@@ -20,6 +22,7 @@ DROP TABLE IF EXISTS boards CASCADE;
 DROP TABLE IF EXISTS workspace_members CASCADE;
 DROP TABLE IF EXISTS workspaces CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
+
 
 
 -- Create users table
@@ -345,4 +348,27 @@ CREATE TABLE automation_rules (
 
 CREATE TRIGGER update_automation_rules_updated_at BEFORE UPDATE ON automation_rules FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE INDEX idx_automation_rules_board_id ON automation_rules(board_id);
+
+-- Sprints Table
+CREATE TABLE sprints (
+    id SERIAL PRIMARY KEY,
+    board_id INTEGER NOT NULL REFERENCES boards(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    goal TEXT,
+    start_date TIMESTAMPTZ NOT NULL,
+    end_date TIMESTAMPTZ NOT NULL,
+    status VARCHAR(50) NOT NULL DEFAULT 'planning', -- 'planning', 'active', 'completed'
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT check_dates CHECK (end_date > start_date)
+);
+
+CREATE TRIGGER update_sprints_updated_at BEFORE UPDATE ON sprints FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE INDEX idx_sprints_board_id ON sprints(board_id);
+CREATE INDEX idx_sprints_status ON sprints(status);
+
+-- Alter cards table to add sprint_id references sprints(id) ON DELETE SET NULL
+ALTER TABLE cards ADD COLUMN sprint_id INTEGER REFERENCES sprints(id) ON DELETE SET NULL;
+CREATE INDEX idx_cards_sprint_id ON cards(sprint_id);
+
 

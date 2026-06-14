@@ -14,7 +14,11 @@ import { AdminDashboardPage } from './pages/AdminDashboardPage'
 import { ExportDialog } from './components/board/ExportDialog'
 import { CustomFieldEditor } from './components/board/CustomFieldEditor'
 import { AutomationList } from './components/board/AutomationList'
+import { SprintPlanning } from './components/board/SprintPlanning'
+import { SprintBoard } from './components/board/SprintBoard'
+import { BurndownChart } from './components/board/BurndownChart'
 import { api } from './lib/api'
+import type { Sprint } from './lib/types'
 
 function decodeToken(token: string | null) {
   if (!token) return null
@@ -164,6 +168,63 @@ function App() {
     lists: [],
     cards: [],
   })
+
+  // Sprints related States
+  const [sprintTab, setSprintTab] = useState<'board' | 'planning' | 'burndown'>('board')
+  const [sprints, setSprints] = useState<Sprint[]>([])
+  const [sprintViewEnabled, setSprintViewEnabled] = useState(false)
+
+  const fetchSprints = async () => {
+    if (!activeBoard) return
+    try {
+      const res = await api.get<{ data: Sprint[] }>(`/boards/${activeBoard.id}/sprints`)
+      setSprints(res.data || [])
+    } catch (err) {
+      console.error('Failed to fetch sprints:', err)
+    }
+  }
+
+  const handleCreateSprint = async (data: any) => {
+    if (!activeBoard) return
+    await api.post(`/boards/${activeBoard.id}/sprints`, data)
+    await fetchSprints()
+  }
+
+  const handleDeleteSprint = async (sprintId: number) => {
+    if (!activeBoard) return
+    await api.delete(`/boards/${activeBoard.id}/sprints/${sprintId}`)
+    await fetchSprints()
+  }
+
+  const handleStartSprint = async (sprintId: number) => {
+    if (!activeBoard) return
+    await api.put(`/boards/${activeBoard.id}/sprints/${sprintId}/start`, {})
+    await fetchSprints()
+  }
+
+  const handleCompleteSprint = async (sprintId: number, moveToSprintId?: number | null) => {
+    if (!activeBoard) return
+    await api.put(`/boards/${activeBoard.id}/sprints/${sprintId}/complete`, {
+      move_incomplete_to_sprint_id: moveToSprintId,
+    })
+    await fetchSprints()
+    await fetchBoard(activeBoard.id) // Reload board to reflect moves/status changes
+  }
+
+  const handleAssignSprint = async (cardId: number, sprintId: number | null) => {
+    await api.put(`/cards/${cardId}/sprint`, { sprint_id: sprintId })
+    if (activeBoard) {
+      await fetchBoard(activeBoard.id) // Reload cards
+    }
+  }
+
+  useEffect(() => {
+    if (activeBoard?.id) {
+      fetchSprints()
+    } else {
+      setSprints([])
+    }
+  }, [activeBoard?.id])
 
   const loadArchive = async () => {
     if (!activeBoard) return
@@ -834,6 +895,46 @@ function App() {
                   </div>
                 )}
 
+                {/* Sprints Board Mode Button */}
+                {activeBoard && (
+                  <button
+                    type="button"
+                    onClick={() => setSprintViewEnabled(!sprintViewEnabled)}
+                    className={`btn btn-xs gap-1 font-semibold uppercase tracking-wider ${
+                      sprintViewEnabled ? 'btn-primary text-white' : 'btn-outline'
+                    }`}
+                  >
+                    🏃 Sprints Mode: {sprintViewEnabled ? 'ON' : 'OFF'}
+                  </button>
+                )}
+
+                {/* Sprints Tab Switchers */}
+                {activeBoard && sprintViewEnabled && (
+                  <div className="join border border-base-300">
+                    <button
+                      type="button"
+                      onClick={() => setSprintTab('board')}
+                      className={`join-item btn btn-xs ${sprintTab === 'board' ? 'btn-active btn-primary text-white' : 'btn-ghost'}`}
+                    >
+                      Active Sprint
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSprintTab('planning')}
+                      className={`join-item btn btn-xs ${sprintTab === 'planning' ? 'btn-active btn-primary text-white' : 'btn-ghost'}`}
+                    >
+                      Planning / Backlog
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSprintTab('burndown')}
+                      className={`join-item btn btn-xs ${sprintTab === 'burndown' ? 'btn-active btn-primary text-white' : 'btn-ghost'}`}
+                    >
+                      Burndown Chart
+                    </button>
+                  </div>
+                )}
+
                 {/* Board Labels Manager */}
                 {activeBoard && (
                   <div className="dropdown dropdown-bottom">
@@ -1167,57 +1268,120 @@ function App() {
               </div>
             </header>
 
-            {/* Columns Board view */}
-            <DndContext onDragEnd={handleDragEnd}>
-              <div className="flex-1 overflow-x-auto p-6 flex gap-6 items-start">
-                {activeBoard?.lists?.map((list) => (
-                  <BoardColumn key={list.id} list={list} />
-                ))}
+            {/* Conditional Sprints or Columns Board view */}
+            {sprintViewEnabled && activeBoard ? (
+              <div className="flex-1 p-6 overflow-y-auto">
+                {sprintTab === 'board' && (
+                  (() => {
+                    const activeSprint = sprints.find((s) => s.status === 'active')
+                    if (activeSprint) {
+                      return <SprintBoard sprint={activeSprint} lists={activeBoard.lists || []} />
+                    }
+                    return (
+                      <div className="text-center py-12 bg-base-100 border border-base-200 rounded-2xl shadow-sm space-y-3">
+                        <span className="text-sm font-semibold text-base-content/65 block">No active sprint running</span>
+                        <button
+                          type="button"
+                          onClick={() => setSprintTab('planning')}
+                          className="btn btn-primary btn-sm text-white"
+                        >
+                          Go to Sprint Planning
+                        </button>
+                      </div>
+                    )
+                  })()
+                )}
 
-                {/* Add Column Button */}
-                {activeBoard && (
-                  <div className="w-80 flex-shrink-0">
-                    {isAddingColumn ? (
-                      <form
-                        onSubmit={handleCreateColumn}
-                        className="bg-base-100 border border-base-200 rounded-2xl p-4 shadow-md space-y-2"
-                      >
-                        <input
-                          type="text"
-                          placeholder="Enter list title..."
-                          value={newColumnTitle}
-                          onChange={(e) => setNewColumnTitle(e.target.value)}
-                          className="input input-sm input-bordered input-primary w-full focus:outline-none"
-                        />
-                        <div className="flex gap-2">
-                          <button type="submit" className="btn btn-primary btn-xs flex-1">
-                            Add List
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setIsAddingColumn(false)
-                              setNewColumnTitle('')
-                            }}
-                            className="btn btn-ghost btn-xs flex-1"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </form>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => setIsAddingColumn(true)}
-                        className="btn btn-block bg-base-100/60 hover:bg-base-100 border border-dashed border-base-content/10 hover:border-primary/40 rounded-2xl p-4 text-left font-semibold text-sm text-base-content/60 hover:text-primary transition-all duration-200 flex items-center gap-2 h-14"
-                      >
-                        + Add List
-                      </button>
-                    )}
-                  </div>
+                {sprintTab === 'planning' && (
+                  (() => {
+                    // Collect all cards for the board (across all lists)
+                    const allCards: Card[] = []
+                    for (const list of activeBoard.lists || []) {
+                      for (const card of list.cards || []) {
+                        allCards.push(card)
+                      }
+                    }
+                    return (
+                      <SprintPlanning
+                        sprints={sprints}
+                        backlogCards={allCards}
+                        onAssignSprint={handleAssignSprint}
+                        onCreateSprint={handleCreateSprint}
+                        onDeleteSprint={handleDeleteSprint}
+                        onStartSprint={handleStartSprint}
+                        onCompleteSprint={handleCompleteSprint}
+                        disabled={userRole === 'observer'}
+                      />
+                    )
+                  })()
+                )}
+
+                {sprintTab === 'burndown' && (
+                  (() => {
+                    const activeSprint = sprints.find((s) => s.status === 'active') || sprints.find((s) => s.status === 'completed')
+                    if (activeSprint) {
+                      return <BurndownChart boardId={activeBoard.id} sprintId={activeSprint.id} />
+                    }
+                    return (
+                      <div className="text-center py-12 bg-base-100 border border-base-200 rounded-2xl shadow-sm">
+                        <span className="text-xs text-base-content/40 italic">Create or activate a sprint to view burndown statistics.</span>
+                      </div>
+                    )
+                  })()
                 )}
               </div>
-            </DndContext>
+            ) : (
+              <DndContext onDragEnd={handleDragEnd}>
+                <div className="flex-1 overflow-x-auto p-6 flex gap-6 items-start">
+                  {activeBoard?.lists?.map((list) => (
+                    <BoardColumn key={list.id} list={list} />
+                  ))}
+
+                  {/* Add Column Button */}
+                  {activeBoard && (
+                    <div className="w-80 flex-shrink-0">
+                      {isAddingColumn ? (
+                        <form
+                          onSubmit={handleCreateColumn}
+                          className="bg-base-100 border border-base-200 rounded-2xl p-4 shadow-md space-y-2"
+                        >
+                          <input
+                            type="text"
+                            placeholder="Enter list title..."
+                            value={newColumnTitle}
+                            onChange={(e) => setNewColumnTitle(e.target.value)}
+                            className="input input-sm input-bordered input-primary w-full focus:outline-none"
+                          />
+                          <div className="flex gap-2">
+                            <button type="submit" className="btn btn-primary btn-xs flex-1">
+                              Add List
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setIsAddingColumn(false)
+                                setNewColumnTitle('')
+                              }}
+                              className="btn btn-ghost btn-xs flex-1"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </form>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setIsAddingColumn(true)}
+                          className="btn btn-block bg-base-100/60 hover:bg-base-100 border border-dashed border-base-content/10 hover:border-primary/40 rounded-2xl p-4 text-left font-semibold text-sm text-base-content/60 hover:text-primary transition-all duration-200 flex items-center gap-2 h-14"
+                        >
+                          + Add List
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </DndContext>
+            )}
           </>
         )}
       </main>
