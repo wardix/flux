@@ -91,4 +91,42 @@ app.get('/summary', async (c) => {
   }
 })
 
+app.get('/workload', async (c) => {
+  const boardId = Number(c.req.query('board_id'))
+  const period = c.req.query('period') || 'month'
+  
+  if (!boardId || isNaN(boardId)) {
+    return c.json({ error: 'board_id is required' }, 400)
+  }
+
+  try {
+    const data = await analyticsService.getWorkload(boardId, period)
+    return c.json({ data })
+  } catch (err) {
+    console.error(err)
+    return c.json({ error: 'Failed to fetch workload' }, 500)
+  }
+})
+
+app.get('/workload/:userId/cards', async (c) => {
+  const boardId = Number(c.req.query('board_id'))
+  const userId = Number(c.req.param('userId'))
+  const period = c.req.query('period') || 'month'
+  
+  if (!boardId || isNaN(boardId)) {
+    return c.json({ error: 'board_id is required' }, 400)
+  }
+  if (!userId || isNaN(userId)) {
+    return c.json({ error: 'userId is required' }, 400)
+  }
+
+  try {
+    const data = await analyticsService.getWorkloadCards(boardId, userId, period)
+    return c.json({ data })
+  } catch (err) {
+    console.error(err)
+    return c.json({ error: 'Failed to fetch workload cards' }, 500)
+  }
+})
+
 export const analyticsRoutes = app
