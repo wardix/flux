@@ -19,7 +19,7 @@ export function DependencyLine({ fromRect, toRect, isCompleted }: DependencyLine
   const controlPointX2 = endX - 50
   const controlPointY2 = endY
 
-  const pathD = \`M \${startX} \${startY} C \${controlPointX1} \${controlPointY1}, \${controlPointX2} \${controlPointY2}, \${endX} \${endY}\`
+  const pathD = `M ${startX} ${startY} C ${controlPointX1} ${controlPointY1}, ${controlPointX2} ${controlPointY2}, ${endX} ${endY}`
 
   const colorClass = isCompleted ? 'stroke-success' : 'stroke-error'
 
@@ -27,7 +27,7 @@ export function DependencyLine({ fromRect, toRect, isCompleted }: DependencyLine
     <svg className="absolute top-0 left-0 w-full h-full pointer-events-none" style={{ zIndex: 0 }}>
       <defs>
         <marker
-          id={\`arrowhead-\${isCompleted ? 'success' : 'error'}\`}
+          id={`arrowhead-${isCompleted ? 'success' : 'error'}`}
           markerWidth="10"
           markerHeight="7"
           refX="9"
@@ -42,9 +42,9 @@ export function DependencyLine({ fromRect, toRect, isCompleted }: DependencyLine
       </defs>
       <path
         d={pathD}
-        className={\`\${colorClass} fill-none\`}
+        className={`${colorClass} fill-none`}
         strokeWidth="2"
-        markerEnd={\`url(#arrowhead-\${isCompleted ? 'success' : 'error'})\`}
+        markerEnd={`url(#arrowhead-${isCompleted ? 'success' : 'error'})`}
       />
     </svg>
   )
