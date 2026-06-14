@@ -42,6 +42,8 @@ import { SearchBar } from './components/shared/SearchBar'
 import { FilterPanel } from './components/board/FilterPanel'
 import { useSearchStore } from './stores/searchStore'
 import { NotificationBell } from './components/shared/NotificationBell'
+import { ChatPanel } from './components/chat/ChatPanel'
+import { useChatStore } from './stores/chatStore'
 
 function decodeToken(token: string | null) {
   if (!token) return null
@@ -155,13 +157,25 @@ function App() {
     }
   }, [token])
 
+  const { toggleChat, unreadTotal, handleIncomingMessage, handleMessageUpdated, handleMessageDeleted, activeChannelId } = useChatStore()
+
   const { isConnected: _isWSConnected, onlineUsers } = useWebSocket({
     boardId: activeBoard?.id || 0,
-    enabled: !!token && !!activeBoard?.id,
+    chatChannelId: activeChannelId,
+    enabled: !!token,
     onEvent: (event) => {
-      if (event.userId === currentUserId) return
+      if (event.userId === currentUserId && !event.type.startsWith('chat')) return
 
       switch (event.type) {
+        case 'chat_message':
+          handleIncomingMessage(event.payload)
+          break
+        case 'chat_message_updated':
+          handleMessageUpdated(event.payload)
+          break
+        case 'chat_message_deleted':
+          handleMessageDeleted(event.payload)
+          break
         case 'card_created':
           addCardLocally(event.payload)
           break
@@ -1694,6 +1708,15 @@ function App() {
               <div className="flex items-center gap-4">
                 {activeBoard && <SearchBar />}
                 <ActiveTimerIndicator />
+                <button 
+                  onClick={toggleChat}
+                  className="btn btn-ghost btn-circle"
+                >
+                  <div className="indicator">
+                    {unreadTotal > 0 && <span className="indicator-item badge badge-primary badge-sm">{unreadTotal}</span>}
+                    <span className="material-symbols-outlined">chat</span>
+                  </div>
+                </button>
                 <NotificationBell />
                 <PresenceIndicator users={onlineUsers} />
                 <span className="text-xs text-base-content/50">
@@ -1876,6 +1899,7 @@ function App() {
           onClearSelection={clearSelection}
         />
       )}
+      <ChatPanel />
     </div>
   )
 }

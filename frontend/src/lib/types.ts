@@ -344,3 +344,37 @@ export interface Notification {
   actor: { id: number; name: string; avatar_url: string | null } | null
   created_at: string
 }
+
+export interface ChatChannel {
+  id: number
+  name: string | null
+  type: 'group' | 'direct'
+  workspace_id: number | null
+  created_at: string
+  updated_at: string
+}
+
+export interface ChannelWithMeta extends ChatChannel {
+  unread_count: number
+  last_message: ChatMessage | null
+  members: Array<{ id: number; name: string; avatar_url: string | null; email: string }>
+}
+
+export interface ChatMessage {
+  id: number
+  channel_id: number
+  user_id: number
+  content: string
+  mentions: number[]
+  card_links: number[]
+  deleted_at: string | null
+  edited_at: string | null
+  created_at: string
+  updated_at: string
+  user?: {
+    id: number
+    name: string
+    avatar_url: string | null
+    email: string
+  }
+}

@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import type { PresenceUser, WSEvent } from '../lib/types'
 
 interface UseWebSocketOptions {
-  boardId: number
+  boardId?: number
+  chatChannelId?: number | null
   onEvent: (event: WSEvent) => void
   enabled?: boolean
 }
@@ -19,6 +20,7 @@ const BACKOFF_FACTOR = 2
 
 export function useWebSocket({
   boardId,
+  chatChannelId,
   onEvent,
   enabled = true,
 }: UseWebSocketOptions): UseWebSocketReturn {
@@ -36,7 +38,7 @@ export function useWebSocket({
   }, [onEvent])
 
   useEffect(() => {
-    if (!enabled || !boardId) {
+    if (!enabled || (!boardId && !chatChannelId)) {
       if (socketRef.current) {
         socketRef.current.close()
       }
@@ -64,7 +66,12 @@ export function useWebSocket({
         setIsConnected(true)
         attempt = 0
         setReconnectAttempts(0)
-        ws.send(JSON.stringify({ type: 'join_board', boardId }))
+        if (boardId) {
+          ws.send(JSON.stringify({ type: 'join_board', boardId }))
+        }
+        if (chatChannelId) {
+          ws.send(JSON.stringify({ type: 'join_chat', channelId: chatChannelId }))
+        }
       }
 
       ws.onmessage = (event) => {
@@ -111,12 +118,13 @@ export function useWebSocket({
       }
       if (socketRef.current) {
         if (socketRef.current.readyState === WebSocket.OPEN) {
-          socketRef.current.send(JSON.stringify({ type: 'leave_board', boardId }))
+          if (boardId) socketRef.current.send(JSON.stringify({ type: 'leave_board', boardId }))
+          if (chatChannelId) socketRef.current.send(JSON.stringify({ type: 'leave_chat', channelId: chatChannelId }))
         }
         socketRef.current.close()
       }
     }
-  }, [boardId, enabled])
+  }, [boardId, chatChannelId, enabled])
 
   return {
     isConnected,

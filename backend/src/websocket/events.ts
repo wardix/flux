@@ -1,6 +1,9 @@
 // Store active connections per board
 export const boardConnections = new Map<number, Set<any>>()
 
+// Store active connections per chat channel
+export const chatConnections = new Map<number, Set<any>>()
+
 export function handleEvent(ws: any, event: any) {
   if (event.type === 'join_board') {
     const boardId = Number(event.boardId)
@@ -23,6 +26,22 @@ export function handleEvent(ws: any, event: any) {
     const boardId = Number(event.boardId || ws.data.boardId)
     if (boardId) {
       leaveBoard(ws, boardId)
+    }
+  } else if (event.type === 'join_chat') {
+    const channelId = Number(event.channelId)
+    if (ws.data.chatChannelId && ws.data.chatChannelId !== channelId) {
+      leaveChat(ws, ws.data.chatChannelId)
+    }
+    ws.data.chatChannelId = channelId
+    ws.subscribe(`chat:${channelId}`)
+    if (!chatConnections.has(channelId)) {
+      chatConnections.set(channelId, new Set())
+    }
+    chatConnections.get(channelId)!.add(ws)
+  } else if (event.type === 'leave_chat') {
+    const channelId = Number(event.channelId || ws.data.chatChannelId)
+    if (channelId) {
+      leaveChat(ws, channelId)
     }
   }
 }
@@ -65,6 +84,32 @@ export function broadcastPresence(boardId: number) {
 
 export function broadcastToBoard(boardId: number, event: any) {
   const conns = boardConnections.get(boardId)
+  if (!conns) return
+  const msg = JSON.stringify(event)
+  for (const ws of conns) {
+    try {
+      ws.send(msg)
+    } catch (err) {
+      // ignore closed connections
+    }
+  }
+}
+
+export function leaveChat(ws: any, channelId: number) {
+  ws.data.chatChannelId = null
+  ws.unsubscribe(`chat:${channelId}`)
+
+  const conns = chatConnections.get(channelId)
+  if (conns) {
+    conns.delete(ws)
+    if (conns.size === 0) {
+      chatConnections.delete(channelId)
+    }
+  }
+}
+
+export function broadcastToChat(channelId: number, event: any) {
+  const conns = chatConnections.get(channelId)
   if (!conns) return
   const msg = JSON.stringify(event)
   for (const ws of conns) {
