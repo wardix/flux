@@ -49,6 +49,7 @@ import { ShortcutHelpModal } from './components/shared/ShortcutHelpModal'
 import { useUiStore } from './stores/uiStore'
 import { useKeyboardShortcut } from './hooks/useKeyboardShortcut'
 import { BoardShortcuts } from './components/board/BoardShortcuts'
+import { CommandPalette } from './components/shared/CommandPalette'
 
 function decodeToken(token: string | null) {
   if (!token) return null
@@ -246,11 +247,16 @@ function App() {
   const [pendingMutationsCount, setPendingMutationsCount] = useState(0)
   const [isSyncing, setIsSyncing] = useState(false)
 
-  const { isShortcutHelpOpen, closeShortcutHelp, openShortcutHelp } = useUiStore()
+  const { isShortcutHelpOpen, closeShortcutHelp, openShortcutHelp, toggleCommandPalette } = useUiStore()
 
   useKeyboardShortcut('?', () => {
     openShortcutHelp()
   }, { description: 'Show Keyboard Shortcuts', category: 'General', modifiers: { shift: true } })
+
+  useKeyboardShortcut('k', (e) => {
+    e.preventDefault()
+    toggleCommandPalette()
+  }, { description: 'Open command palette', category: 'Navigation', modifiers: { meta: true } })
 
   useEffect(() => {
     const checkQueue = async () => {
@@ -1914,6 +1920,7 @@ function App() {
       )}
       <ChatPanel />
       <ShortcutHelpModal isOpen={isShortcutHelpOpen} onClose={closeShortcutHelp} />
+      <CommandPalette />
     </div>
   )
 }
