@@ -4,6 +4,7 @@ export async function create(data: {
   list_id: number
   title: string
   description?: string
+  description_json?: any
   position?: number
   start_date?: string
   due_date?: string
@@ -23,9 +24,14 @@ export async function create(data: {
     position = maxPosition[0].max !== null ? Number(maxPosition[0].max) + 1 : 0
   }
 
+  let description_text = data.description || null
+  if (data.description_json && !data.description) {
+    description_text = extractTextFromTiptap(data.description_json)
+  }
+
   const result = await db`
-    INSERT INTO cards (list_id, title, description, position, start_date, due_date, assignee_id, story_points, is_recurring)
-    VALUES (${data.list_id}, ${data.title}, ${data.description || null}, ${position}, ${data.start_date || null}, ${data.due_date || null}, ${data.assignee_id || null}, ${data.story_points || null}, ${data.is_recurring || false})
+    INSERT INTO cards (list_id, title, description, description_json, position, start_date, due_date, assignee_id, story_points, is_recurring)
+    VALUES (${data.list_id}, ${data.title}, ${description_text}, ${data.description_json || null}, ${position}, ${data.start_date || null}, ${data.due_date || null}, ${data.assignee_id || null}, ${data.story_points || null}, ${data.is_recurring || false})
     RETURNING *
   `
   return result[0]
@@ -71,6 +77,7 @@ export async function update(
     list_id?: number
     title?: string
     description?: string | null
+    description_json?: any | null
     position?: number
     start_date?: string | null
     due_date?: string | null
@@ -110,12 +117,24 @@ export async function update(
   const deleted_at = data.deleted_at !== undefined ? data.deleted_at : row.deleted_at
   const is_recurring = data.is_recurring !== undefined ? data.is_recurring : row.is_recurring
 
+  let final_description = description
+  const description_json = data.description_json !== undefined ? data.description_json : row.description_json
+
+  if (data.description_json !== undefined) {
+    if (data.description_json) {
+      final_description = extractTextFromTiptap(data.description_json)
+    } else {
+      final_description = null
+    }
+  }
+
   const result = await db`
     UPDATE cards
     SET
       list_id = ${list_id},
       title = ${title},
-      description = ${description},
+      description = ${final_description},
+      description_json = ${description_json},
       position = ${position},
       start_date = ${start_date},
       due_date = ${due_date},
@@ -148,6 +167,26 @@ export async function updatePositions(cards: { id: number; list_id: number; posi
       WHERE id = ${card.id}
     `
   }
+}
+
+export function extractTextFromTiptap(doc: any): string {
+  if (!doc || !doc.content) return ''
+  let text = ''
+  for (const node of doc.content) {
+    if (node.type === 'text') {
+      text += node.text || ''
+    } else if (node.content) {
+      text += extractTextFromTiptap(node) + '\n'
+    } else if (node.type === 'hardBreak') {
+      text += '\n'
+    } else if (node.type === 'image' && node.attrs && node.attrs.alt) {
+      text += `[Image: ${node.attrs.alt}] `
+    } else {
+      // Just add a space for block elements without content if needed, but \n is better handled recursively
+    }
+  }
+  // clean up extra newlines
+  return text.trim().replace(/\n{3,}/g, '\n\n')
 }
 
 export async function remove(id: number) {

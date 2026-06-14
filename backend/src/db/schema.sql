@@ -99,6 +99,7 @@ CREATE TABLE cards (
     list_id INTEGER REFERENCES lists(id) ON DELETE CASCADE,
     title VARCHAR(255) NOT NULL,
     description TEXT,
+    description_json JSONB,
     position INTEGER NOT NULL DEFAULT 0,
     start_date TIMESTAMPTZ DEFAULT NULL,
     due_date TIMESTAMPTZ,
@@ -139,6 +140,7 @@ CREATE INDEX idx_lists_board_id ON lists(board_id);
 CREATE INDEX idx_cards_list_id ON cards(list_id);
 CREATE INDEX idx_cards_assignee_id ON cards(assignee_id);
 CREATE INDEX idx_cards_parent_card_id ON cards(parent_card_id);
+CREATE INDEX idx_cards_description_json ON cards USING GIN (description_json);
 CREATE INDEX idx_labels_board_id ON labels(board_id);
 CREATE INDEX idx_card_labels_label_id ON card_labels(label_id);
 
