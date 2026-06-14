@@ -105,6 +105,33 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
     setSelectedEpicId(card.epic_id ?? null)
   }, [card.epic_id])
 
+  const [isRecurring, setIsRecurring] = useState(card.is_recurring ?? false)
+  const [recurringFrequency, setRecurringFrequency] = useState<'daily' | 'weekly' | 'monthly'>('weekly')
+  const [recurringRuleId, setRecurringRuleId] = useState<number | null>(null)
+
+  const fetchRecurringRule = async () => {
+    try {
+      const res = await api.get<{ data: any }>(`/recurring-tasks/card/${card.id}`)
+      if (res.data) {
+        setIsRecurring(true)
+        setRecurringFrequency(res.data.frequency)
+        setRecurringRuleId(res.data.id)
+      } else {
+        setIsRecurring(false)
+        setRecurringRuleId(null)
+      }
+    } catch (err) {
+      console.error('Failed to fetch recurring task rule:', err)
+    }
+  }
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchRecurringRule()
+    }
+  }, [isOpen])
+
+
 
   useEffect(() => {
     if (activeCardId === card.id) {
@@ -214,17 +241,45 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
     if (selectedEpicId !== card.epic_id) {
       try {
         await api.put(`/cards/${card.id}/epic`, { epic_id: selectedEpicId })
-        const activeBoard = useBoardStore.getState().activeBoard
-        if (activeBoard?.id) {
-          await useBoardStore.getState().fetchBoard(activeBoard.id)
-        }
       } catch (err) {
         console.error('Failed to assign epic:', err)
       }
     }
+
+    // Update Recurrence Task Rule
+    try {
+      if (isRecurring) {
+        if (recurringRuleId) {
+          // Update frequency and set to active
+          await api.put(`/recurring-tasks/${recurringRuleId}`, {
+            frequency: recurringFrequency,
+            is_active: true,
+          })
+        } else {
+          // Create new rule
+          await api.post('/recurring-tasks', {
+            card_id: card.id,
+            frequency: recurringFrequency,
+          })
+        }
+      } else {
+        if (recurringRuleId) {
+          // Disable/Delete rule
+          await api.delete(`/recurring-tasks/${recurringRuleId}`)
+        }
+      }
+    } catch (err) {
+      console.error('Failed to update recurring task rule:', err)
+    }
+
+    const activeBoard = useBoardStore.getState().activeBoard
+    if (activeBoard?.id) {
+      await useBoardStore.getState().fetchBoard(activeBoard.id)
+    }
     
     closeOpenedModal()
   }
+
 
 
   const toggleLabel = async (label: (typeof labels)[0]) => {
@@ -365,12 +420,43 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
           )}
 
 
+          {!card.parent_card_id && (
+            <div className="border border-base-200 rounded-lg p-3 bg-base-50 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-base-content/60 font-bold uppercase">🔁 Recurring Task</span>
+                <input
+                  type="checkbox"
+                  checked={isRecurring}
+                  onChange={(e) => setIsRecurring(e.target.checked)}
+                  disabled={isObserver}
+                  className="toggle toggle-primary toggle-sm"
+                />
+              </div>
+              {isRecurring && (
+                <div className="space-y-1">
+                  <span className="text-[10px] text-base-content/50 uppercase block">Frequency</span>
+                  <select
+                    value={recurringFrequency}
+                    onChange={(e: any) => setRecurringFrequency(e.target.value)}
+                    disabled={isObserver}
+                    className="select select-bordered select-xs w-full"
+                  >
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                  </select>
+                </div>
+              )}
+            </div>
+          )}
+
           <div>
             <span className="text-xs text-base-content/50 font-bold uppercase block mb-1">
               Story Points
             </span>
             <StoryPointPicker value={storyPoints} onChange={setStoryPoints} disabled={isObserver} />
           </div>
+
 
           {!card.parent_card_id && (
             <>
@@ -604,6 +690,16 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
             <EpicBadge title="Epic" color="#6366f1" />
           </div>
         )}
+
+        {/* Recurring Badge preview */}
+        {card.is_recurring && (
+          <div className="flex">
+            <span className="badge badge-sm badge-info text-white text-[10px] uppercase font-bold tracking-wider">
+              🔁 Recurring
+            </span>
+          </div>
+        )}
+
 
 
         <div className="flex items-start justify-between">

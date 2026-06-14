@@ -1,4 +1,5 @@
 -- Drop tables if they exist (for easy migration reset)
+DROP TABLE IF EXISTS recurring_tasks CASCADE;
 DROP TABLE IF EXISTS epics CASCADE;
 DROP TABLE IF EXISTS sprints CASCADE;
 DROP TABLE IF EXISTS automation_rules CASCADE;
@@ -392,6 +393,25 @@ CREATE INDEX idx_epics_status ON epics(status);
 -- Alter cards table to add epic_id references epics(id) ON DELETE SET NULL
 ALTER TABLE cards ADD COLUMN epic_id INTEGER REFERENCES epics(id) ON DELETE SET NULL;
 CREATE INDEX idx_cards_epic_id ON cards(epic_id);
+
+-- Alter cards table to add is_recurring
+ALTER TABLE cards ADD COLUMN is_recurring BOOLEAN NOT NULL DEFAULT FALSE;
+
+-- Recurring Tasks Table
+CREATE TABLE recurring_tasks (
+    id SERIAL PRIMARY KEY,
+    card_id INTEGER NOT NULL REFERENCES cards(id) ON DELETE CASCADE,
+    frequency VARCHAR(50) NOT NULL, -- 'daily', 'weekly', 'monthly'
+    next_run TIMESTAMPTZ NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TRIGGER update_recurring_tasks_updated_at BEFORE UPDATE ON recurring_tasks FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE INDEX idx_recurring_tasks_card_id ON recurring_tasks(card_id);
+CREATE INDEX idx_recurring_tasks_next_run ON recurring_tasks(next_run);
+
 
 
 

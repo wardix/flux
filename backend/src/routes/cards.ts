@@ -92,6 +92,7 @@ const createCardRoute = createRoute({
         'application/json': {
           schema: CreateCardRequest.extend({
             story_points: z.number().nullable().optional().openapi({ example: 5 }),
+            is_recurring: z.boolean().optional(),
           }),
         },
       },
@@ -230,6 +231,7 @@ const updateCardRoute = createRoute({
             story_points: z.number().nullable().optional().openapi({ example: 8 }),
             archived_at: z.string().nullable().optional(),
             deleted_at: z.string().nullable().optional(),
+            is_recurring: z.boolean().optional(),
           }),
         },
       },

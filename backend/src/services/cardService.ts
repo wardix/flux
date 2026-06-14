@@ -8,6 +8,7 @@ export async function create(data: {
   due_date?: string
   assignee_id?: number
   story_points?: number
+  is_recurring?: boolean
 }) {
   let position = data.position
   if (position === undefined) {
@@ -17,8 +18,8 @@ export async function create(data: {
   }
 
   const result = await db`
-    INSERT INTO cards (list_id, title, description, position, due_date, assignee_id, story_points)
-    VALUES (${data.list_id}, ${data.title}, ${data.description || null}, ${position}, ${data.due_date || null}, ${data.assignee_id || null}, ${data.story_points || null})
+    INSERT INTO cards (list_id, title, description, position, due_date, assignee_id, story_points, is_recurring)
+    VALUES (${data.list_id}, ${data.title}, ${data.description || null}, ${position}, ${data.due_date || null}, ${data.assignee_id || null}, ${data.story_points || null}, ${data.is_recurring || false})
     RETURNING *
   `
   return result[0]
@@ -71,7 +72,9 @@ export async function update(
     story_points?: number | null
     archived_at?: string | null
     deleted_at?: string | null
+    is_recurring?: boolean
   },
+
 ) {
   const current = await db`SELECT * FROM cards WHERE id = ${id}`
   if (current.length === 0) return null
@@ -88,6 +91,8 @@ export async function update(
   const story_points = data.story_points !== undefined ? data.story_points : row.story_points
   const archived_at = data.archived_at !== undefined ? data.archived_at : row.archived_at
   const deleted_at = data.deleted_at !== undefined ? data.deleted_at : row.deleted_at
+  const is_recurring = data.is_recurring !== undefined ? data.is_recurring : row.is_recurring
+
 
   const result = await db`
     UPDATE cards
@@ -100,6 +105,7 @@ export async function update(
       assignee_id = ${assignee_id},
       parent_card_id = ${parent_card_id},
       story_points = ${story_points},
+      is_recurring = ${is_recurring},
       archived_at = ${archived_at},
       deleted_at = ${deleted_at},
       updated_at = NOW()

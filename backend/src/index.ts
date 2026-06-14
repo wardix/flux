@@ -1,6 +1,6 @@
 import { OpenAPIHono } from '@hono/zod-openapi'
 import { cors } from 'hono/cors'
-import { cleanOldTrash, db } from './db'
+import { cleanOldTrash, db, startRecurringTasksScheduler } from './db'
 import { verify } from 'hono/jwt'
 import { websocket } from './websocket'
 import { authRoutes } from './routes/auth'
@@ -30,11 +30,14 @@ import { boardCustomFieldRoutes, cardCustomFieldRoutes } from './routes/customFi
 import { automationRoutes } from './routes/automations'
 import { sprintRoutes } from './routes/sprints'
 import { epicRoutes } from './routes/epics'
+import { recurringRoutes } from './routes/recurring'
+
 
 
 
 // Trigger database old trash clean up on server startup
 cleanOldTrash().catch((err) => console.error('Trash cleanup failed:', err))
+startRecurringTasksScheduler()
 
 const app = new OpenAPIHono()
 
@@ -85,6 +88,8 @@ app.route('/api/cards/:cardId/custom-fields', cardCustomFieldRoutes)
 app.route('/api/boards/:boardId/automations', automationRoutes)
 app.route('/api/boards/:boardId/sprints', sprintRoutes)
 app.route('/api/workspaces/:workspaceId/epics', epicRoutes)
+app.route('/api/recurring-tasks', recurringRoutes)
+
 
 
 
