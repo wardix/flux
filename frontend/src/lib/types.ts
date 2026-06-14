@@ -245,3 +245,40 @@ export interface CardMirror {
   mirror_list_title?: string
   source_board_title?: string
 }
+
+export interface Goal {
+  id: number
+  workspace_id: number
+  parent_id: number | null
+  title: string
+  description: string | null
+  type: 'objective' | 'key_result'
+  status: 'active' | 'completed' | 'cancelled'
+  target_value: number | null
+  current_value: number
+  unit: string | null
+  due_date: string | null
+  color: string | null
+  progress: number
+  created_by: number
+  created_at: string
+  updated_at: string
+}
+
+export interface GoalWithKeyResults extends Goal {
+  key_results: Goal[]
+  linked_cards_count?: number
+  completed_cards_count?: number
+}
+
+export interface CreateGoalRequest {
+  workspace_id: number
+  parent_id?: number | null
+  title: string
+  description?: string
+  type: 'objective' | 'key_result'
+  target_value?: number
+  unit?: string
+  due_date?: string
+  color?: string
+}
