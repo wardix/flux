@@ -20,9 +20,10 @@ interface Checklist {
 interface CardChecklistsProps {
   cardId: number
   onProgressChange: () => void
+  disabled?: boolean
 }
 
-export function CardChecklists({ cardId, onProgressChange }: CardChecklistsProps) {
+export function CardChecklists({ cardId, onProgressChange, disabled = false }: CardChecklistsProps) {
   const [checklists, setChecklists] = useState<Checklist[]>([])
   const [newChecklistTitle, setNewChecklistTitle] = useState('')
   const [newItemTitles, setNewItemTitles] = useState<{ [key: number]: string }>({})
@@ -153,26 +154,30 @@ export function CardChecklists({ cardId, onProgressChange }: CardChecklistsProps
               ) : (
                 <div className="flex items-center gap-2">
                   <h4 className="font-bold text-sm text-base-content/85">📋 {checklist.title}</h4>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEditingChecklistId(checklist.id)
-                      setEditingChecklistTitle(checklist.title)
-                    }}
-                    className="btn btn-ghost btn-xs text-base-content/40 hover:text-primary"
-                  >
-                    Edit
-                  </button>
+                  {!disabled && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingChecklistId(checklist.id)
+                        setEditingChecklistTitle(checklist.title)
+                      }}
+                      className="btn btn-ghost btn-xs text-base-content/40 hover:text-primary"
+                    >
+                      Edit
+                    </button>
+                  )}
                 </div>
               )}
 
-              <button
-                type="button"
-                onClick={() => handleDeleteChecklist(checklist.id)}
-                className="btn btn-ghost btn-xs text-error hover:bg-error/15 rounded-md"
-              >
-                Delete
-              </button>
+              {!disabled && (
+                <button
+                  type="button"
+                  onClick={() => handleDeleteChecklist(checklist.id)}
+                  className="btn btn-ghost btn-xs text-error hover:bg-error/15 rounded-md"
+                >
+                  Delete
+                </button>
+              )}
             </div>
 
             {/* Progress bar */}
@@ -201,6 +206,7 @@ export function CardChecklists({ cardId, onProgressChange }: CardChecklistsProps
                     <input
                       type="checkbox"
                       checked={item.is_completed}
+                      disabled={disabled}
                       onChange={(e) => handleToggleItem(checklist.id, item.id, e.target.checked)}
                       className="checkbox checkbox-success checkbox-sm rounded"
                     />
@@ -214,54 +220,61 @@ export function CardChecklists({ cardId, onProgressChange }: CardChecklistsProps
                       {item.title}
                     </span>
                   </label>
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteItem(checklist.id, item.id)}
-                    className="btn btn-ghost btn-xs btn-circle text-error/60 opacity-0 group-hover:opacity-100 hover:bg-error/10 transition-opacity"
-                  >
-                    ✕
-                  </button>
+                  {!disabled && (
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteItem(checklist.id, item.id)}
+                      className="btn btn-ghost btn-xs btn-circle text-error/60 opacity-0 group-hover:opacity-100 hover:bg-error/10 transition-opacity"
+                    >
+                      ✕
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
 
             {/* Add new item */}
-            <div className="flex gap-2 pt-2">
-              <input
-                type="text"
-                placeholder="Add item..."
-                value={newItemTitles[checklist.id] || ''}
-                onChange={(e) =>
-                  setNewItemTitles({ ...newItemTitles, [checklist.id]: e.target.value })
-                }
-                onKeyDown={(e) => e.key === 'Enter' && handleAddItem(checklist.id)}
-                className="input input-bordered input-sm flex-1 focus:outline-none"
-              />
-              <button
-                type="button"
-                onClick={() => handleAddItem(checklist.id)}
-                className="btn btn-success btn-outline btn-sm"
-              >
-                Add
-              </button>
-            </div>
+            {!disabled && (
+              <div className="flex gap-2 pt-2">
+                <input
+                  type="text"
+                  placeholder="Add item..."
+                  value={newItemTitles[checklist.id] || ''}
+                  onChange={(e) =>
+                    setNewItemTitles({ ...newItemTitles, [checklist.id]: e.target.value })
+                  }
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddItem(checklist.id)}
+                  className="input input-bordered input-sm flex-1 focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleAddItem(checklist.id)}
+                  className="btn btn-success btn-outline btn-sm"
+                >
+                  Add
+                </button>
+              </div>
+            )}
           </div>
         )
       })}
 
       {/* Add New Checklist Form */}
-      <form onSubmit={handleAddChecklist} className="flex gap-2 bg-base-100 p-2 border border-dashed border-base-300 rounded-xl">
-        <input
-          type="text"
-          placeholder="New Checklist title..."
-          value={newChecklistTitle}
-          onChange={(e) => setNewChecklistTitle(e.target.value)}
-          className="input input-bordered input-sm flex-1 focus:outline-none"
-        />
-        <button type="submit" className="btn btn-primary btn-sm">
-          ➕ Add Checklist
-        </button>
-      </form>
+      {!disabled && (
+        <form onSubmit={handleAddChecklist} className="flex gap-2 bg-base-100 p-2 border border-dashed border-base-300 rounded-xl">
+          <input
+            type="text"
+            placeholder="New Checklist title..."
+            value={newChecklistTitle}
+            onChange={(e) => setNewChecklistTitle(e.target.value)}
+            className="input input-bordered input-sm flex-1 focus:outline-none"
+          />
+          <button type="submit" className="btn btn-primary btn-sm">
+            ➕ Add Checklist
+          </button>
+        </form>
+      )}
     </div>
   )
 }
+

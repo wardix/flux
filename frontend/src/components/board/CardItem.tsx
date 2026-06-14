@@ -49,11 +49,20 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
   const activeCardId = useBoardStore((s) => s.activeCardId)
   const setActiveCardId = useBoardStore((s) => s.setActiveCardId)
 
+  const userRole = useBoardStore((s) => s.userRole)
+  const isObserver = userRole === 'observer'
+  const boardMembers = useBoardStore((s) => s.boardMembers)
+  const [assigneeId, setAssigneeId] = useState<number | null>(card.assignee_id ?? null)
+
   useEffect(() => {
     if (activeCardId === card.id) {
       setIsOpen(true)
     }
   }, [activeCardId, card.id])
+
+  useEffect(() => {
+    setAssigneeId(card.assignee_id ?? null)
+  }, [card.assignee_id])
 
   const closeOpenedModal = () => {
     setIsOpen(false)
@@ -141,6 +150,7 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
       description: description || null,
       due_date: dueDate ? new Date(dueDate).toISOString() : null,
       story_points: storyPoints,
+      assignee_id: assigneeId,
     })
     closeOpenedModal()
   }
@@ -164,7 +174,7 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
         >
           ✕
         </button>
-        <h3 className="font-bold text-lg text-primary">Edit Card Details</h3>
+        <h3 className="font-bold text-lg text-primary">{isObserver ? 'Card Details (Read-only)' : 'Edit Card Details'}</h3>
 
         <div className="space-y-3">
           <div>
@@ -175,6 +185,7 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
+              disabled={isObserver}
               className="input input-bordered input-sm w-full focus:outline-none focus:input-primary"
             />
           </div>
@@ -184,15 +195,17 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
               <span className="text-xs text-base-content/50 font-bold uppercase">
                 Description (Markdown)
               </span>
-              <button
-                type="button"
-                onClick={() => setIsEditingDescription(!isEditingDescription)}
-                className="text-xs text-primary hover:underline font-semibold"
-              >
-                {isEditingDescription ? '👁️ Preview' : '✏️ Edit'}
-              </button>
+              {!isObserver && (
+                <button
+                  type="button"
+                  onClick={() => setIsEditingDescription(!isEditingDescription)}
+                  className="text-xs text-primary hover:underline font-semibold"
+                >
+                  {isEditingDescription ? '👁️ Preview' : '✏️ Edit'}
+                </button>
+              )}
             </div>
-            {isEditingDescription ? (
+            {isEditingDescription && !isObserver ? (
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -204,10 +217,10 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
                 role="button"
                 tabIndex={0}
                 className="border border-base-200 rounded-lg p-3 bg-base-50 min-h-[6rem] hover:bg-base-100 transition-colors cursor-pointer"
-                onClick={() => setIsEditingDescription(true)}
-                onKeyDown={(e) => e.key === 'Enter' && setIsEditingDescription(true)}
+                onClick={() => !isObserver && setIsEditingDescription(true)}
+                onKeyDown={(e) => e.key === 'Enter' && !isObserver && setIsEditingDescription(true)}
               >
-                <MarkdownRenderer content={description || '*Tidak ada deskripsi. Klik untuk menulis.*'} />
+                <MarkdownRenderer content={description || (isObserver ? '*Tidak ada deskripsi.*' : '*Tidak ada deskripsi. Klik untuk menulis.*')} />
               </div>
             )}
           </div>
@@ -221,6 +234,7 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
               onAdd={handleAddSubtask}
               onToggle={handleToggleSubtask}
               onDelete={handleDeleteSubtask}
+              disabled={isObserver}
             />
           )}
 
@@ -233,8 +247,27 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
                 type="date"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
+                disabled={isObserver}
                 className="input input-bordered input-sm w-full focus:outline-none"
               />
+            </div>
+            <div>
+              <span className="text-xs text-base-content/50 font-bold uppercase block mb-1">
+                Assignee
+              </span>
+              <select
+                value={assigneeId ?? ''}
+                onChange={(e) => setAssigneeId(e.target.value ? Number(e.target.value) : null)}
+                disabled={isObserver}
+                className="select select-bordered select-sm w-full focus:outline-none focus:select-primary"
+              >
+                <option value="">Unassigned</option>
+                {boardMembers.map((member) => (
+                  <option key={member.user_id} value={member.user_id}>
+                    {member.email} ({member.role})
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 
@@ -242,7 +275,7 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
             <span className="text-xs text-base-content/50 font-bold uppercase block mb-1">
               Story Points
             </span>
-            <StoryPointPicker value={storyPoints} onChange={setStoryPoints} />
+            <StoryPointPicker value={storyPoints} onChange={setStoryPoints} disabled={isObserver} />
           </div>
 
           {!card.parent_card_id && (
@@ -253,6 +286,7 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
                 </span>
                 <CardChecklists
                   cardId={card.id}
+                  disabled={isObserver}
                   onProgressChange={async () => {
                     const activeBoard = useBoardStore.getState().activeBoard
                     if (activeBoard?.id) {
@@ -268,6 +302,7 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
                 </span>
                 <CardAttachments
                   cardId={card.id}
+                  disabled={isObserver}
                   onCoverChange={async () => {
                     const activeBoard = useBoardStore.getState().activeBoard
                     if (activeBoard?.id) {
@@ -291,7 +326,8 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
                   <button
                     key={l.id}
                     type="button"
-                    onClick={() => toggleLabel(l)}
+                    onClick={() => !isObserver && toggleLabel(l)}
+                    disabled={isObserver}
                     style={{
                       backgroundColor: active ? l.color : undefined,
                       borderColor: l.color,
@@ -313,6 +349,7 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
             </span>
             <CardComments
               cardId={card.id}
+              disabled={isObserver}
               onCommentsChange={() => setRefreshActivitiesTrigger((t) => t + 1)}
             />
           </div>
@@ -329,23 +366,35 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
         </div>
 
         <div className="modal-action flex justify-between items-center w-full">
-          <button
-            type="button"
-            onClick={async () => {
-              await archiveCard(card.id)
-              closeOpenedModal()
-            }}
-            className="btn btn-warning btn-sm btn-outline gap-1"
-          >
-            📦 Archive
-          </button>
+          {!isObserver ? (
+            <button
+              type="button"
+              onClick={async () => {
+                await archiveCard(card.id)
+                closeOpenedModal()
+              }}
+              className="btn btn-warning btn-sm btn-outline gap-1"
+            >
+              📦 Archive
+            </button>
+          ) : (
+            <div />
+          )}
           <div className="flex gap-2">
-            <button type="button" onClick={handleUpdate} className="btn btn-primary btn-sm px-6">
-              Save
-            </button>
-            <button type="button" onClick={closeOpenedModal} className="btn btn-ghost btn-sm">
-              Cancel
-            </button>
+            {!isObserver ? (
+              <>
+                <button type="button" onClick={handleUpdate} className="btn btn-primary btn-sm px-6">
+                  Save
+                </button>
+                <button type="button" onClick={closeOpenedModal} className="btn btn-ghost btn-sm">
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <button type="button" onClick={closeOpenedModal} className="btn btn-primary btn-sm px-6">
+                Close
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -460,9 +509,18 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
               />
             )}
           </div>
-          {card.story_points !== null && card.story_points !== undefined && (
-            <StoryPointBadge points={card.story_points} />
-          )}
+          <div className="flex items-center gap-1.5">
+            {card.assignee_avatar && (
+              <div className="avatar" title={card.assignee_email || 'Assigned User'}>
+                <div className="w-5 h-5 rounded-full ring ring-primary ring-offset-base-100 ring-offset-1">
+                  <img src={card.assignee_avatar} alt="Avatar" />
+                </div>
+              </div>
+            )}
+            {card.story_points !== null && card.story_points !== undefined && (
+              <StoryPointBadge points={card.story_points} />
+            )}
+          </div>
         </div>
       </div>
       {isOpen && renderModal()}

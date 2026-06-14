@@ -29,6 +29,8 @@ export function BoardColumn({ list }: BoardColumnProps) {
   }
 
   const totalStoryPoints = list.cards?.reduce((sum, card) => sum + (card.story_points || 0), 0) || 0
+  const userRole = useBoardStore((s) => s.userRole)
+  const isObserver = userRole === 'observer'
 
   return (
     <div className="flex flex-col bg-base-200/60 border border-base-200 w-80 rounded-2xl p-4 max-h-[80vh] shadow-sm">
@@ -39,36 +41,38 @@ export function BoardColumn({ list }: BoardColumnProps) {
             {totalStoryPoints > 0 && ` • ${totalStoryPoints} pts`}
           </h3>
         </div>
-        <div className="dropdown dropdown-end">
-          <button
-            type="button"
-            tabIndex={0}
-            className="btn btn-ghost btn-xs btn-circle text-base-content/40 hover:text-base-content/85"
-            title="Column Options"
-          >
-            ⋮
-          </button>
-          <ul className="dropdown-content menu p-2 shadow-lg bg-base-200 rounded-box w-40 z-[2] border border-base-300 gap-1 mt-1">
-            <li>
-              <button
-                type="button"
-                onClick={() => archiveList(list.id)}
-                className="text-warning text-xs font-semibold py-1.5"
-              >
-                📦 Archive List
-              </button>
-            </li>
-            <li>
-              <button
-                type="button"
-                onClick={() => deleteList(list.id)}
-                className="text-error text-xs font-semibold py-1.5"
-              >
-                🗑️ Delete List
-              </button>
-            </li>
-          </ul>
-        </div>
+        {!isObserver && (
+          <div className="dropdown dropdown-end">
+            <button
+              type="button"
+              tabIndex={0}
+              className="btn btn-ghost btn-xs btn-circle text-base-content/40 hover:text-base-content/85"
+              title="Column Options"
+            >
+              ⋮
+            </button>
+            <ul className="dropdown-content menu p-2 shadow-lg bg-base-200 rounded-box w-40 z-[2] border border-base-300 gap-1 mt-1">
+              <li>
+                <button
+                  type="button"
+                  onClick={() => archiveList(list.id)}
+                  className="text-warning text-xs font-semibold py-1.5"
+                >
+                  📦 Archive List
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={() => deleteList(list.id)}
+                  className="text-error text-xs font-semibold py-1.5"
+                >
+                  🗑️ Delete List
+                </button>
+              </li>
+            </ul>
+          </div>
+        )}
       </div>
 
       <div ref={setNodeRef} className="flex-1 overflow-y-auto py-3 space-y-3 scrollbar-thin">
@@ -83,7 +87,7 @@ export function BoardColumn({ list }: BoardColumnProps) {
       </div>
 
       <div className="pt-2">
-        {isAdding ? (
+        {isAdding && !isObserver ? (
           <form onSubmit={handleCreateCard} className="space-y-2">
             <input
               type="text"
@@ -109,13 +113,15 @@ export function BoardColumn({ list }: BoardColumnProps) {
             </div>
           </form>
         ) : (
-          <button
-            type="button"
-            onClick={() => setIsAdding(true)}
-            className="btn btn-ghost btn-sm btn-block text-primary/80 hover:text-primary hover:bg-primary/10 border border-dashed border-primary/20 hover:border-primary/40 rounded-xl"
-          >
-            + Add Card
-          </button>
+          !isObserver && (
+            <button
+              type="button"
+              onClick={() => setIsAdding(true)}
+              className="btn btn-ghost btn-sm btn-block text-primary/80 hover:text-primary hover:bg-primary/10 border border-dashed border-primary/20 hover:border-primary/40 rounded-xl"
+            >
+              + Add Card
+            </button>
+          )
         )}
       </div>
     </div>

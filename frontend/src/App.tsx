@@ -37,6 +37,9 @@ function App() {
     deleteCardPermanently,
     deleteListPermanently,
     deleteBoard,
+    boardMembers,
+    userRole,
+    inviteBoardMember,
   } = useBoardStore()
 
   const [newBoardTitle, setNewBoardTitle] = useState('')
@@ -134,6 +137,7 @@ function App() {
   }
 
   const handleDragEnd = async (event: DragEndEvent) => {
+    if (userRole === 'observer') return
     const { active, over } = event
     if (!over) return
 
@@ -503,52 +507,55 @@ function App() {
                     <button
                       type="button"
                       tabIndex={0}
+                      disabled={userRole === 'observer'}
                       className="btn btn-outline btn-xs uppercase tracking-wider font-semibold"
                     >
                       👁️ {activeBoard.visibility}
                     </button>
-                    <ul className="dropdown-content menu bg-base-200 rounded-box z-[1] w-40 p-2 shadow-lg gap-1 border border-base-300 mt-1">
-                      <li>
-                        <button
-                          type="button"
-                          onClick={() => updateBoardVisibility(activeBoard.id, 'private')}
-                          className={activeBoard.visibility === 'private' ? 'active' : ''}
-                        >
-                          Private
-                        </button>
-                      </li>
-                      <li>
-                        <button
-                          type="button"
-                          onClick={() => updateBoardVisibility(activeBoard.id, 'workspace-only')}
-                          className={activeBoard.visibility === 'workspace-only' ? 'active' : ''}
-                        >
-                          Workspace Only
-                        </button>
-                      </li>
-                      <li>
-                        <button
-                          type="button"
-                          onClick={() => updateBoardVisibility(activeBoard.id, 'public')}
-                          className={activeBoard.visibility === 'public' ? 'active' : ''}
-                        >
-                          Public
-                        </button>
-                      </li>
-                      <li className="border-t border-base-300 mt-1 pt-1">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (confirm('Move this board to Trash?')) {
-                              deleteBoard(activeBoard.id)
-                            }
-                          }}
-                          className="text-error font-semibold hover:bg-error/10"
-                        >
-                          🗑️ Delete Board
-                        </button>
-                      </li>
-                    </ul>
+                    {userRole !== 'observer' && (
+                      <ul className="dropdown-content menu bg-base-200 rounded-box z-[1] w-40 p-2 shadow-lg gap-1 border border-base-300 mt-1">
+                        <li>
+                          <button
+                            type="button"
+                            onClick={() => updateBoardVisibility(activeBoard.id, 'private')}
+                            className={activeBoard.visibility === 'private' ? 'active' : ''}
+                          >
+                            Private
+                          </button>
+                        </li>
+                        <li>
+                          <button
+                            type="button"
+                            onClick={() => updateBoardVisibility(activeBoard.id, 'workspace-only')}
+                            className={activeBoard.visibility === 'workspace-only' ? 'active' : ''}
+                          >
+                            Workspace Only
+                          </button>
+                        </li>
+                        <li>
+                          <button
+                            type="button"
+                            onClick={() => updateBoardVisibility(activeBoard.id, 'public')}
+                            className={activeBoard.visibility === 'public' ? 'active' : ''}
+                          >
+                            Public
+                          </button>
+                        </li>
+                        <li className="border-t border-base-300 mt-1 pt-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (confirm('Move this board to Trash?')) {
+                                deleteBoard(activeBoard.id)
+                              }
+                            }}
+                            className="text-error font-semibold hover:bg-error/10"
+                          >
+                            🗑️ Delete Board
+                          </button>
+                        </li>
+                      </ul>
+                    )}
                   </div>
                 )}
 
@@ -580,39 +587,41 @@ function App() {
                           <span className="text-xs text-base-content/40">No labels created</span>
                         )}
                       </div>
-                      <form
-                        onSubmit={(e) => {
-                          e.preventDefault()
-                          const form = e.currentTarget
-                          const name = (form.elements.namedItem('labelName') as HTMLInputElement).value
-                          const color = (form.elements.namedItem('labelColor') as HTMLInputElement)
-                            .value
-                          if (name && color) {
-                            createLabel(activeBoard.id, name, color)
-                            form.reset()
-                          }
-                        }}
-                        className="space-y-2 pt-2 border-t border-base-300"
-                      >
-                        <input
-                          name="labelName"
-                          type="text"
-                          placeholder="New label name..."
-                          className="input input-xs input-bordered w-full focus:outline-none"
-                          required
-                        />
-                        <div className="flex items-center justify-between gap-2">
+                      {userRole !== 'observer' && (
+                        <form
+                          onSubmit={(e) => {
+                            e.preventDefault()
+                            const form = e.currentTarget
+                            const name = (form.elements.namedItem('labelName') as HTMLInputElement).value
+                            const color = (form.elements.namedItem('labelColor') as HTMLInputElement)
+                              .value
+                            if (name && color) {
+                              createLabel(activeBoard.id, name, color)
+                              form.reset()
+                            }
+                          }}
+                          className="space-y-2 pt-2 border-t border-base-300"
+                        >
                           <input
-                            name="labelColor"
-                            type="color"
-                            defaultValue="#4f46e5"
-                            className="w-8 h-6 rounded cursor-pointer border-none bg-transparent"
+                            name="labelName"
+                            type="text"
+                            placeholder="New label name..."
+                            className="input input-xs input-bordered w-full focus:outline-none"
+                            required
                           />
-                          <button type="submit" className="btn btn-primary btn-xs flex-1 text-white">
-                            Add Label
-                          </button>
-                        </div>
-                      </form>
+                          <div className="flex items-center justify-between gap-2">
+                            <input
+                              name="labelColor"
+                              type="color"
+                              defaultValue="#4f46e5"
+                              className="w-8 h-6 rounded cursor-pointer border-none bg-transparent"
+                            />
+                            <button type="submit" className="btn btn-primary btn-xs flex-1 text-white">
+                              Add Label
+                            </button>
+                          </div>
+                        </form>
+                      )}
                     </div>
                   </div>
                 )}
@@ -643,16 +652,18 @@ function App() {
                               className="flex items-center justify-between gap-2 bg-base-100 p-1.5 rounded border border-base-300"
                             >
                               <span className="text-xs truncate font-medium">{l.title}</span>
-                              <button
-                                type="button"
-                                onClick={async () => {
-                                  await restoreList(l.id)
-                                  loadArchive()
-                                }}
-                                className="btn btn-xs btn-primary text-white"
-                              >
-                                Restore
-                              </button>
+                              {userRole !== 'observer' && (
+                                <button
+                                  type="button"
+                                  onClick={async () => {
+                                    await restoreList(l.id)
+                                    loadArchive()
+                                  }}
+                                  className="btn btn-xs btn-primary text-white"
+                                >
+                                  Restore
+                                </button>
+                              )}
                             </div>
                           ))}
                         </div>
@@ -668,16 +679,18 @@ function App() {
                               className="flex items-center justify-between gap-2 bg-base-100 p-1.5 rounded border border-base-300"
                             >
                               <span className="text-xs truncate font-medium">{c.title}</span>
-                              <button
-                                type="button"
-                                onClick={async () => {
-                                  await restoreCard(c.id)
-                                  loadArchive()
-                                }}
-                                className="btn btn-xs btn-primary text-white"
-                              >
-                                Restore
-                              </button>
+                              {userRole !== 'observer' && (
+                                <button
+                                  type="button"
+                                  onClick={async () => {
+                                    await restoreCard(c.id)
+                                    loadArchive()
+                                  }}
+                                  className="btn btn-xs btn-primary text-white"
+                                >
+                                  Restore
+                                </button>
+                              )}
                             </div>
                           ))}
                         </div>
@@ -718,30 +731,32 @@ function App() {
                               className="flex items-center justify-between gap-2 bg-base-100 p-1.5 rounded border border-base-300"
                             >
                               <span className="text-xs truncate font-medium">{l.title}</span>
-                              <div className="flex gap-1">
-                                <button
-                                  type="button"
-                                  onClick={async () => {
-                                    await restoreList(l.id)
-                                    loadTrash()
-                                  }}
-                                  className="btn btn-xs btn-primary text-white"
-                                >
-                                  Restore
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={async () => {
-                                    if (confirm('Permanently delete list and all its cards?')) {
-                                      await deleteListPermanently(l.id)
+                              {userRole !== 'observer' && (
+                                <div className="flex gap-1">
+                                  <button
+                                    type="button"
+                                    onClick={async () => {
+                                      await restoreList(l.id)
                                       loadTrash()
-                                    }
-                                  }}
-                                  className="btn btn-xs btn-error text-white"
-                                >
-                                  Delete
-                                </button>
-                              </div>
+                                    }}
+                                    className="btn btn-xs btn-primary text-white"
+                                  >
+                                    Restore
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={async () => {
+                                      if (confirm('Permanently delete list and all its cards?')) {
+                                        await deleteListPermanently(l.id)
+                                        loadTrash()
+                                      }
+                                    }}
+                                    className="btn btn-xs btn-error text-white"
+                                  >
+                                    Delete
+                                  </button>
+                                </div>
+                              )}
                             </div>
                           ))}
                         </div>
@@ -757,30 +772,32 @@ function App() {
                               className="flex items-center justify-between gap-2 bg-base-100 p-1.5 rounded border border-base-300"
                             >
                               <span className="text-xs truncate font-medium">{c.title}</span>
-                              <div className="flex gap-1">
-                                <button
-                                  type="button"
-                                  onClick={async () => {
-                                    await restoreCard(c.id)
-                                    loadTrash()
-                                  }}
-                                  className="btn btn-xs btn-primary text-white"
-                                >
-                                  Restore
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={async () => {
-                                    if (confirm('Permanently delete card?')) {
-                                      await deleteCardPermanently(c.id)
+                              {userRole !== 'observer' && (
+                                <div className="flex gap-1">
+                                  <button
+                                    type="button"
+                                    onClick={async () => {
+                                      await restoreCard(c.id)
                                       loadTrash()
-                                    }
-                                  }}
-                                  className="btn btn-xs btn-error text-white"
-                                >
-                                  Delete
-                                </button>
-                              </div>
+                                    }}
+                                    className="btn btn-xs btn-primary text-white"
+                                  >
+                                    Restore
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={async () => {
+                                      if (confirm('Permanently delete card?')) {
+                                        await deleteCardPermanently(c.id)
+                                        loadTrash()
+                                      }
+                                    }}
+                                    className="btn btn-xs btn-error text-white"
+                                  >
+                                    Delete
+                                  </button>
+                                </div>
+                              )}
                             </div>
                           ))}
                         </div>
@@ -790,6 +807,77 @@ function App() {
                         <span className="text-xs text-base-content/40 py-2 text-center">
                           Trash is empty
                         </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Board Members & Roles Selector */}
+                {activeBoard && (
+                  <div className="dropdown dropdown-bottom">
+                    <button
+                      type="button"
+                      tabIndex={0}
+                      className="btn btn-outline btn-xs gap-1 font-semibold uppercase tracking-wider"
+                    >
+                      👥 Members ({boardMembers.length})
+                    </button>
+                    <div className="dropdown-content menu bg-base-200 rounded-box z-[1] w-72 p-3 shadow-lg gap-2 border border-base-300 mt-1 max-h-[350px] overflow-y-auto">
+                      <span className="text-[10px] font-bold text-base-content/50 uppercase tracking-wide">
+                        Board Members
+                      </span>
+                      <div className="space-y-1.5 py-1">
+                        {boardMembers.map((member) => (
+                          <div key={member.user_id} className="flex items-center justify-between text-xs bg-base-100 p-1.5 rounded border border-base-300">
+                            <span className="truncate max-w-[150px]" title={member.email}>{member.email}</span>
+                            <span className="badge badge-xs uppercase font-bold">{member.role}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {userRole === 'admin' && (
+                        <form
+                          onSubmit={async (e) => {
+                            e.preventDefault()
+                            const form = e.currentTarget
+                            const email = (form.elements.namedItem('inviteEmail') as HTMLInputElement).value
+                            const role = (form.elements.namedItem('inviteRole') as HTMLSelectElement).value
+                            if (email && role) {
+                              try {
+                                await inviteBoardMember(activeBoard.id, email, role)
+                                form.reset()
+                                alert('Member invited successfully!')
+                              } catch (err: any) {
+                                alert(err.response?.data?.error || 'Failed to invite member.')
+                              }
+                            }
+                          }}
+                          className="space-y-2 pt-2 border-t border-base-300"
+                        >
+                          <span className="text-[10px] font-bold text-base-content/50 uppercase tracking-wide">
+                            Invite New Member
+                          </span>
+                          <input
+                            name="inviteEmail"
+                            type="email"
+                            placeholder="user@example.com"
+                            className="input input-xs input-bordered w-full focus:outline-none"
+                            required
+                          />
+                          <div className="flex gap-2">
+                            <select
+                              name="inviteRole"
+                              className="select select-xs select-bordered flex-1 focus:outline-none"
+                              defaultValue="observer"
+                            >
+                              <option value="admin">Admin</option>
+                              <option value="observer">Observer</option>
+                            </select>
+                            <button type="submit" className="btn btn-primary btn-xs text-white">
+                              Invite
+                            </button>
+                          </div>
+                        </form>
                       )}
                     </div>
                   </div>

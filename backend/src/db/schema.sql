@@ -1,4 +1,5 @@
 -- Drop tables if they exist (for easy migration reset)
+DROP TABLE IF EXISTS board_members CASCADE;
 DROP TABLE IF EXISTS activity_logs CASCADE;
 DROP TABLE IF EXISTS comments CASCADE;
 DROP TABLE IF EXISTS attachments CASCADE;
@@ -233,6 +234,21 @@ CREATE INDEX idx_comments_card_id ON comments(card_id);
 CREATE INDEX idx_comments_user_id ON comments(user_id);
 CREATE INDEX idx_activity_logs_card_id ON activity_logs(card_id);
 CREATE INDEX idx_activity_logs_user_id ON activity_logs(user_id);
+
+-- Board Members Table
+CREATE TABLE board_members (
+    board_id INTEGER NOT NULL REFERENCES boards(id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    role VARCHAR(50) NOT NULL DEFAULT 'member', -- 'admin', 'observer', 'member'
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (board_id, user_id)
+);
+
+CREATE TRIGGER update_board_members_updated_at BEFORE UPDATE ON board_members FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE INDEX idx_board_members_user_id ON board_members(user_id);
+
 
 
 

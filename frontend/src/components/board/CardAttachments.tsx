@@ -15,9 +15,10 @@ interface Attachment {
 interface CardAttachmentsProps {
   cardId: number
   onCoverChange: () => void
+  disabled?: boolean
 }
 
-export function CardAttachments({ cardId, onCoverChange }: CardAttachmentsProps) {
+export function CardAttachments({ cardId, onCoverChange, disabled = false }: CardAttachmentsProps) {
   const [attachments, setAttachments] = useState<Attachment[]>([])
   const [uploading, setUploading] = useState(false)
 
@@ -89,18 +90,20 @@ export function CardAttachments({ cardId, onCoverChange }: CardAttachmentsProps)
   return (
     <div className="space-y-4">
       {/* Upload button/input */}
-      <div className="flex items-center gap-2">
-        <label className="btn btn-sm btn-outline btn-primary gap-1 relative overflow-hidden cursor-pointer">
-          <span>{uploading ? '⏳ Uploading...' : '📎 Upload File'}</span>
-          <input
-            type="file"
-            onChange={handleFileUpload}
-            disabled={uploading}
-            className="absolute inset-0 opacity-0 cursor-pointer"
-          />
-        </label>
-        <span className="text-xs text-base-content/40">Images or documents</span>
-      </div>
+      {!disabled && (
+        <div className="flex items-center gap-2">
+          <label className="btn btn-sm btn-outline btn-primary gap-1 relative overflow-hidden cursor-pointer">
+            <span>{uploading ? '⏳ Uploading...' : '📎 Upload File'}</span>
+            <input
+              type="file"
+              onChange={handleFileUpload}
+              disabled={uploading}
+              className="absolute inset-0 opacity-0 cursor-pointer"
+            />
+          </label>
+          <span className="text-xs text-base-content/40">Images or documents</span>
+        </div>
+      )}
 
       {/* Attachments List */}
       {attachments.length > 0 && (
@@ -135,28 +138,30 @@ export function CardAttachments({ cardId, onCoverChange }: CardAttachmentsProps)
                   </div>
 
                   {/* Actions */}
-                  <div className="flex gap-2 pt-1 justify-between items-center mt-auto">
-                    {isImage ? (
+                  {!disabled && (
+                    <div className="flex gap-2 pt-1 justify-between items-center mt-auto">
+                      {isImage ? (
+                        <button
+                          type="button"
+                          onClick={() => handleToggleCover(att)}
+                          className={`btn btn-xs ${
+                            att.is_cover ? 'btn-primary' : 'btn-outline text-base-content/75'
+                          }`}
+                        >
+                          🖼️ {att.is_cover ? 'Remove Cover' : 'Make Cover'}
+                        </button>
+                      ) : (
+                        <div />
+                      )}
                       <button
                         type="button"
-                        onClick={() => handleToggleCover(att)}
-                        className={`btn btn-xs ${
-                          att.is_cover ? 'btn-primary' : 'btn-outline text-base-content/75'
-                        }`}
+                        onClick={() => handleDeleteAttachment(att.id, att.is_cover)}
+                        className="btn btn-ghost btn-xs text-error hover:bg-error/15 rounded-md"
                       >
-                        🖼️ {att.is_cover ? 'Remove Cover' : 'Make Cover'}
+                        Delete
                       </button>
-                    ) : (
-                      <div />
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteAttachment(att.id, att.is_cover)}
-                      className="btn btn-ghost btn-xs text-error hover:bg-error/15 rounded-md"
-                    >
-                      Delete
-                    </button>
-                  </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )
@@ -166,3 +171,4 @@ export function CardAttachments({ cardId, onCoverChange }: CardAttachmentsProps)
     </div>
   )
 }
+
