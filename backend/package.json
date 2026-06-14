@@ -9,6 +9,8 @@
     "db:seed": "bun run src/db/migrate.ts --seed"
   },
   "dependencies": {
+    "@hono/zod-openapi": "0.19.10",
+    "@scalar/hono-api-reference": "^0.11.3",
     "argon2": "0.41",
     "hono": "^4.12.25",
     "zod": "3"
