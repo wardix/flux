@@ -21,6 +21,10 @@ import { commentRoutes } from './routes/comments'
 import { activityRoutes } from './routes/activities'
 import { timeTrackingRoutes } from './routes/timeTracking'
 import { voteRoutes } from './routes/votes'
+import { rateLimitMiddleware } from './middleware/rateLimit'
+import { corsMiddleware } from './middleware/cors'
+import { adminRoutes } from './routes/admin'
+import { exportRoutes } from './routes/export'
 
 
 
@@ -29,7 +33,8 @@ cleanOldTrash().catch((err) => console.error('Trash cleanup failed:', err))
 
 const app = new OpenAPIHono()
 
-app.use('*', cors())
+app.use('*', corsMiddleware)
+app.use('*', rateLimitMiddleware())
 
 app.onError((err, c) => {
   console.error('API Error:', err)
@@ -67,6 +72,8 @@ app.route('/api', commentRoutes)
 app.route('/api', activityRoutes)
 app.route('/api', timeTrackingRoutes)
 app.route('/api', voteRoutes)
+app.route('/api', adminRoutes)
+app.route('/api', exportRoutes)
 
 
 export default {
