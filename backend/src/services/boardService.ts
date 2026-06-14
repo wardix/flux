@@ -32,9 +32,17 @@ export async function getById(id: number) {
   }
 
   const listsWithCards = lists.map((list) => {
+    // biome-ignore lint/suspicious/noExplicitAny: card type is dynamic from raw DB query
+    const listCards = cards.filter((card: any) => card.list_id === list.id)
+    const total_story_points = listCards.reduce(
+      // biome-ignore lint/suspicious/noExplicitAny: card type is dynamic from raw DB query
+      (sum, card: any) => sum + (card.story_points || 0),
+      0,
+    )
     return {
       ...list,
-      cards: cards.filter((card) => card.list_id === list.id),
+      total_story_points,
+      cards: listCards,
     }
   })
 

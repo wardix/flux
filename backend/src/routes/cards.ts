@@ -12,6 +12,15 @@ cardRoutes.post('/', async (c) => {
     if (!body.list_id) return c.json({ error: 'list_id is required' }, 400)
     if (!body.title) return c.json({ error: 'Title is required' }, 400)
 
+    if ('story_points' in body) {
+      const sp = body.story_points
+      if (sp !== null && sp !== undefined) {
+        if (typeof sp !== 'number' || !Number.isInteger(sp) || sp < 0 || sp > 100) {
+          return c.json({ error: 'story_points must be an integer between 0 and 100' }, 400)
+        }
+      }
+    }
+
     const card = await cardService.create(body)
     return c.json({ data: card }, 201)
   } catch (error) {
@@ -41,6 +50,14 @@ cardRoutes.put('/:id', async (c) => {
     if (Number.isNaN(id)) return c.json({ error: 'Invalid ID' }, 400)
 
     const body = await c.req.json()
+    if ('story_points' in body) {
+      const sp = body.story_points
+      if (sp !== null && sp !== undefined) {
+        if (typeof sp !== 'number' || !Number.isInteger(sp) || sp < 0 || sp > 100) {
+          return c.json({ error: 'story_points must be an integer between 0 and 100' }, 400)
+        }
+      }
+    }
     const card = await cardService.update(id, body)
     if (!card) return c.json({ error: 'Card not found' }, 404)
 
