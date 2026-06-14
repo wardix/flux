@@ -119,9 +119,6 @@ export async function createMessage(channelId: number, userId: number, content: 
       }
     }
   }
-
-  }
-
   broadcastToChat(channelId, {
     type: 'chat_message',
     payload: enrichedMsg,

@@ -11,9 +11,16 @@ export async function getChecklists(cardId: number) {
 
   const checklistIds = checklists.map((c) => c.id)
   const items = await db`
-    SELECT * FROM checklist_items
-    WHERE checklist_id IN (${checklistIds})
-    ORDER BY position ASC, id ASC
+    SELECT 
+      ci.*,
+      CASE 
+        WHEN u.id IS NOT NULL THEN json_build_object('id', u.id, 'name', u.email, 'avatar_url', u.avatar_url) 
+        ELSE null 
+      END as assignee
+    FROM checklist_items ci
+    LEFT JOIN users u ON ci.assignee_id = u.id
+    WHERE ci.checklist_id IN (${checklistIds})
+    ORDER BY ci.position ASC, ci.id ASC
   `
 
   return checklists.map((c) => {
@@ -86,6 +93,8 @@ export async function updateChecklistItem(
     title?: string
     is_completed?: boolean
     position?: number
+    assignee_id?: number | null
+    due_date?: string | null
   },
 ) {
   const current = await db`
@@ -98,18 +107,38 @@ export async function updateChecklistItem(
   const title = data.title !== undefined ? data.title : row.title
   const is_completed = data.is_completed !== undefined ? data.is_completed : row.is_completed
   const position = data.position !== undefined ? data.position : row.position
+  const assignee_id = data.assignee_id !== undefined ? data.assignee_id : row.assignee_id
+  const due_date = data.due_date !== undefined ? data.due_date : row.due_date
 
-  const result = await db`
+  let result = await db`
     UPDATE checklist_items
     SET
       title = ${title},
       is_completed = ${is_completed},
       position = ${position},
+      assignee_id = ${assignee_id},
+      due_date = ${due_date},
       updated_at = NOW()
     WHERE id = ${itemId} AND checklist_id = ${checklistId}
     RETURNING *
   `
-  return result[0] || null
+
+  if (result.length > 0) {
+    const updated = await db`
+      SELECT 
+        ci.*,
+        CASE 
+          WHEN u.id IS NOT NULL THEN json_build_object('id', u.id, 'name', u.email, 'avatar_url', u.avatar_url) 
+          ELSE null 
+        END as assignee
+      FROM checklist_items ci
+      LEFT JOIN users u ON ci.assignee_id = u.id
+      WHERE ci.id = ${itemId}
+    `
+    return updated[0]
+  }
+
+  return null
 }
 
 export async function deleteChecklistItem(checklistId: number, itemId: number) {

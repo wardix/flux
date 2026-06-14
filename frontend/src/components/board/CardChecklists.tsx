@@ -1,32 +1,21 @@
 import { useEffect, useState } from 'react'
 import { api } from '../../lib/api'
 
-interface ChecklistItem {
-  id: number
-  checklist_id: number
-  title: string
-  is_completed: boolean
-  position: number
-}
-
-interface Checklist {
-  id: number
-  card_id: number
-  title: string
-  position: number
-  items: ChecklistItem[]
-}
+import { Checklist, ChecklistItem } from '../../lib/types'
+import { ChecklistItemRow } from './ChecklistItemRow'
 
 interface CardChecklistsProps {
   cardId: number
   onProgressChange: () => void
   disabled?: boolean
+  boardMembers: Array<{ id: number; name: string; avatar_url: string | null }>
 }
 
 export function CardChecklists({
   cardId,
   onProgressChange,
   disabled = false,
+  boardMembers,
 }: CardChecklistsProps) {
   const [checklists, setChecklists] = useState<Checklist[]>([])
   const [newChecklistTitle, setNewChecklistTitle] = useState('')
@@ -108,6 +97,16 @@ export function CardChecklists({
       onProgressChange()
     } catch (err) {
       console.error('Failed to toggle item:', err)
+    }
+  }
+
+  const handleUpdateItem = async (checklistId: number, itemId: number, data: Partial<ChecklistItem>) => {
+    try {
+      await api.put(`/checklists/${checklistId}/items/${itemId}`, data)
+      await fetchChecklists()
+      onProgressChange()
+    } catch (err) {
+      console.error('Failed to update item:', err)
     }
   }
 
@@ -203,40 +202,17 @@ export function CardChecklists({
             )}
 
             {/* Checklist items list */}
-            <div className="space-y-2">
+            <div className="space-y-1">
               {checklist.items.map((item) => (
-                <div
+                <ChecklistItemRow
                   key={item.id}
-                  className="flex items-center justify-between py-1 px-2 rounded-lg hover:bg-base-200/50 transition-colors group"
-                >
-                  <label className="flex items-center gap-3 cursor-pointer flex-1 min-w-0">
-                    <input
-                      type="checkbox"
-                      checked={item.is_completed}
-                      disabled={disabled}
-                      onChange={(e) => handleToggleItem(checklist.id, item.id, e.target.checked)}
-                      className="checkbox checkbox-success checkbox-sm rounded"
-                    />
-                    <span
-                      className={`text-sm transition-all truncate ${
-                        item.is_completed
-                          ? 'line-through text-base-content/40'
-                          : 'text-base-content/80'
-                      }`}
-                    >
-                      {item.title}
-                    </span>
-                  </label>
-                  {!disabled && (
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteItem(checklist.id, item.id)}
-                      className="btn btn-ghost btn-xs btn-circle text-error/60 opacity-0 group-hover:opacity-100 hover:bg-error/10 transition-opacity"
-                    >
-                      ✕
-                    </button>
-                  )}
-                </div>
+                  item={item}
+                  onToggle={(itemId, isCompleted) => handleToggleItem(checklist.id, itemId, isCompleted)}
+                  onUpdate={(itemId, data) => handleUpdateItem(checklist.id, itemId, data)}
+                  onDelete={(itemId) => handleDeleteItem(checklist.id, itemId)}
+                  boardMembers={boardMembers}
+                  disabled={disabled}
+                />
               ))}
             </div>
 
