@@ -4,6 +4,10 @@ import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
 import { EditorToolbar } from './EditorToolbar'
 import { SlashCommandMenu, SlashCommandItem } from './SlashCommandMenu'
+import { EmbedExtension } from '../../lib/tiptapEmbed'
+import { detectEmbedProvider, getEmbedUrl } from '../../lib/embedHelpers'
+import { EmbedPreview } from './EmbedPreview'
+import { EmbedProvider } from '../../lib/embedProviders'
 
 interface TiptapEditorProps {
   content: JSONContent | null
@@ -61,6 +65,33 @@ const COMMAND_ITEMS: SlashCommandItem[] = [
     description: 'Garis pembatas',
     icon: '—',
     command: (editor) => editor.chain().focus().setHorizontalRule().run()
+  },
+  {
+    title: 'Embed',
+    description: 'Embed link media',
+    icon: '🔗',
+    command: (editor) => {
+      const url = window.prompt('Enter URL to embed (YouTube, Figma, Docs, etc):')
+      if (url) {
+        const provider = detectEmbedProvider(url)
+        if (provider) {
+          const embedUrl = getEmbedUrl(url)
+          if (embedUrl) {
+            editor.chain().focus().insertContent({
+              type: 'embed',
+              attrs: {
+                src: embedUrl,
+                originalUrl: url,
+                provider: provider.name,
+              }
+            }).run()
+          }
+        } else {
+          // If not embeddable, just insert as text/link
+          editor.chain().focus().insertContent(url).run()
+        }
+      }
+    }
   }
 ]
 
@@ -68,6 +99,7 @@ export function TiptapEditor({ content, onUpdate, placeholder = 'Type / for comm
   const [slashMenuOpen, setSlashMenuOpen] = useState(false)
   const [slashMenuPos, setSlashMenuPos] = useState({ top: 0, left: 0 })
   const [slashQuery, setSlashQuery] = useState('')
+  const [pendingEmbed, setPendingEmbed] = useState<{ url: string; provider: EmbedProvider; pos: number } | null>(null)
 
   const handleUpdate = useCallback(
     ({ editor }: { editor: any }) => {
@@ -83,7 +115,8 @@ export function TiptapEditor({ content, onUpdate, placeholder = 'Type / for comm
       StarterKit,
       Placeholder.configure({
         placeholder,
-      })
+      }),
+      EmbedExtension,
     ],
     content: content || '',
     editable,
@@ -91,6 +124,22 @@ export function TiptapEditor({ content, onUpdate, placeholder = 'Type / for comm
     editorProps: {
       attributes: {
         class: 'prose prose-sm sm:prose-base focus:outline-none max-w-full p-4 min-h-[150px]'
+      },
+      handlePaste: (view, event, slice) => {
+        const text = event.clipboardData?.getData('text/plain');
+        if (text) {
+          const urlPattern = /^https?:\/\/[^\s]+$/;
+          if (urlPattern.test(text.trim())) {
+            const url = text.trim();
+            const provider = detectEmbedProvider(url);
+            if (provider) {
+              const { state } = view;
+              setPendingEmbed({ url, provider, pos: state.selection.from });
+              return true; // prevent default paste
+            }
+          }
+        }
+        return false;
       },
       handleKeyDown: (view, event) => {
         if (slashMenuOpen && (event.key === 'ArrowUp' || event.key === 'ArrowDown' || event.key === 'Enter')) {
@@ -202,6 +251,37 @@ export function TiptapEditor({ content, onUpdate, placeholder = 'Type / for comm
           onSelect={handleSelectCommand}
           onClose={() => setSlashMenuOpen(false)}
         />
+        
+        {pendingEmbed && (
+          <div className="absolute z-20 shadow-xl" style={{ top: 10, right: 10 }}>
+            <EmbedPreview
+              url={pendingEmbed.url}
+              provider={pendingEmbed.provider}
+              onEmbed={() => {
+                if (editor) {
+                  const embedUrl = getEmbedUrl(pendingEmbed.url);
+                  if (embedUrl) {
+                    editor.chain().focus().insertContentAt(pendingEmbed.pos, {
+                      type: 'embed',
+                      attrs: {
+                        src: embedUrl,
+                        originalUrl: pendingEmbed.url,
+                        provider: pendingEmbed.provider.name,
+                      }
+                    }).run();
+                  }
+                }
+                setPendingEmbed(null);
+              }}
+              onKeepLink={() => {
+                if (editor) {
+                  editor.chain().focus().insertContentAt(pendingEmbed.pos, pendingEmbed.url).run();
+                }
+                setPendingEmbed(null);
+              }}
+            />
+          </div>
+        )}
       </div>
     </div>
   )
