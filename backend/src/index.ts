@@ -13,6 +13,9 @@ import { apiDoc } from './lib/openapi'
 
 import { twoFactorRoutes } from './routes/twoFactor'
 import { oauthRoutes } from './routes/oauth'
+import { checklistRoutes } from './routes/checklists'
+import { attachmentRoutes } from './routes/attachments'
+
 
 // Trigger database old trash clean up on server startup
 cleanOldTrash().catch((err) => console.error('Trash cleanup failed:', err))
@@ -51,6 +54,8 @@ app.route('/api/cards', cardRoutes)
 app.route('/api/workspaces', workspaceRoutes)
 app.route('/api/labels', labelRoutes)
 app.route('/api', subtaskRoutes)
+app.route('/api', checklistRoutes)
+app.route('/api', attachmentRoutes)
 
 export default {
   port: process.env.PORT || 3000,

@@ -34,7 +34,21 @@ export async function getById(id: number) {
         )
         FROM cards sub
         WHERE sub.parent_card_id = c.id AND sub.deleted_at IS NULL
-      ), json_build_object('total', 0, 'completed', 0)) as subtask_count
+      ), json_build_object('total', 0, 'completed', 0)) as subtask_count,
+      COALESCE((
+        SELECT json_build_object(
+          'total', COUNT(*)::integer,
+          'completed', COUNT(CASE WHEN is_completed = TRUE THEN 1 END)::integer
+        )
+        FROM checklist_items ci
+        JOIN checklists ch ON ci.checklist_id = ch.id
+        WHERE ch.card_id = c.id
+      ), json_build_object('total', 0, 'completed', 0)) as checklist_count,
+      (
+        SELECT file_path FROM attachments
+        WHERE card_id = c.id AND is_cover = TRUE
+        LIMIT 1
+      ) as cover_file_path
     FROM cards c
     WHERE c.id = ${id} AND c.deleted_at IS NULL
   `
