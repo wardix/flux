@@ -4,6 +4,10 @@ import { useEffect, useState } from 'react'
 import { api } from '../../lib/api'
 import type { Card, CardMirror, CreateSubtaskRequest, Epic, SubtaskCard } from '../../lib/types'
 import { useBoardStore } from '../../stores/boardStore'
+import { useUIStore } from '../../stores/uiStore'
+import { AISuggestButton } from './AISuggestButton'
+import { AISuggestionPanel } from './AISuggestionPanel'
+import type { AISuggestionResult } from '../../lib/types'
 import { MarkdownRenderer } from '../shared/MarkdownRenderer'
 import { CardActivities } from './CardActivities'
 import { CardAttachments } from './CardAttachments'
@@ -67,6 +71,8 @@ export function CardItem({
   const [refreshActivitiesTrigger, setRefreshActivitiesTrigger] = useState(0)
   const [isEditingDescription, setIsEditingDescription] = useState(false)
   const activeCardId = useBoardStore((s) => s.activeCardId)
+  const aiFeaturesEnabled = useUIStore((s) => s.aiFeaturesEnabled)
+  const [aiSuggestion, setAiSuggestion] = useState<AISuggestionResult | null>(null)
 
   const [timeLogs, setTimeLogs] = useState<any[]>([])
   const [timeMeta, setTimeMeta] = useState<any>({
@@ -442,9 +448,42 @@ export function CardItem({
   const renderModal = () => (
     <div className="modal modal-open z-50">
       <div className="modal-box bg-base-100 border border-base-200 shadow-2xl relative space-y-4 max-w-lg">
+        {aiFeaturesEnabled && aiSuggestion && (
+          <AISuggestionPanel
+            suggestions={aiSuggestion}
+            onAccept={async (item) => {
+              if (aiSuggestion.type === 'labels') {
+                const labelObj = labels.find((l) => l.id === item.id)
+                if (labelObj) {
+                  const alreadyHas = card.labels?.some((l) => l.id === item.id)
+                  if (!alreadyHas) {
+                    await addLabelToCard(card.id, labelObj)
+                  }
+                }
+              } else if (aiSuggestion.type === 'assignee') {
+                setAssigneeId(item.id)
+              }
+            }}
+            onReject={(item) => {
+              if (aiSuggestion.type === 'labels' && aiSuggestion.data?.suggested_labels) {
+                setAiSuggestion({
+                  ...aiSuggestion,
+                  data: {
+                    ...aiSuggestion.data,
+                    suggested_labels: aiSuggestion.data.suggested_labels.filter((l) => l.id !== item.id),
+                  },
+                })
+              }
+            }}
+            onDismiss={() => setAiSuggestion(null)}
+          />
+        )}
         <button
           type="button"
-          onClick={closeOpenedModal}
+          onClick={() => {
+            setAiSuggestion(null)
+            closeOpenedModal()
+          }}
           className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
         >
           ✕
@@ -491,9 +530,19 @@ export function CardItem({
 
           <div>
             <div className="flex justify-between items-baseline mb-1">
-              <span className="text-xs text-base-content/50 font-bold uppercase">
-                Description (Markdown)
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-base-content/50 font-bold uppercase">
+                  Description (Markdown)
+                </span>
+                {aiFeaturesEnabled && !isObserver && (
+                  <AISuggestButton
+                    type="summarize"
+                    cardId={card.id}
+                    payload={{}}
+                    onSuggestion={setAiSuggestion}
+                  />
+                )}
+              </div>
               {!isObserver && (
                 <button
                   type="button"
@@ -558,9 +607,26 @@ export function CardItem({
               />
             </div>
             <div>
-              <span className="text-xs text-base-content/50 font-bold uppercase block mb-1">
-                Assignee
-              </span>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs text-base-content/50 font-bold uppercase block">
+                  Assignee
+                </span>
+                {aiFeaturesEnabled && !isObserver && (
+                  <AISuggestButton
+                    type="assignee"
+                    cardId={card.id}
+                    payload={{
+                      title,
+                      description,
+                      available_members: boardMembers.map((m: any) => ({
+                        id: m.user_id,
+                        name: m.email.split('@')[0],
+                      })),
+                    }}
+                    onSuggestion={setAiSuggestion}
+                  />
+                )}
+              </div>
               <select
                 value={assigneeId ?? ''}
                 onChange={(e) => setAssigneeId(e.target.value ? Number(e.target.value) : null)}
@@ -677,9 +743,23 @@ export function CardItem({
 
           {/* Labels list toggle */}
           <div>
-            <span className="text-xs text-base-content/50 font-bold uppercase block mb-2">
-              Labels
-            </span>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-base-content/50 font-bold uppercase block">
+                Labels
+              </span>
+              {aiFeaturesEnabled && !isObserver && (
+                <AISuggestButton
+                  type="labels"
+                  cardId={card.id}
+                  payload={{
+                    title,
+                    description,
+                    available_labels: labels.map((l) => ({ id: l.id, name: l.name, color: l.color })),
+                  }}
+                  onSuggestion={setAiSuggestion}
+                />
+              )}
+            </div>
             <div className="flex flex-wrap gap-2">
               {labels.map((l) => {
                 const active = card.labels?.some((cl) => cl.id === l.id)

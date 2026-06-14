@@ -286,3 +286,14 @@ export interface CreateGoalRequest {
   due_date?: string
   color?: string
 }
+
+export interface AISuggestionResult {
+  type: 'labels' | 'summarize' | 'assignee'
+  data: {
+    suggested_labels?: Array<{ id: number; name: string; confidence: number }>
+    summary?: string
+    key_points?: string[]
+    suggested_assignees?: Array<{ id: number; name: string; confidence: number; reason: string }>
+    reasoning?: string
+  }
+}

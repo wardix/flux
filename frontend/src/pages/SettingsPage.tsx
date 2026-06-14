@@ -2,6 +2,8 @@ import { useTranslation } from 'react-i18next'
 import { LanguageSwitcher } from '../components/settings/LanguageSwitcher'
 import { PersonalAccessTokens } from '../components/settings/PersonalAccessTokens'
 import { TwoFactorSetup } from '../components/settings/TwoFactorSetup'
+import { AISettingsToggle } from '../components/settings/AISettingsToggle'
+import { useUIStore } from '../stores/uiStore'
 
 interface SettingsPageProps {
   onBack: () => void
@@ -9,6 +11,7 @@ interface SettingsPageProps {
 
 export function SettingsPage({ onBack }: SettingsPageProps) {
   const { t } = useTranslation()
+  const { aiFeaturesEnabled, setAiFeaturesEnabled } = useUIStore()
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-2xl space-y-8 min-h-screen">
@@ -59,6 +62,20 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
           </p>
           <div className="pt-2 border-t border-base-200/50">
             <PersonalAccessTokens />
+          </div>
+        </div>
+
+        {/* AI Features Section */}
+        <div className="card bg-base-100 border border-base-200/50 p-6 shadow-sm space-y-3">
+          <h2 className="text-lg font-bold text-base-content/95">✨ Artificial Intelligence</h2>
+          <p className="text-xs text-base-content/60 mb-2">
+            Configure system AI features.
+          </p>
+          <div className="pt-2 border-t border-base-200/50">
+            <AISettingsToggle
+              enabled={aiFeaturesEnabled}
+              onToggle={setAiFeaturesEnabled}
+            />
           </div>
         </div>
       </div>
