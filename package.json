@@ -1,0 +1,10 @@
+{
+  "name": "flux-root",
+  "private": true,
+  "scripts": {
+    "dev:frontend": "cd frontend && bun run dev",
+    "dev:backend": "cd backend && bun run dev",
+    "lint": "bunx biome check .",
+    "format": "bunx biome check --write ."
+  }
+}
