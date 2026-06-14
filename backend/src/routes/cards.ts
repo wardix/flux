@@ -245,6 +245,9 @@ const updateCardRoute = createRoute({
             archived_at: z.string().nullable().optional(),
             deleted_at: z.string().nullable().optional(),
             is_recurring: z.boolean().optional(),
+            latitude: z.number().nullable().optional(),
+            longitude: z.number().nullable().optional(),
+            address: z.string().nullable().optional(),
           }),
         },
       },
@@ -531,6 +534,14 @@ cardRoutes.openapi(updateCardRoute, async (c) => {
     }
     const card = await cardService.update(id, body)
     if (!card) return c.json({ error: 'Card not found' }, 404)
+
+    if (body.latitude !== undefined && body.longitude !== undefined) {
+      if (body.latitude === null || body.longitude === null) {
+        await cardService.removeLocation(id)
+      } else {
+        await cardService.updateLocation(id, body.latitude, body.longitude, body.address || '')
+      }
+    }
 
     // Log what changed
     if (body.title && body.title !== oldCard.title) {

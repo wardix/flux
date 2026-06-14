@@ -2,6 +2,7 @@ import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi'
 import { BoardSchema, CreateBoardRequest, ErrorSchema } from '../lib/schemas'
 import { authMiddleware } from '../middleware/auth'
 import * as boardService from '../services/boardService'
+import * as cardService from '../services/cardService'
 
 const boardRoutes = new OpenAPIHono()
 
@@ -663,6 +664,71 @@ boardRoutes.openapi(unstarBoardRoute, async (c) => {
     const userId = c.get('userId')
     await boardService.unstarBoard(id, userId)
     return c.json({ success: true }, 200)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Internal Server Error'
+    return c.json({ error: message }, 500)
+  }
+})
+
+
+const getBoardMapCardsRoute = createRoute({
+  method: 'get',
+  path: '/{id}/cards/map',
+  tags: ['Boards'],
+  summary: 'Get board cards with location',
+  description: 'Get all cards on the board that have latitude and longitude',
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      id: z.string().openapi({ example: '1' }),
+    }),
+    query: z.object({
+      bounds: z.string().optional().openapi({ example: '-6.3,-6.1,106.7,107.0' })
+    })
+  },
+  responses: {
+    200: {
+      description: 'Cards with location',
+      content: {
+        'application/json': {
+          schema: z.object({
+            data: z.array(z.any()),
+          }),
+        },
+      },
+    },
+    401: {
+      description: 'Unauthorized',
+      content: {
+        'application/json': {
+          schema: ErrorSchema,
+        },
+      },
+    },
+  },
+})
+
+boardRoutes.openapi(getBoardMapCardsRoute, async (c) => {
+  try {
+    const id = Number(c.req.param('id'))
+    if (Number.isNaN(id)) return c.json({ error: 'Invalid ID' }, 400)
+    
+    let bounds
+    const boundsStr = c.req.query('bounds')
+    if (boundsStr) {
+      const parts = boundsStr.split(',').map(Number)
+      if (parts.length === 4 && parts.every(p => !isNaN(p))) {
+        bounds = {
+          minLat: parts[0],
+          maxLat: parts[1],
+          minLng: parts[2],
+          maxLng: parts[3]
+        }
+      }
+    }
+
+    const cards = await cardService.getCardsWithLocation(id, bounds)
+    return c.json({ data: cards }, 200)
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Internal Server Error'
     return c.json({ error: message }, 500)

@@ -193,3 +193,72 @@ export async function remove(id: number) {
   const result = await db`DELETE FROM cards WHERE id = ${id} RETURNING *`
   return result[0] || null
 }
+
+export async function updateLocation(
+  id: number,
+  latitude: number,
+  longitude: number,
+  address: string
+) {
+  const result = await db`
+    UPDATE cards
+    SET latitude = ${latitude}, longitude = ${longitude}, address = ${address}, updated_at = NOW()
+    WHERE id = ${id}
+    RETURNING *
+  `
+  return result[0] || null
+}
+
+export async function removeLocation(id: number) {
+  const result = await db`
+    UPDATE cards
+    SET latitude = NULL, longitude = NULL, address = NULL, updated_at = NOW()
+    WHERE id = ${id}
+    RETURNING *
+  `
+  return result[0] || null
+}
+
+export async function getCardsWithLocation(boardId: number, bounds?: { minLat: number, maxLat: number, minLng: number, maxLng: number }) {
+  if (bounds) {
+    return await db`
+      SELECT c.id, c.title, c.latitude, c.longitude, c.address, c.list_id, c.due_date, l.title as list_title,
+             COALESCE(
+               (SELECT json_agg(json_build_object('id', lbl.id, 'name', lbl.name, 'color', lbl.color))
+                FROM card_labels cl JOIN labels lbl ON cl.label_id = lbl.id WHERE cl.card_id = c.id),
+               '[]'
+             ) as labels,
+             COALESCE(
+               (SELECT json_agg(json_build_object('id', u.id, 'name', u.email, 'email', u.email, 'avatar_url', u.avatar_url))
+                FROM users u WHERE u.id = c.assignee_id),
+               '[]'
+             ) as assignees
+      FROM cards c
+      JOIN lists l ON c.list_id = l.id
+      WHERE l.board_id = ${boardId} 
+        AND c.latitude IS NOT NULL 
+        AND c.longitude IS NOT NULL
+        AND c.latitude >= ${bounds.minLat} AND c.latitude <= ${bounds.maxLat}
+        AND c.longitude >= ${bounds.minLng} AND c.longitude <= ${bounds.maxLng}
+    `
+  } else {
+    return await db`
+      SELECT c.id, c.title, c.latitude, c.longitude, c.address, c.list_id, c.due_date, l.title as list_title,
+             COALESCE(
+               (SELECT json_agg(json_build_object('id', lbl.id, 'name', lbl.name, 'color', lbl.color))
+                FROM card_labels cl JOIN labels lbl ON cl.label_id = lbl.id WHERE cl.card_id = c.id),
+               '[]'
+             ) as labels,
+             COALESCE(
+               (SELECT json_agg(json_build_object('id', u.id, 'name', u.email, 'email', u.email, 'avatar_url', u.avatar_url))
+                FROM users u WHERE u.id = c.assignee_id),
+               '[]'
+             ) as assignees
+      FROM cards c
+      JOIN lists l ON c.list_id = l.id
+      WHERE l.board_id = ${boardId} 
+        AND c.latitude IS NOT NULL 
+        AND c.longitude IS NOT NULL
+    `
+  }
+}

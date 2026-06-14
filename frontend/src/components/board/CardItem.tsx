@@ -38,6 +38,8 @@ import { VoterList } from './VoterList'
 import { DependencyWithCard } from '../../lib/types'
 import { DependencyBadge } from './DependencyBadge'
 import { DependencySelector } from './DependencySelector'
+import { LocationPicker } from './LocationPicker'
+import { MapPin } from 'lucide-react'
 
 interface CardItemProps {
   card: Card
@@ -71,6 +73,10 @@ export function CardItem({
   const [descriptionJson, setDescriptionJson] = useState<JSONContent | null>(card.description_json || null)
   const [dueDate, setDueDate] = useState(card.due_date ? card.due_date.split('T')[0] : '')
   const [storyPoints, setStoryPoints] = useState<number | null>(card.story_points ?? null)
+  const [isLocationPickerOpen, setIsLocationPickerOpen] = useState(false)
+  const [location, setLocation] = useState<{lat: number, lng: number, address: string} | null>(
+    card.latitude && card.longitude ? { lat: card.latitude, lng: card.longitude, address: card.address || '' } : null
+  )
 
   const [subtasks, setSubtasks] = useState<SubtaskCard[]>([])
   const [subtaskTotal, setSubtaskTotal] = useState(0)
@@ -433,8 +439,14 @@ export function CardItem({
       description: description || null,
       description_json: descriptionJson || null,
       due_date: dueDate ? new Date(dueDate).toISOString() : null,
-      story_points: storyPoints,
       assignee_id: assigneeId,
+      epic_id: selectedEpicId,
+      is_recurring: isRecurring,
+      recurring_rule: isRecurring ? recurringFrequency : null,
+      story_points: storyPoints,
+      latitude: location?.lat || null,
+      longitude: location?.lng || null,
+      address: location?.address || null,
     }
 
     await updateCard(card.id, updatedCard)
@@ -726,6 +738,36 @@ export function CardItem({
           </div>
 
           {!card.parent_card_id && (
+            <div>
+              <span className="text-xs text-base-content/50 font-bold uppercase block mb-1">
+                Location
+              </span>
+              {location ? (
+                <div className="flex items-center gap-2 mb-2 bg-base-200 p-2 rounded text-sm">
+                  <MapPin size={16} className="text-error shrink-0" />
+                  <span className="truncate flex-1">{location.address || `${location.lat}, ${location.lng}`}</span>
+                  {!isObserver && (
+                    <button 
+                      className="btn btn-xs btn-ghost text-error" 
+                      onClick={() => setLocation(null)}
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+              ) : null}
+              {!isObserver && (
+                <button 
+                  className="btn btn-sm btn-outline w-full"
+                  onClick={() => setIsLocationPickerOpen(true)}
+                >
+                  {location ? 'Edit Location' : 'Add Location'}
+                </button>
+              )}
+            </div>
+          )}
+
+          {!card.parent_card_id && (
             <>
               <div className="border-t border-base-200 pt-3">
                 <span className="text-xs text-base-content/50 font-bold uppercase block mb-2">
@@ -1015,6 +1057,19 @@ export function CardItem({
             currentBoardId={useBoardStore.getState().activeBoard?.id || 0}
             onMirrorCreated={handleMirrorCreated}
             onClose={() => setShowMirrorSelector(false)}
+          />
+        )}
+
+        {isLocationPickerOpen && (
+          <LocationPicker
+            initialLat={location?.lat}
+            initialLng={location?.lng}
+            initialAddress={location?.address}
+            onClose={() => setIsLocationPickerOpen(false)}
+            onLocationSelect={(lat, lng, address) => {
+              setLocation({ lat, lng, address })
+              setIsLocationPickerOpen(false)
+            }}
           />
         )}
       </div>

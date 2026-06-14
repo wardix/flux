@@ -2,6 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
+@import 'leaflet/dist/leaflet.css';
+
 [cmdk-dialog-overlay] {
   position: fixed;
   inset: 0;
