@@ -13,9 +13,12 @@
     "@scalar/hono-api-reference": "^0.11.3",
     "argon2": "0.41",
     "hono": "^4.12.25",
+    "otpauth": "^9.5.1",
+    "qrcode": "^1.5.4",
     "zod": "3"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@types/qrcode": "^1.5.6"
   }
 }

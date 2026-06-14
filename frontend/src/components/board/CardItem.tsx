@@ -30,7 +30,7 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
   const [title, setTitle] = useState(card.title)
   const [description, setDescription] = useState(card.description || '')
   const [dueDate, setDueDate] = useState(card.due_date ? card.due_date.split('T')[0] : '')
-  const [storyPoints, setStoryPoints] = useState<number | null>(card.story_points)
+  const [storyPoints, setStoryPoints] = useState<number | null>(card.story_points ?? null)
 
   const [subtasks, setSubtasks] = useState<SubtaskCard[]>([])
   const [subtaskTotal, setSubtaskTotal] = useState(0)
@@ -47,13 +47,14 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
 
   const fetchSubtasks = async () => {
     try {
-      const { data: resData } = await api.get<{
-        data: SubtaskCard[]
-        meta: { total: number; completed: number }
+      const res = await api.get<{
+        subtasks: SubtaskCard[]
+        totalCount: number
+        completedCount: number
       }>(`/cards/${card.id}/subtasks`)
-      setSubtasks(resData.data)
-      setSubtaskTotal(resData.meta.total)
-      setSubtaskCompleted(resData.meta.completed)
+      setSubtasks(res.subtasks)
+      setSubtaskTotal(res.totalCount)
+      setSubtaskCompleted(res.completedCount)
     } catch (err) {
       console.error(err)
     }
