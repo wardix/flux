@@ -157,3 +157,76 @@ export async function getSummary(boardId: number, period: string) {
     completion_percentage: total > 0 ? Math.round((completed / total) * 100) : 0
   }
 }
+
+import { WORKLOAD_THRESHOLDS, CapacityLevel } from '../lib/constants';
+
+export function getCapacityLevel(activeCards: number): CapacityLevel {
+  if (activeCards <= WORKLOAD_THRESHOLDS.UNDERLOAD) return 'underload';
+  if (activeCards <= WORKLOAD_THRESHOLDS.OPTIMAL) return 'optimal';
+  return 'overload';
+}
+
+export async function getWorkload(boardId: number, period: string) {
+  let periodFilter = db``;
+  if (period === 'week') {
+    periodFilter = db`AND c.created_at >= NOW() - INTERVAL '7 days'`;
+  } else if (period === 'month') {
+    periodFilter = db`AND c.created_at >= NOW() - INTERVAL '30 days'`;
+  }
+
+  const data = await db`
+    SELECT 
+      u.id, 
+      u.email as name, 
+      u.avatar_url,
+      CAST(COUNT(c.id) AS INTEGER) as total_cards,
+      CAST(SUM(CASE WHEN c.is_completed = false THEN 1 ELSE 0 END) AS INTEGER) as active_cards,
+      CAST(SUM(CASE WHEN c.is_completed = true THEN 1 ELSE 0 END) AS INTEGER) as completed_cards,
+      CAST(SUM(CASE WHEN c.due_date < NOW() AND c.is_completed = false THEN 1 ELSE 0 END) AS INTEGER) as overdue_cards
+    FROM users u
+    JOIN cards c ON c.assignee_id = u.id
+    WHERE c.list_id IN (SELECT id FROM lists WHERE board_id = ${boardId}) ${periodFilter}
+    GROUP BY u.id, u.email, u.avatar_url
+    ORDER BY active_cards DESC
+  `;
+
+  return data.map(member => ({
+    ...member,
+    capacity_level: getCapacityLevel(member.active_cards)
+  }));
+}
+
+export async function getWorkloadCards(boardId: number, userId: number, period: string) {
+  let periodFilter = db``;
+  if (period === 'week') {
+    periodFilter = db`AND c.created_at >= NOW() - INTERVAL '7 days'`;
+  } else if (period === 'month') {
+    periodFilter = db`AND c.created_at >= NOW() - INTERVAL '30 days'`;
+  }
+
+  const cards = await db`
+    SELECT 
+      c.id,
+      c.title,
+      c.due_date,
+      l.title as list_title,
+      CASE WHEN c.due_date < NOW() AND c.is_completed = false THEN true ELSE false END as is_overdue,
+      COALESCE(
+        json_agg(
+          json_build_object('id', cl.id, 'name', cl.name, 'color', cl.color)
+        ) FILTER (WHERE cl.id IS NOT NULL),
+        '[]'
+      ) as labels
+    FROM cards c
+    JOIN lists l ON c.list_id = l.id
+    LEFT JOIN card_labels card_l ON card_l.card_id = c.id
+    LEFT JOIN labels cl ON cl.id = card_l.label_id
+    WHERE l.board_id = ${boardId} 
+      AND c.assignee_id = ${userId}
+      ${periodFilter}
+    GROUP BY c.id, l.title
+    ORDER BY c.due_date ASC NULLS LAST
+  `;
+
+  return cards;
+}

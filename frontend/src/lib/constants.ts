@@ -21,3 +21,15 @@ export const CARD_COVER_COLORS = [
   '#14b8a6', // Teal
   '#a855f7', // Purple
 ]
+
+export const CAPACITY_COLORS = {
+  underload: 'bg-success',
+  optimal: 'bg-info',
+  overload: 'bg-error',
+}
+
+export const CAPACITY_LABELS = {
+  underload: 'Available (≤5)',
+  optimal: 'Balanced (6-10)',
+  overload: 'Overloaded (>10)',
+}

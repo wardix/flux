@@ -147,4 +147,39 @@ describe('Analytics API', () => {
       expect(typeof data.total_cards).toBe('number')
     })
   })
+  describe('GET /api/analytics/workload', () => {
+    test('should return workload data per member', async () => {
+      const res = await app.request(`/api/analytics/workload?board_id=${boardId}`, {
+        headers: { Authorization: `Bearer ${testToken}` },
+      })
+      expect(res.status).toBe(200)
+      const { data } = await res.json()
+      expect(Array.isArray(data)).toBe(true)
+      if (data.length > 0) {
+        expect(data[0]).toHaveProperty('name')
+        expect(data[0]).toHaveProperty('active_cards')
+        expect(data[0]).toHaveProperty('capacity_level')
+        expect(['underload', 'optimal', 'overload']).toContain(data[0].capacity_level)
+      }
+    })
+
+    test('should return 400 without board_id', async () => {
+      const res = await app.request('/api/analytics/workload', {
+        headers: { Authorization: `Bearer ${testToken}` },
+      })
+      expect(res.status).toBe(400)
+    })
+  })
+
+  describe('GET /api/analytics/workload/:userId/cards', () => {
+    test('should return cards assigned to specific member', async () => {
+      // Just fetch for a dummy user ID or from the setup
+      const res = await app.request(`/api/analytics/workload/1/cards?board_id=${boardId}`, {
+        headers: { Authorization: `Bearer ${testToken}` },
+      })
+      expect(res.status).toBe(200)
+      const { data } = await res.json()
+      expect(Array.isArray(data)).toBe(true)
+    })
+  })
 })

@@ -13,6 +13,7 @@ export function ViewSwitcher({ activeView, onViewChange }: ViewSwitcherProps) {
     { id: 'calendar', label: 'Calendar' },
     { id: 'timeline', label: 'Timeline' },
     { id: 'map', label: 'Map View' },
+    { id: 'workload', label: 'Workload' },
   ]
 
   return (

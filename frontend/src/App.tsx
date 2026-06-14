@@ -12,6 +12,7 @@ import { TableView } from './components/board/TableView'
 import { CalendarView } from './components/board/CalendarView'
 import { TimelineView } from './components/board/TimelineView'
 import { MapView } from './components/board/MapView'
+import { WorkloadView } from './components/board/WorkloadView'
 import { BurndownChart } from './components/board/BurndownChart'
 import { CustomFieldEditor } from './components/board/CustomFieldEditor'
 import { EpicDetail } from './components/board/EpicDetail'
@@ -1960,6 +1961,9 @@ function App() {
                     cards={activeBoard?.lists?.flatMap(l => l.cards) || []}
                     onCardClick={(card) => setActiveCardId(card.id)}
                   />
+                )}
+                {activeView === 'workload' && activeBoard && (
+                  <WorkloadView boardId={activeBoard.id} />
                 )}
               </>
             )}

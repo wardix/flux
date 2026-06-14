@@ -1,6 +1,6 @@
 import { JSONContent } from '@tiptap/react'
 
-export type BoardViewType = 'kanban' | 'table' | 'calendar' | 'timeline' | 'map'
+export type BoardViewType = 'kanban' | 'table' | 'calendar' | 'timeline' | 'map' | 'workload'
 
 export interface Card {
   id: number
@@ -518,4 +518,24 @@ export interface SummaryData {
   overdue_cards: number
   avg_completion_days: number
   completion_percentage: number
+}
+
+export interface WorkloadMember {
+  id: number
+  name: string
+  avatar_url: string | null
+  total_cards: number
+  active_cards: number
+  completed_cards: number
+  overdue_cards: number
+  capacity_level: 'underload' | 'optimal' | 'overload'
+}
+
+export interface WorkloadCard {
+  id: number
+  title: string
+  list_title: string
+  due_date: string | null
+  is_overdue: boolean
+  labels: Array<{ id: number; name: string; color: string }>
 }
