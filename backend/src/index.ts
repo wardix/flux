@@ -1,8 +1,8 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
+import { authRoutes } from './routes/auth'
 import { boardRoutes } from './routes/boards'
 import { cardRoutes } from './routes/cards'
-import { authRoutes } from './routes/auth'
 
 const app = new Hono()
 
