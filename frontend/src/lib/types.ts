@@ -11,6 +11,7 @@ export interface Card {
   archived_at?: string | null
   created_at: string
   updated_at: string
+  labels?: Label[]
 }
 
 export interface List {
@@ -41,4 +42,13 @@ export interface Workspace {
   owner_id: number
   created_at: string
   updated_at: string
+}
+
+export interface Label {
+  id: number
+  board_id: number
+  name: string
+  color: string
+  created_at?: string
+  updated_at?: string
 }

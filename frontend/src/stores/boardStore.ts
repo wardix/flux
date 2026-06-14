@@ -1,10 +1,11 @@
 import { create } from 'zustand'
 import { api } from '../lib/api'
-import type { Board, Card, List, Workspace } from '../lib/types'
+import type { Board, Card, Label, List, Workspace } from '../lib/types'
 
 interface BoardState {
   boards: Board[]
   workspaces: Workspace[]
+  labels: Label[]
   activeWorkspace: Workspace | null
   activeBoard: Board | null
   isLoading: boolean
@@ -22,11 +23,17 @@ interface BoardState {
   updateCard: (cardId: number, data: Partial<Card>) => Promise<void>
   deleteCard: (cardId: number) => Promise<void>
   deleteList: (listId: number) => Promise<void>
+  fetchLabels: (boardId: number) => Promise<void>
+  createLabel: (boardId: number, name: string, color: string) => Promise<void>
+  deleteLabel: (id: number) => Promise<void>
+  addLabelToCard: (cardId: number, label: Label) => Promise<void>
+  removeLabelFromCard: (cardId: number, labelId: number) => Promise<void>
 }
 
 export const useBoardStore = create<BoardState>((set, get) => ({
   boards: [],
   workspaces: [],
+  labels: [],
   activeWorkspace: null,
   activeBoard: null,
   isLoading: false,
@@ -140,8 +147,22 @@ export const useBoardStore = create<BoardState>((set, get) => ({
                 description: 'Look into native WebSockets vs Socket.io in Hono',
                 position: 0,
                 story_points: 3,
+                due_date: new Date(Date.now() + 86400000 * 2).toISOString(),
                 created_at: '',
                 updated_at: '',
+                labels: [{ id: 50, board_id: id, name: 'Feature', color: '#3b82f6' }],
+              },
+              {
+                id: 101,
+                list_id: 10,
+                title: 'Integrate Rich Text Editor',
+                description: 'Setup TipTap editor in Card Details modal',
+                position: 1,
+                story_points: 5,
+                due_date: new Date(Date.now() - 86400000).toISOString(),
+                created_at: '',
+                updated_at: '',
+                labels: [{ id: 51, board_id: id, name: 'Urgent', color: '#ef4444' }],
               },
             ],
           },
@@ -242,7 +263,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
           if (list.id === listId) {
             return {
               ...list,
-              cards: [...(list.cards || []), data],
+              cards: [...(list.cards || []), { ...data, labels: [] }],
             }
           }
           return list
@@ -262,6 +283,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
         position: 99,
         created_at: '',
         updated_at: '',
+        labels: [],
       }
       set((state) => {
         if (!state.activeBoard?.lists) return {}
@@ -299,7 +321,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
           if (list.id === updatedCard.list_id) {
             const exists = list.cards.some((c) => c.id === cardId)
             const updatedCards = exists
-              ? list.cards.map((c) => (c.id === cardId ? updatedCard : c))
+              ? list.cards.map((c) => (c.id === cardId ? { ...c, ...updatedCard } : c))
               : [...list.cards, updatedCard]
             return {
               ...list,
@@ -393,6 +415,121 @@ export const useBoardStore = create<BoardState>((set, get) => ({
             lists: state.activeBoard.lists.filter((list) => list.id !== listId),
           },
         }
+      })
+    }
+  },
+
+  fetchLabels: async (boardId: number) => {
+    try {
+      const { data } = await api.get<{ data: Label[] }>(`/labels?boardId=${boardId}`)
+      set({ labels: data })
+    } catch {
+      const mockLabels = [
+        { id: 50, board_id: boardId, name: 'Feature', color: '#3b82f6' },
+        { id: 51, board_id: boardId, name: 'Urgent', color: '#ef4444' },
+        { id: 52, board_id: boardId, name: 'Bug', color: '#ef4444' },
+        { id: 53, board_id: boardId, name: 'Refactor', color: '#10b981' },
+      ]
+      set({ labels: mockLabels })
+    }
+  },
+
+  createLabel: async (boardId: number, name: string, color: string) => {
+    try {
+      const { data } = await api.post<{ data: Label }>('/labels', {
+        board_id: boardId,
+        name,
+        color,
+      })
+      set((state) => ({ labels: [...state.labels, data] }))
+    } catch {
+      const mockLabel: Label = {
+        id: Math.floor(Math.random() * 1000) + 200,
+        board_id: boardId,
+        name,
+        color,
+      }
+      set((state) => ({ labels: [...state.labels, mockLabel] }))
+    }
+  },
+
+  deleteLabel: async (id: number) => {
+    try {
+      await api.delete(`/labels/${id}`)
+      set((state) => ({ labels: state.labels.filter((l) => l.id !== id) }))
+    } catch {
+      set((state) => ({ labels: state.labels.filter((l) => l.id !== id) }))
+    }
+  },
+
+  addLabelToCard: async (cardId: number, label: Label) => {
+    try {
+      await api.post(`/labels/card/${cardId}`, { label_id: label.id })
+      set((state) => {
+        if (!state.activeBoard?.lists) return {}
+        const updatedLists = state.activeBoard.lists.map((list) => ({
+          ...list,
+          cards: list.cards.map((c) => {
+            if (c.id === cardId) {
+              const currentLabels = c.labels || []
+              if (currentLabels.some((l) => l.id === label.id)) return c
+              return { ...c, labels: [...currentLabels, label] }
+            }
+            return c
+          }),
+        }))
+        return { activeBoard: { ...state.activeBoard, lists: updatedLists } }
+      })
+    } catch {
+      set((state) => {
+        if (!state.activeBoard?.lists) return {}
+        const updatedLists = state.activeBoard.lists.map((list) => ({
+          ...list,
+          cards: list.cards.map((c) => {
+            if (c.id === cardId) {
+              const currentLabels = c.labels || []
+              if (currentLabels.some((l) => l.id === label.id)) return c
+              return { ...c, labels: [...currentLabels, label] }
+            }
+            return c
+          }),
+        }))
+        return { activeBoard: { ...state.activeBoard, lists: updatedLists } }
+      })
+    }
+  },
+
+  removeLabelFromCard: async (cardId: number, labelId: number) => {
+    try {
+      await api.delete(`/labels/card/${cardId}/${labelId}`)
+      set((state) => {
+        if (!state.activeBoard?.lists) return {}
+        const updatedLists = state.activeBoard.lists.map((list) => ({
+          ...list,
+          cards: list.cards.map((c) => {
+            if (c.id === cardId) {
+              const currentLabels = c.labels || []
+              return { ...c, labels: currentLabels.filter((l) => l.id !== labelId) }
+            }
+            return c
+          }),
+        }))
+        return { activeBoard: { ...state.activeBoard, lists: updatedLists } }
+      })
+    } catch {
+      set((state) => {
+        if (!state.activeBoard?.lists) return {}
+        const updatedLists = state.activeBoard.lists.map((list) => ({
+          ...list,
+          cards: list.cards.map((c) => {
+            if (c.id === cardId) {
+              const currentLabels = c.labels || []
+              return { ...c, labels: currentLabels.filter((l) => l.id !== labelId) }
+            }
+            return c
+          }),
+        }))
+        return { activeBoard: { ...state.activeBoard, lists: updatedLists } }
       })
     }
   },

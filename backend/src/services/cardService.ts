@@ -29,7 +29,7 @@ export async function update(
   data: {
     list_id?: number
     title?: string
-    description?: string
+    description?: string | null
     position?: number
     due_date?: string | null
     assignee_id?: number | null
@@ -38,42 +38,37 @@ export async function update(
     archived_at?: string | null
   },
 ) {
-  const updates: string[] = []
-  const values: unknown[] = []
-  let index = 1
+  const current = await db`SELECT * FROM cards WHERE id = ${id}`
+  if (current.length === 0) return null
 
-  const allowedFields = [
-    'list_id',
-    'title',
-    'description',
-    'position',
-    'due_date',
-    'assignee_id',
-    'parent_card_id',
-    'story_points',
-    'archived_at',
-  ]
+  const row = current[0]
+  const list_id = data.list_id !== undefined ? data.list_id : row.list_id
+  const title = data.title !== undefined ? data.title : row.title
+  const description = data.description !== undefined ? data.description : row.description
+  const position = data.position !== undefined ? data.position : row.position
+  const due_date = data.due_date !== undefined ? data.due_date : row.due_date
+  const assignee_id = data.assignee_id !== undefined ? data.assignee_id : row.assignee_id
+  const parent_card_id =
+    data.parent_card_id !== undefined ? data.parent_card_id : row.parent_card_id
+  const story_points = data.story_points !== undefined ? data.story_points : row.story_points
+  const archived_at = data.archived_at !== undefined ? data.archived_at : row.archived_at
 
-  for (const field of allowedFields) {
-    if (data[field as keyof typeof data] !== undefined) {
-      updates.push(`${field} = $${index++}`)
-      values.push(data[field as keyof typeof data])
-    }
-  }
-
-  if (updates.length === 0) {
-    const current = await db`SELECT * FROM cards WHERE id = ${id}`
-    return current[0] || null
-  }
-
-  values.push(id)
-  const query = `
+  const result = await db`
     UPDATE cards
-    SET ${updates.join(', ')}, updated_at = NOW()
-    WHERE id = $${index}
+    SET
+      list_id = ${list_id},
+      title = ${title},
+      description = ${description},
+      position = ${position},
+      due_date = ${due_date},
+      assignee_id = ${assignee_id},
+      parent_card_id = ${parent_card_id},
+      story_points = ${story_points},
+      archived_at = ${archived_at},
+      updated_at = NOW()
+    WHERE id = ${id}
     RETURNING *
   `
-  const result = await db.query(query, values)
   return result[0] || null
 }
 

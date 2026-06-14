@@ -40,19 +40,35 @@ INSERT INTO lists (board_id, title, position) VALUES
 
 -- Insert cards for 'Flux Development' Board (id = 1)
 -- Backlog (list_id = 1)
-INSERT INTO cards (list_id, title, description, position, assignee_id, story_points) VALUES
-(1, 'Research WebSocket Libraries', 'Look into Socket.io vs native WebSockets for Hono', 0, 1, 3),
-(1, 'Integrate Rich Text Editor', 'Setup TipTap editor in Card Details modal', 1, 2, 5);
+INSERT INTO cards (list_id, title, description, position, assignee_id, story_points, due_date) VALUES
+(1, 'Research WebSocket Libraries', 'Look into Socket.io vs native WebSockets for Hono', 0, 1, 3, NOW() + INTERVAL '2 days'),
+(1, 'Integrate Rich Text Editor', 'Setup TipTap editor in Card Details modal', 1, 2, 5, NOW() - INTERVAL '1 days');
 
 -- To Do (list_id = 2)
-INSERT INTO cards (list_id, title, description, position, assignee_id, story_points) VALUES
-(2, 'Design DB Schema', 'Define tables for boards, lists, cards, and users', 0, 1, 2),
-(2, 'Setup Frontend Project', 'Initialize React App with Vite, Tailwind CSS, and DaisyUI', 1, 2, 1);
+INSERT INTO cards (list_id, title, description, position, assignee_id, story_points, due_date) VALUES
+(2, 'Design DB Schema', 'Define tables for boards, lists, cards, and users', 0, 1, 2, NOW() + INTERVAL '5 days'),
+(2, 'Setup Frontend Project', 'Initialize React App with Vite, Tailwind CSS, and DaisyUI', 1, 2, 1, NOW() + INTERVAL '10 days');
 
 -- In Progress (list_id = 3)
-INSERT INTO cards (list_id, title, description, position, assignee_id, story_points) VALUES
-(3, 'Develop Authentication', 'Implement JWT login/register flow on backend and frontend', 0, 1, 3);
+INSERT INTO cards (list_id, title, description, position, assignee_id, story_points, due_date) VALUES
+(3, 'Develop Authentication', 'Implement JWT login/register flow on backend and frontend', 0, 1, 3, NOW() + INTERVAL '1 days');
 
 -- Done (list_id = 4)
-INSERT INTO cards (list_id, title, description, position, assignee_id, story_points) VALUES
-(4, 'Configure Biome', 'Setup Biome for formatting and linting instead of ESLint/Prettier', 0, 1, 1);
+INSERT INTO cards (list_id, title, description, position, assignee_id, story_points, due_date) VALUES
+(4, 'Configure Biome', 'Setup Biome for formatting and linting instead of ESLint/Prettier', 0, 1, 1, NOW() - INTERVAL '5 days');
+
+-- Insert labels
+INSERT INTO labels (board_id, name, color) VALUES
+(1, 'Bug', '#ef4444'),
+(1, 'Feature', '#3b82f6'),
+(1, 'Urgent', '#f59e0b'),
+(1, 'Refactor', '#10b981');
+
+-- Associate card labels
+INSERT INTO card_labels (card_id, label_id) VALUES
+(1, 2), -- WebSocket is a Feature
+(2, 2), -- Editor is a Feature
+(3, 3), -- DB Schema is Urgent
+(4, 2), -- Frontend is a Feature
+(5, 3), -- Auth is Urgent
+(6, 4); -- Biome is Refactor

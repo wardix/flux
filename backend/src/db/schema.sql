@@ -1,4 +1,6 @@
 -- Drop tables if they exist (for easy migration reset)
+DROP TABLE IF EXISTS card_labels CASCADE;
+DROP TABLE IF EXISTS labels CASCADE;
 DROP TABLE IF EXISTS cards CASCADE;
 DROP TABLE IF EXISTS lists CASCADE;
 DROP TABLE IF EXISTS boards CASCADE;
@@ -73,6 +75,23 @@ CREATE TABLE cards (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Create labels table
+CREATE TABLE labels (
+    id SERIAL PRIMARY KEY,
+    board_id INTEGER REFERENCES boards(id) ON DELETE CASCADE,
+    name VARCHAR(100) NOT NULL,
+    color VARCHAR(50) NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Create card_labels join table
+CREATE TABLE card_labels (
+    card_id INTEGER REFERENCES cards(id) ON DELETE CASCADE,
+    label_id INTEGER REFERENCES labels(id) ON DELETE CASCADE,
+    PRIMARY KEY (card_id, label_id)
+);
+
 -- Create indexes
 CREATE INDEX idx_workspaces_owner_id ON workspaces(owner_id);
 CREATE INDEX idx_workspace_members_workspace_id ON workspace_members(workspace_id);
@@ -81,6 +100,8 @@ CREATE INDEX idx_lists_board_id ON lists(board_id);
 CREATE INDEX idx_cards_list_id ON cards(list_id);
 CREATE INDEX idx_cards_assignee_id ON cards(assignee_id);
 CREATE INDEX idx_cards_parent_card_id ON cards(parent_card_id);
+CREATE INDEX idx_labels_board_id ON labels(board_id);
+CREATE INDEX idx_card_labels_label_id ON card_labels(label_id);
 
 -- Triggers for updated_at
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -97,3 +118,4 @@ CREATE TRIGGER update_workspace_members_updated_at BEFORE UPDATE ON workspace_me
 CREATE TRIGGER update_boards_updated_at BEFORE UPDATE ON boards FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_lists_updated_at BEFORE UPDATE ON lists FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_cards_updated_at BEFORE UPDATE ON cards FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_labels_updated_at BEFORE UPDATE ON labels FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

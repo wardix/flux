@@ -9,10 +9,12 @@ export async function authMiddleware(c: Context, next: Next) {
     const payload = await verify(
       token,
       process.env.JWT_SECRET || 'your-jwt-secret-here-change-in-production',
+      'HS256',
     )
     c.set('userId', Number(payload.sub))
     await next()
-  } catch {
+  } catch (err) {
+    console.error('JWT verification error:', err)
     return c.json({ error: 'Invalid token' }, 401)
   }
 }
