@@ -1,6 +1,6 @@
 import { JSONContent } from '@tiptap/react'
 
-export type BoardViewType = 'kanban' | 'table' | 'calendar' | 'timeline'
+export type BoardViewType = 'kanban' | 'table' | 'calendar' | 'timeline' | 'map'
 
 export interface Card {
   id: number
@@ -35,6 +35,9 @@ export interface Card {
   source_board_id?: number | null
   cover_color?: string | null
   cover_image_url?: string | null
+  latitude?: number | null
+  longitude?: number | null
+  address?: string | null
 }
 
 export interface RecurringRule {
@@ -264,6 +267,19 @@ export interface Sprint {
   status: 'planning' | 'active' | 'completed'
   created_at: string
   updated_at: string
+}
+
+export interface CardWithLocation {
+  id: number
+  title: string
+  latitude: number
+  longitude: number
+  address: string | null
+  list_id: number
+  list_title: string
+  labels: Label[]
+  assignees: User[]
+  due_date: string | null
 }
 
 export interface Epic {

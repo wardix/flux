@@ -11,6 +11,7 @@ import { ViewSwitcher } from './components/board/ViewSwitcher'
 import { TableView } from './components/board/TableView'
 import { CalendarView } from './components/board/CalendarView'
 import { TimelineView } from './components/board/TimelineView'
+import { MapView } from './components/board/MapView'
 import { BurndownChart } from './components/board/BurndownChart'
 import { CustomFieldEditor } from './components/board/CustomFieldEditor'
 import { EpicDetail } from './components/board/EpicDetail'
@@ -1884,6 +1885,13 @@ function App() {
                   <TimelineView 
                     cards={activeBoard?.lists?.flatMap(l => l.cards) || []} 
                     lists={activeBoard?.lists || []}
+                    onCardClick={(card) => setActiveCardId(card.id)}
+                  />
+                )}
+                {activeView === 'map' && activeBoard && (
+                  <MapView 
+                    boardId={activeBoard.id}
+                    cards={activeBoard?.lists?.flatMap(l => l.cards) || []}
                     onCardClick={(card) => setActiveCardId(card.id)}
                   />
                 )}

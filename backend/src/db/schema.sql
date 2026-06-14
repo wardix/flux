@@ -111,6 +111,9 @@ CREATE TABLE cards (
     cover_image_url TEXT,
     archived_at TIMESTAMPTZ,
     deleted_at TIMESTAMPTZ,
+    latitude NUMERIC(10, 8),
+    longitude NUMERIC(11, 8),
+    address TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -143,6 +146,7 @@ CREATE INDEX idx_cards_parent_card_id ON cards(parent_card_id);
 CREATE INDEX idx_cards_description_json ON cards USING GIN (description_json);
 CREATE INDEX idx_labels_board_id ON labels(board_id);
 CREATE INDEX idx_card_labels_label_id ON card_labels(label_id);
+CREATE INDEX idx_cards_location ON cards(latitude, longitude) WHERE latitude IS NOT NULL AND longitude IS NOT NULL;
 
 -- Triggers for updated_at
 CREATE OR REPLACE FUNCTION update_updated_at_column()
