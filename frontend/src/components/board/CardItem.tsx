@@ -177,12 +177,19 @@ export function CardItem({ card }: CardItemProps) {
                   <span className="text-xs text-base-content/50 font-bold uppercase block mb-1">
                     Story Points
                   </span>
-                  <input
-                    type="number"
+                  <select
                     value={storyPoints}
                     onChange={(e) => setStoryPoints(e.target.value)}
-                    className="input input-bordered input-sm w-full focus:outline-none"
-                  />
+                    className="select select-bordered select-sm w-full focus:outline-none font-semibold"
+                  >
+                    <option value="">None</option>
+                    <option value="1">1 pt</option>
+                    <option value="2">2 pts</option>
+                    <option value="3">3 pts</option>
+                    <option value="5">5 pts</option>
+                    <option value="8">8 pts</option>
+                    <option value="13">13 pts</option>
+                  </select>
                 </div>
               </div>
 
