@@ -1,28 +1,364 @@
-import { Hono } from 'hono'
+import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
 import { authMiddleware } from '../middleware/auth'
 import * as boardService from '../services/boardService'
+import { ErrorSchema, BoardSchema, CreateBoardRequest } from '../lib/schemas'
 
-const boardRoutes = new Hono()
+const boardRoutes = new OpenAPIHono()
 
-boardRoutes.use('*', authMiddleware)
-
-boardRoutes.get('/', async (c) => {
-  const userId = c.get('userId')
-  const boards = await boardService.getAll(userId)
-  return c.json({ data: boards })
+const listBoardsRoute = createRoute({
+  method: 'get',
+  path: '/',
+  tags: ['Boards'],
+  summary: 'List all boards',
+  description: 'Get all boards accessible by the authenticated user',
+  security: [{ bearerAuth: [] }],
+  responses: {
+    200: {
+      description: 'List of boards',
+      content: {
+        'application/json': {
+          schema: z.object({
+            data: z.array(BoardSchema),
+          }),
+        },
+      },
+    },
+    401: {
+      description: 'Unauthorized',
+      content: {
+        'application/json': {
+          schema: ErrorSchema,
+        },
+      },
+    },
+  },
 })
 
-boardRoutes.get('/:id', async (c) => {
+const getBoardByIdRoute = createRoute({
+  method: 'get',
+  path: '/{id}',
+  tags: ['Boards'],
+  summary: 'Get board details by ID',
+  description: 'Get detailed information about a specific board including its lists and cards',
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      id: z.string().openapi({ example: '1' }),
+    }),
+  },
+  responses: {
+    200: {
+      description: 'Board details retrieved successfully',
+      content: {
+        'application/json': {
+          schema: z.object({
+            data: BoardSchema.extend({
+              lists: z.array(z.any()).optional(), // Detailed board info contains lists & cards
+            }),
+          }),
+        },
+      },
+    },
+    400: {
+      description: 'Invalid ID',
+      content: {
+        'application/json': {
+          schema: ErrorSchema,
+        },
+      },
+    },
+    404: {
+      description: 'Board not found',
+      content: {
+        'application/json': {
+          schema: ErrorSchema,
+        },
+      },
+    },
+    401: {
+      description: 'Unauthorized',
+      content: {
+        'application/json': {
+          schema: ErrorSchema,
+        },
+      },
+    },
+  },
+})
+
+const createBoardRoute = createRoute({
+  method: 'post',
+  path: '/',
+  tags: ['Boards'],
+  summary: 'Create a new board',
+  description: 'Create a new project board in the specified workspace',
+  security: [{ bearerAuth: [] }],
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: CreateBoardRequest,
+        },
+      },
+    },
+  },
+  responses: {
+    201: {
+      description: 'Board created successfully',
+      content: {
+        'application/json': {
+          schema: z.object({
+            data: BoardSchema,
+          }),
+        },
+      },
+    },
+    400: {
+      description: 'Bad Request',
+      content: {
+        'application/json': {
+          schema: ErrorSchema,
+        },
+      },
+    },
+    401: {
+      description: 'Unauthorized',
+      content: {
+        'application/json': {
+          schema: ErrorSchema,
+        },
+      },
+    },
+    500: {
+      description: 'Internal Server Error',
+      content: {
+        'application/json': {
+          schema: ErrorSchema,
+        },
+      },
+    },
+  },
+})
+
+const updateBoardRoute = createRoute({
+  method: 'put',
+  path: '/{id}',
+  tags: ['Boards'],
+  summary: 'Update board details',
+  description: 'Update the title, background, visibility, or other details of an existing board',
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      id: z.string().openapi({ example: '1' }),
+    }),
+    body: {
+      content: {
+        'application/json': {
+          schema: z.object({
+            title: z.string().optional().openapi({ example: 'New Title' }),
+            background: z.string().optional().openapi({ example: 'green' }),
+            visibility: z.string().optional().openapi({ example: 'public' }),
+            deleted_at: z.string().nullable().optional(),
+          }),
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Board updated successfully',
+      content: {
+        'application/json': {
+          schema: z.object({
+            data: BoardSchema,
+          }),
+        },
+      },
+    },
+    400: {
+      description: 'Invalid ID',
+      content: {
+        'application/json': {
+          schema: ErrorSchema,
+        },
+      },
+    },
+    404: {
+      description: 'Board not found',
+      content: {
+        'application/json': {
+          schema: ErrorSchema,
+        },
+      },
+    },
+    401: {
+      description: 'Unauthorized',
+      content: {
+        'application/json': {
+          schema: ErrorSchema,
+        },
+      },
+    },
+  },
+})
+
+const getBoardArchiveRoute = createRoute({
+  method: 'get',
+  path: '/{id}/archive',
+  tags: ['Boards'],
+  summary: 'Get board archived items',
+  description: 'Get all archived lists and cards for a specific board',
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      id: z.string().openapi({ example: '1' }),
+    }),
+  },
+  responses: {
+    200: {
+      description: 'Archived lists and cards',
+      content: {
+        'application/json': {
+          schema: z.object({
+            data: z.object({
+              lists: z.array(z.any()),
+              cards: z.array(z.any()),
+            }),
+          }),
+        },
+      },
+    },
+    400: {
+      description: 'Invalid ID',
+      content: {
+        'application/json': {
+          schema: ErrorSchema,
+        },
+      },
+    },
+    401: {
+      description: 'Unauthorized',
+      content: {
+        'application/json': {
+          schema: ErrorSchema,
+        },
+      },
+    },
+  },
+})
+
+const getBoardTrashRoute = createRoute({
+  method: 'get',
+  path: '/{id}/trash',
+  tags: ['Boards'],
+  summary: 'Get board trashed items',
+  description: 'Get all soft-deleted lists and cards for a specific board',
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      id: z.string().openapi({ example: '1' }),
+    }),
+  },
+  responses: {
+    200: {
+      description: 'Trashed lists and cards',
+      content: {
+        'application/json': {
+          schema: z.object({
+            data: z.object({
+              lists: z.array(z.any()),
+              cards: z.array(z.any()),
+            }),
+          }),
+        },
+      },
+    },
+    400: {
+      description: 'Invalid ID',
+      content: {
+        'application/json': {
+          schema: ErrorSchema,
+        },
+      },
+    },
+    401: {
+      description: 'Unauthorized',
+      content: {
+        'application/json': {
+          schema: ErrorSchema,
+        },
+      },
+    },
+  },
+})
+
+const deleteBoardRoute = createRoute({
+  method: 'delete',
+  path: '/{id}',
+  tags: ['Boards'],
+  summary: 'Delete board',
+  description: 'Soft-delete or permanently delete a board by its ID',
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      id: z.string().openapi({ example: '1' }),
+    }),
+    query: z.object({
+      permanent: z.string().optional().openapi({ example: 'true' }),
+    }),
+  },
+  responses: {
+    204: {
+      description: 'Board deleted successfully (no content)',
+    },
+    400: {
+      description: 'Invalid ID',
+      content: {
+        'application/json': {
+          schema: ErrorSchema,
+        },
+      },
+    },
+    404: {
+      description: 'Board not found',
+      content: {
+        'application/json': {
+          schema: ErrorSchema,
+        },
+      },
+    },
+    401: {
+      description: 'Unauthorized',
+      content: {
+        'application/json': {
+          schema: ErrorSchema,
+        },
+      },
+    },
+  },
+})
+
+// Apply authentication middleware to all sub-routes
+boardRoutes.use('*', authMiddleware)
+
+// Register route handlers
+boardRoutes.openapi(listBoardsRoute, async (c) => {
+  const userId = c.get('userId')
+  const boards = await boardService.getAll(userId)
+  return c.json({ data: boards }, 200)
+})
+
+boardRoutes.openapi(getBoardByIdRoute, async (c) => {
   const id = Number(c.req.param('id'))
   if (Number.isNaN(id)) return c.json({ error: 'Invalid ID' }, 400)
 
   const board = await boardService.getById(id)
   if (!board) return c.json({ error: 'Board not found' }, 404)
 
-  return c.json({ data: board })
+  return c.json({ data: board }, 200)
 })
 
-boardRoutes.post('/', async (c) => {
+boardRoutes.openapi(createBoardRoute, async (c) => {
   try {
     const body = await c.req.json()
     if (!body.title) return c.json({ error: 'Title is required' }, 400)
@@ -36,7 +372,7 @@ boardRoutes.post('/', async (c) => {
   }
 })
 
-boardRoutes.put('/:id', async (c) => {
+boardRoutes.openapi(updateBoardRoute, async (c) => {
   try {
     const id = Number(c.req.param('id'))
     if (Number.isNaN(id)) return c.json({ error: 'Invalid ID' }, 400)
@@ -45,14 +381,14 @@ boardRoutes.put('/:id', async (c) => {
     const board = await boardService.update(id, body)
     if (!board) return c.json({ error: 'Board not found' }, 404)
 
-    return c.json({ data: board })
+    return c.json({ data: board }, 200)
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Internal Server Error'
     return c.json({ error: message }, 500)
   }
 })
 
-boardRoutes.get('/:id/archive', async (c) => {
+boardRoutes.openapi(getBoardArchiveRoute, async (c) => {
   const id = Number(c.req.param('id'))
   if (Number.isNaN(id)) return c.json({ error: 'Invalid ID' }, 400)
 
@@ -64,10 +400,10 @@ boardRoutes.get('/:id/archive', async (c) => {
     JOIN lists l ON c.list_id = l.id
     WHERE l.board_id = ${id} AND c.archived_at IS NOT NULL AND c.deleted_at IS NULL
   `
-  return c.json({ data: { lists, cards } })
+  return c.json({ data: { lists, cards } }, 200)
 })
 
-boardRoutes.get('/:id/trash', async (c) => {
+boardRoutes.openapi(getBoardTrashRoute, async (c) => {
   const id = Number(c.req.param('id'))
   if (Number.isNaN(id)) return c.json({ error: 'Invalid ID' }, 400)
 
@@ -78,10 +414,10 @@ boardRoutes.get('/:id/trash', async (c) => {
     JOIN lists l ON c.list_id = l.id
     WHERE l.board_id = ${id} AND c.deleted_at IS NOT NULL
   `
-  return c.json({ data: { lists, cards } })
+  return c.json({ data: { lists, cards } }, 200)
 })
 
-boardRoutes.delete('/:id', async (c) => {
+boardRoutes.openapi(deleteBoardRoute, async (c) => {
   const id = Number(c.req.param('id'))
   if (Number.isNaN(id)) return c.json({ error: 'Invalid ID' }, 400)
 
