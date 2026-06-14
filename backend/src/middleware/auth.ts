@@ -3,17 +3,7 @@ import { verify } from 'hono/jwt'
 
 export async function authMiddleware(c: Context, next: Next) {
   const token = c.req.header('Authorization')?.replace('Bearer ', '')
-  if (!token) {
-    c.set('userId', 1)
-    await next()
-    return
-  }
-
-  if (token === 'mock-token') {
-    c.set('userId', 1)
-    await next()
-    return
-  }
+  if (!token) return c.json({ error: 'Unauthorized' }, 401)
 
   try {
     const payload = await verify(
