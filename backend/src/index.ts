@@ -26,6 +26,7 @@ import { corsMiddleware } from './middleware/cors'
 import { adminRoutes } from './routes/admin'
 import { exportRoutes } from './routes/export'
 import { userRoutes } from './routes/users'
+import { boardCustomFieldRoutes, cardCustomFieldRoutes } from './routes/customFields'
 
 
 
@@ -76,6 +77,8 @@ app.route('/api', voteRoutes)
 app.route('/api', adminRoutes)
 app.route('/api', exportRoutes)
 app.route('/api', userRoutes)
+app.route('/api/boards/:boardId/custom-fields', boardCustomFieldRoutes)
+app.route('/api/cards/:cardId/custom-fields', cardCustomFieldRoutes)
 
 
 export default {

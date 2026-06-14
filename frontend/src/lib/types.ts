@@ -134,4 +134,27 @@ export interface ManualTimeLogRequest {
   description?: string
 }
 
+export interface CustomField {
+  id: number
+  board_id: number
+  name: string
+  field_type: 'text' | 'number' | 'date' | 'dropdown' | 'checkbox'
+  options?: {
+    choices?: string[]
+  } | null
+  is_required: boolean
+  position: number
+  created_at?: string
+  updated_at?: string
+}
+
+export interface CustomFieldValueData {
+  field_id: number
+  field_name?: string
+  field_type?: 'text' | 'number' | 'date' | 'dropdown' | 'checkbox'
+  field_options?: { choices?: string[] } | null
+  value: string | null
+}
+
+
 

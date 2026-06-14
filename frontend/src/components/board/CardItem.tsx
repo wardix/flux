@@ -20,6 +20,8 @@ import { ManualTimeForm } from './ManualTimeForm'
 import { VoteCount } from './VoteCount'
 import { VoteButton } from './VoteButton'
 import { VoterList } from './VoterList'
+import { CustomFieldValues } from './CustomFieldValues'
+import { CustomFieldBadge } from './CustomFieldBadge'
 
 
 
@@ -371,6 +373,15 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
             </div>
           </div>
 
+          {/* Custom Fields section */}
+          {useBoardStore.getState().activeBoard?.id && (
+            <CustomFieldValues
+              cardId={card.id}
+              boardId={useBoardStore.getState().activeBoard!.id}
+              disabled={isObserver}
+            />
+          )}
+
           {!card.parent_card_id && (
             <div className="border-t border-base-200 pt-3 space-y-2">
               <span className="text-xs text-base-content/50 font-bold uppercase block">
@@ -519,6 +530,9 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
             ))}
           </div>
         )}
+
+        {/* Custom Fields Badge preview */}
+        <CustomFieldBadge cardId={card.id} />
 
         <div className="flex items-start justify-between">
           <h4 className="font-medium text-sm text-base-content/90 line-clamp-2 pr-6">
