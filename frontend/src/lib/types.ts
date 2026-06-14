@@ -310,3 +310,22 @@ export interface AISuggestionResult {
     reasoning?: string
   }
 }
+
+export interface SearchResult {
+  id: number
+  title: string
+  description: string | null
+  due_date: string | null
+  list_id: number
+  list_title: string
+  board_id: number
+  board_title: string
+  labels: { id: number; name: string; color: string }[]
+  assignees: { id: number; name: string; avatar_url: string | null }[]
+}
+
+export interface ActiveFilters {
+  assigneeIds: number[]
+  labelIds: number[]
+  dueStatus: 'all' | 'overdue' | 'due_today' | 'due_week' | 'no_date'
+}

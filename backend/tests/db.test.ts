@@ -4,6 +4,8 @@ import { db } from '../src/db/index'
 
 describe('Database Tests', () => {
   beforeAll(async () => {
+    await db`DROP SCHEMA public CASCADE`
+    await db`CREATE SCHEMA public`
     const schemaPath = path.join(__dirname, '../src/db/schema.sql')
     await db.file(schemaPath)
   })
