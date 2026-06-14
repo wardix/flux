@@ -22,6 +22,7 @@ import type { Sprint } from './lib/types'
 import { EpicList } from './components/board/EpicList'
 import { EpicDetail } from './components/board/EpicDetail'
 import { WebhookList } from './components/board/WebhookList'
+import { ImportDialog } from './components/board/ImportDialog'
 
 
 function decodeToken(token: string | null) {
@@ -49,6 +50,7 @@ function App() {
   const [show2FASettings, setShow2FASettings] = useState(false)
   const [showAdminPage, setShowAdminPage] = useState(false)
   const [isExportOpen, setIsExportOpen] = useState(false)
+  const [isImportOpen, setIsImportOpen] = useState(false)
 
   const { theme, setTheme, accentColor, setAccentColor } = useTheme()
   const {
@@ -516,13 +518,23 @@ function App() {
               <span className="text-xs font-semibold uppercase tracking-wider text-base-content/50">
                 Boards
               </span>
-              <button
-                type="button"
-                onClick={() => setIsAddingBoard(!isAddingBoard)}
-                className="btn btn-ghost btn-xs btn-circle text-primary hover:bg-primary/10"
-              >
-                +
-              </button>
+              <div className="flex gap-1">
+                <button
+                  type="button"
+                  onClick={() => setIsImportOpen(true)}
+                  className="btn btn-ghost btn-xs text-primary hover:bg-primary/10"
+                  title="Import Project"
+                >
+                  📥
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsAddingBoard(!isAddingBoard)}
+                  className="btn btn-ghost btn-xs btn-circle text-primary hover:bg-primary/10"
+                >
+                  +
+                </button>
+              </div>
             </div>
 
             {isAddingBoard && (
@@ -1495,6 +1507,14 @@ function App() {
           boardTitle={activeBoard.title}
           isOpen={isExportOpen}
           onClose={() => setIsExportOpen(false)}
+        />
+      )}
+
+      {isImportOpen && activeWorkspace && (
+        <ImportDialog
+          workspaceId={activeWorkspace.id}
+          onSuccess={() => setIsImportOpen(false)}
+          onClose={() => setIsImportOpen(false)}
         />
       )}
     </div>
