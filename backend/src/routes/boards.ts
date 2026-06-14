@@ -352,7 +352,8 @@ boardRoutes.openapi(getBoardByIdRoute, async (c) => {
   const id = Number(c.req.param('id'))
   if (Number.isNaN(id)) return c.json({ error: 'Invalid ID' }, 400)
 
-  const board = await boardService.getById(id)
+  const userId = c.get('userId')
+  const board = await boardService.getById(id, userId)
   if (!board) return c.json({ error: 'Board not found' }, 404)
 
   return c.json({ data: board }, 200)
@@ -584,5 +585,84 @@ boardRoutes.openapi(getBoardRoleRoute, async (c) => {
   }
 })
 
+const starBoardRoute = createRoute({
+  method: 'post',
+  path: '/{id}/star',
+  tags: ['Boards'],
+  summary: 'Star a board',
+  description: 'Add a board to user favorites',
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      id: z.string().openapi({ example: '1' }),
+    }),
+  },
+  responses: {
+    200: {
+      description: 'Board starred successfully',
+      content: {
+        'application/json': {
+          schema: z.object({
+            success: z.boolean(),
+          }),
+        },
+      },
+    },
+  },
+})
+
+const unstarBoardRoute = createRoute({
+  method: 'delete',
+  path: '/{id}/star',
+  tags: ['Boards'],
+  summary: 'Unstar a board',
+  description: 'Remove a board from user favorites',
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      id: z.string().openapi({ example: '1' }),
+    }),
+  },
+  responses: {
+    200: {
+      description: 'Board unstarred successfully',
+      content: {
+        'application/json': {
+          schema: z.object({
+            success: z.boolean(),
+          }),
+        },
+      },
+    },
+  },
+})
+
+boardRoutes.openapi(starBoardRoute, async (c) => {
+  try {
+    const id = Number(c.req.param('id'))
+    if (Number.isNaN(id)) return c.json({ error: 'Invalid ID' }, 400)
+    const userId = c.get('userId')
+    await boardService.starBoard(id, userId)
+    return c.json({ success: true }, 200)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Internal Server Error'
+    return c.json({ error: message }, 500)
+  }
+})
+
+boardRoutes.openapi(unstarBoardRoute, async (c) => {
+  try {
+    const id = Number(c.req.param('id'))
+    if (Number.isNaN(id)) return c.json({ error: 'Invalid ID' }, 400)
+    const userId = c.get('userId')
+    await boardService.unstarBoard(id, userId)
+    return c.json({ success: true }, 200)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Internal Server Error'
+    return c.json({ error: message }, 500)
+  }
+})
+
 export { boardRoutes }
+
 
