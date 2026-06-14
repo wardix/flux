@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
+import { sign } from 'hono/jwt'
 import { db } from '../../src/db/index'
 import app from '../../src/index'
 
@@ -8,6 +9,7 @@ describe('Cards Route', () => {
   let boardId: number
   let listId: number
   let cardId: number
+  let token: string
 
   beforeAll(async () => {
     const userResult = await db`
@@ -37,6 +39,13 @@ describe('Cards Route', () => {
       RETURNING id
     `
     listId = listResult[0].id
+
+    const tokenPayload = {
+      sub: userId,
+      email: 'cards_route_test@example.com',
+      exp: Math.floor(Date.now() / 1000) + 60 * 60,
+    }
+    token = await sign(tokenPayload, 'your-jwt-secret-here-change-in-production')
   })
 
   afterAll(async () => {
@@ -47,7 +56,10 @@ describe('Cards Route', () => {
     const res = await app.fetch(
       new Request('http://localhost/api/cards', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({
           list_id: listId,
           title: 'Route Card',
@@ -66,7 +78,10 @@ describe('Cards Route', () => {
     const res = await app.fetch(
       new Request(`http://localhost/api/cards/${cardId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({ title: 'Updated Route Card', story_points: 3 }),
       }),
     )
@@ -80,6 +95,9 @@ describe('Cards Route', () => {
     const res = await app.fetch(
       new Request(`http://localhost/api/cards/${cardId}`, {
         method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       }),
     )
     expect(res.status).toBe(204)

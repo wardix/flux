@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
+import { sign } from 'hono/jwt'
 import { db } from '../../src/db/index'
 import app from '../../src/index'
 
@@ -6,6 +7,7 @@ describe('Boards Route', () => {
   let userId: number
   let workspaceId: number
   let boardId: number
+  let token: string
 
   beforeAll(async () => {
     const userResult = await db`
@@ -21,6 +23,13 @@ describe('Boards Route', () => {
       RETURNING id
     `
     workspaceId = workspaceResult[0].id
+
+    const tokenPayload = {
+      sub: userId,
+      email: 'boards_route_test@example.com',
+      exp: Math.floor(Date.now() / 1000) + 60 * 60,
+    }
+    token = await sign(tokenPayload, 'your-jwt-secret-here-change-in-production')
   })
 
   afterAll(async () => {
@@ -31,7 +40,10 @@ describe('Boards Route', () => {
     const res = await app.fetch(
       new Request('http://localhost/api/boards', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({ title: 'Route Board', workspace_id: workspaceId }),
       }),
     )
@@ -46,6 +58,9 @@ describe('Boards Route', () => {
     const res = await app.fetch(
       new Request('http://localhost/api/boards', {
         method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       }),
     )
     expect(res.status).toBe(200)
@@ -57,6 +72,9 @@ describe('Boards Route', () => {
     const res = await app.fetch(
       new Request(`http://localhost/api/boards/${boardId}`, {
         method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       }),
     )
     expect(res.status).toBe(200)
@@ -69,7 +87,10 @@ describe('Boards Route', () => {
     const res = await app.fetch(
       new Request(`http://localhost/api/boards/${boardId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({ title: 'Updated Route Board' }),
       }),
     )
@@ -82,6 +103,9 @@ describe('Boards Route', () => {
     const res = await app.fetch(
       new Request(`http://localhost/api/boards/${boardId}`, {
         method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       }),
     )
     expect(res.status).toBe(204)
@@ -89,6 +113,9 @@ describe('Boards Route', () => {
     const checkRes = await app.fetch(
       new Request(`http://localhost/api/boards/${boardId}`, {
         method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       }),
     )
     expect(checkRes.status).toBe(404)
