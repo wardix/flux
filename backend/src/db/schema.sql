@@ -325,11 +325,24 @@ CREATE TABLE card_custom_field_values (
 
 CREATE TRIGGER update_card_custom_field_values_updated_at BEFORE UPDATE ON card_custom_field_values FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE INDEX idx_card_custom_field_values_card_id ON card_custom_field_values(card_id);
-CREATE INDEX idx_card_custom_field_values_field_id ON card_custom_field_values(field_id);
+CREATE INDEX idx_card_custom_field_values_field_id ON card_custom_field_values(field_id);-- Automation Rules Table
+CREATE TABLE automation_rules (
+    id SERIAL PRIMARY KEY,
+    board_id INTEGER NOT NULL REFERENCES boards(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    trigger_event VARCHAR(100) NOT NULL,
+    trigger_config JSONB NOT NULL DEFAULT '{}',
+    action_type VARCHAR(100) NOT NULL,
+    action_config JSONB NOT NULL DEFAULT '{}',
+    is_enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    execution_count INTEGER NOT NULL DEFAULT 0,
+    last_executed_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
 
-
-
-
-
-
+CREATE TRIGGER update_automation_rules_updated_at BEFORE UPDATE ON automation_rules FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE INDEX idx_automation_rules_board_id ON automation_rules(board_id);
 

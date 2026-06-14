@@ -27,6 +27,7 @@ import { adminRoutes } from './routes/admin'
 import { exportRoutes } from './routes/export'
 import { userRoutes } from './routes/users'
 import { boardCustomFieldRoutes, cardCustomFieldRoutes } from './routes/customFields'
+import { automationRoutes } from './routes/automations'
 
 
 
@@ -79,6 +80,7 @@ app.route('/api', exportRoutes)
 app.route('/api', userRoutes)
 app.route('/api/boards/:boardId/custom-fields', boardCustomFieldRoutes)
 app.route('/api/cards/:cardId/custom-fields', cardCustomFieldRoutes)
+app.route('/api/boards/:boardId/automations', automationRoutes)
 
 
 export default {
