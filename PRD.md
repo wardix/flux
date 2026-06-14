@@ -50,22 +50,22 @@ Flux menggabungkan kesederhanaan visual Kanban dengan fitur-fitur enterprise sep
 #### 👩‍💻 Persona 1: Developer / Software Engineer
 - **Kebutuhan**: Sprint planning, GitHub integration, keyboard shortcuts, command palette
 - **Pain Point**: Tools PM yang lambat dan mengganggu flow coding
-- **Fitur Kunci**: #05 Drag & Drop, #20 Keyboard Shortcuts, #27 Command Palette, #30 GitHub Automation
+- **Fitur Kunci**: #09 Drag & Drop, #46 Keyboard Shortcuts, #47 Command Palette, #53 GitHub Automation
 
 #### 👨‍💼 Persona 2: Project Manager
 - **Kebutuhan**: Overview proyek, timeline, workload management, reporting
 - **Pain Point**: Sulit melacak progress dan distribusi kerja tim
-- **Fitur Kunci**: #16 Multiple Views, #28 Sprints, #29 Epics, #38 Dashboard & Analytics, #45 Workload View
+- **Fitur Kunci**: #42 Multiple Views, #27 Sprints, #28 Epics, #54 Dashboard & Analytics, #56 Workload View
 
 #### 👩‍🎨 Persona 3: Designer / Creative Team
 - **Kebutuhan**: Visual board, file attachments, embed Figma
 - **Pain Point**: Kolaborasi visual yang terbatas di tools existing
-- **Fitur Kunci**: #11 Attachments, #22 Card Covers, #51 Embeds, #31 Rich Editor
+- **Fitur Kunci**: #15 Attachments, #36 Card Covers, #57 Embeds, #48 Rich Editor
 
 #### 🏢 Persona 4: Enterprise Admin
 - **Kebutuhan**: Security, SSO, audit log, white-labeling
 - **Pain Point**: Compliance dan kontrol akses yang ketat
-- **Fitur Kunci**: #21 Admin Security, #49 2FA & SSO, #55 White-labeling, #46 Approval Workflow
+- **Fitur Kunci**: #23 Admin Security, #14 2FA & SSO, #40 White-labeling, #52 Approval Workflow
 
 ### 3.2 Target Market
 
@@ -153,10 +153,10 @@ Flux menggabungkan kesederhanaan visual Kanban dengan fitur-fitur enterprise sep
 | #01 | Project Setup (Frontend + Backend) | 🔴 Critical | 1 hari |
 | #02 | Database Schema & Connection | 🔴 Critical | 1 hari |
 | #03 | Backend API Endpoints (CRUD) | 🔴 Critical | 2 hari |
-| #04 | Kanban UI (Static & State) | 🔴 Critical | 2 hari |
-| #05 | Drag and Drop (dnd-kit) | 🔴 Critical | 2 hari |
-| #37 | Dark Mode & Theming | 🟡 Medium | 1 hari |
-| #42 | Archive & Trash | 🟠 High | 1 hari |
+| #06 | Kanban UI (Static & State) | 🔴 Critical | 2 hari |
+| #09 | Drag and Drop (dnd-kit) | 🔴 Critical | 2 hari |
+| #05 | Dark Mode & Theming | 🟡 Medium | 1 hari |
+| #10 | Archive & Trash | 🟠 High | 1 hari |
 
 **Deliverable**: User bisa membuat board, menambah/mengedit/menghapus list dan card, serta drag & drop card antar kolom.
 
@@ -168,14 +168,14 @@ Flux menggabungkan kesederhanaan visual Kanban dengan fitur-fitur enterprise sep
 
 | Issue | Fitur | Prioritas | Estimasi |
 |:-----:|-------|:---------:|:--------:|
-| #07 | Authentication & JWT | 🔴 Critical | 2 hari |
-| #08 | Workspaces & Board Privacy | 🔴 Critical | 2 hari |
-| #09 | Collaboration & Roles (RBAC) | 🔴 Critical | 2 hari |
-| #06 | Smart Mention & Markdown | 🟠 High | 1 hari |
-| #10 | Card Labels & Due Dates | 🟠 High | 1 hari |
-| #11 | Checklists & File Attachments | 🟠 High | 2 hari |
-| #12 | Activity Log & Comments | 🟠 High | 2 hari |
-| #41 | Favorites & Pinned Boards | 🟡 Medium | 0.5 hari |
+| #04 | Authentication & JWT | 🔴 Critical | 2 hari |
+| #07 | Workspaces & Board Privacy | 🔴 Critical | 2 hari |
+| #18 | Collaboration & Roles (RBAC) | 🔴 Critical | 2 hari |
+| #17 | Smart Mention & Markdown | 🟠 High | 1 hari |
+| #08 | Card Labels & Due Dates | 🟠 High | 1 hari |
+| #15 | Checklists & File Attachments | 🟠 High | 2 hari |
+| #16 | Activity Log & Comments | 🟠 High | 2 hari |
+| #19 | Favorites & Pinned Boards | 🟡 Medium | 0.5 hari |
 
 **Deliverable**: Multi-user system dengan workspace, role-based access, dan card yang kaya fitur (labels, dates, checklists, comments, attachments).
 
@@ -187,13 +187,13 @@ Flux menggabungkan kesederhanaan visual Kanban dengan fitur-fitur enterprise sep
 
 | Issue | Fitur | Prioritas | Estimasi |
 |:-----:|-------|:---------:|:--------:|
-| #13 | Search & Filtering | 🟠 High | 1 hari |
-| #14 | In-App Notifications | 🟠 High | 2 hari |
-| #15 | Custom Fields | 🟡 Medium | 2 hari |
-| #16 | Multiple Views (Table, Calendar, Timeline) | 🟠 High | 3 hari |
-| #20 | Keyboard Shortcuts & Accessibility | 🟡 Medium | 1 hari |
-| #27 | Command Palette (Cmd+K) | 🟡 Medium | 1 hari |
-| #39 | Batch Operations | 🟡 Medium | 1 hari |
+| #41 | Search & Filtering | 🟠 High | 1 hari |
+| #43 | In-App Notifications | 🟠 High | 2 hari |
+| #25 | Custom Fields | 🟡 Medium | 2 hari |
+| #42 | Multiple Views (Table, Calendar, Timeline) | 🟠 High | 3 hari |
+| #46 | Keyboard Shortcuts & Accessibility | 🟡 Medium | 1 hari |
+| #47 | Command Palette (Cmd+K) | 🟡 Medium | 1 hari |
+| #38 | Batch Operations | 🟡 Medium | 1 hari |
 
 **Deliverable**: Pengalaman produktivitas yang lengkap — cari apapun, navigasi cepat, dan lihat data dalam berbagai format.
 
@@ -205,16 +205,16 @@ Flux menggabungkan kesederhanaan visual Kanban dengan fitur-fitur enterprise sep
 
 | Issue | Fitur | Prioritas | Estimasi |
 |:-----:|-------|:---------:|:--------:|
-| #17 | Automations (Rule-based Engine) | 🟠 High | 3 hari |
-| #28 | Sprints & Cycles | 🟠 High | 2 hari |
-| #29 | Epics & Task Hierarchy | 🟡 Medium | 2 hari |
-| #32 | Issue Estimations (Story Points) | 🟡 Medium | 1 hari |
-| #36 | Card Dependencies | 🟡 Medium | 2 hari |
-| #40 | Sub-tasks (Nested Cards) | 🟡 Medium | 1 hari |
-| #35 | Recurring Tasks | 🟡 Medium | 1 hari |
-| #38 | Dashboard & Analytics | 🟠 High | 2 hari |
-| #45 | Workload View | 🟡 Medium | 1 hari |
-| #46 | Approval Workflow | 🟡 Medium | 2 hari |
+| #26 | Automations (Rule-based Engine) | 🟠 High | 3 hari |
+| #27 | Sprints & Cycles | 🟠 High | 2 hari |
+| #28 | Epics & Task Hierarchy | 🟡 Medium | 2 hari |
+| #11 | Issue Estimations (Story Points) | 🟡 Medium | 1 hari |
+| #50 | Card Dependencies | 🟡 Medium | 2 hari |
+| #12 | Sub-tasks (Nested Cards) | 🟡 Medium | 1 hari |
+| #29 | Recurring Tasks | 🟡 Medium | 1 hari |
+| #54 | Dashboard & Analytics | 🟠 High | 2 hari |
+| #56 | Workload View | 🟡 Medium | 1 hari |
+| #52 | Approval Workflow | 🟡 Medium | 2 hari |
 
 **Deliverable**: Full agile workflow — sprint planning, velocity tracking, epics, story points, dan dashboard analytics.
 
@@ -226,11 +226,11 @@ Flux menggabungkan kesederhanaan visual Kanban dengan fitur-fitur enterprise sep
 
 | Issue | Fitur | Prioritas | Estimasi |
 |:-----:|-------|:---------:|:--------:|
-| #33 | Real-time Collaboration (WebSocket) | 🔴 Critical | 3 hari |
-| #34 | Time Tracking | 🟡 Medium | 2 hari |
-| #53 | In-App Chat | 🟡 Medium | 3 hari |
-| #24 | Advanced Checklists | 🟡 Medium | 1 hari |
-| #26 | Voting System | 🟢 Low | 1 hari |
+| #20 | Real-time Collaboration (WebSocket) | 🔴 Critical | 3 hari |
+| #21 | Time Tracking | 🟡 Medium | 2 hari |
+| #45 | In-App Chat | 🟡 Medium | 3 hari |
+| #49 | Advanced Checklists | 🟡 Medium | 1 hari |
+| #22 | Voting System | 🟢 Low | 1 hari |
 
 **Deliverable**: Kolaborasi real-time — perubahan instan antar user, chat terintegrasi, dan time tracking.
 
@@ -242,14 +242,14 @@ Flux menggabungkan kesederhanaan visual Kanban dengan fitur-fitur enterprise sep
 
 | Issue | Fitur | Prioritas | Estimasi |
 |:-----:|-------|:---------:|:--------:|
-| #31 | Rich Document Editor (Block-based) | 🟠 High | 3 hari |
-| #18 | Board Templates & Cloning | 🟡 Medium | 1 hari |
-| #19 | Integrations & Webhooks | 🟡 Medium | 2 hari |
-| #22 | Card Covers & Board Backgrounds | 🟡 Medium | 1 hari |
-| #30 | GitHub Automation | 🟡 Medium | 2 hari |
-| #51 | Embeds (External Content) | 🟡 Medium | 1 hari |
-| #52 | Goals & OKRs | 🟡 Medium | 2 hari |
-| #57 | Changelog & Release Notes | 🟢 Low | 1 hari |
+| #48 | Rich Document Editor (Block-based) | 🟠 High | 3 hari |
+| #30 | Board Templates & Cloning | 🟡 Medium | 1 hari |
+| #31 | Integrations & Webhooks | 🟡 Medium | 2 hari |
+| #36 | Card Covers & Board Backgrounds | 🟡 Medium | 1 hari |
+| #53 | GitHub Automation | 🟡 Medium | 2 hari |
+| #57 | Embeds (External Content) | 🟡 Medium | 1 hari |
+| #35 | Goals & OKRs | 🟡 Medium | 2 hari |
+| #55 | Changelog & Release Notes | 🟢 Low | 1 hari |
 
 **Deliverable**: Editor kaya konten ala Notion, integrasi GitHub, webhook system, dan board templates.
 
@@ -261,11 +261,11 @@ Flux menggabungkan kesederhanaan visual Kanban dengan fitur-fitur enterprise sep
 
 | Issue | Fitur | Prioritas | Estimasi |
 |:-----:|-------|:---------:|:--------:|
-| #21 | Admin Controls, Security & Export | 🟠 High | 2 hari |
-| #49 | 2FA & SSO (Google, GitHub, Facebook) | 🟠 High | 2 hari |
-| #55 | White-labeling | 🟢 Low | 2 hari |
-| #54 | API Documentation (OpenAPI) | 🟡 Medium | 1 hari |
-| #47 | Multi-language (i18n) | 🟡 Medium | 2 hari |
+| #23 | Admin Controls, Security & Export | 🟠 High | 2 hari |
+| #14 | 2FA & SSO (Google, GitHub, Facebook) | 🟠 High | 2 hari |
+| #40 | White-labeling | 🟢 Low | 2 hari |
+| #13 | API Documentation (OpenAPI) | 🟡 Medium | 1 hari |
+| #24 | Multi-language (i18n) | 🟡 Medium | 2 hari |
 
 **Deliverable**: Enterprise-ready — SSO, 2FA, admin dashboard, data export, API docs, dan multi-bahasa.
 
@@ -277,13 +277,13 @@ Flux menggabungkan kesederhanaan visual Kanban dengan fitur-fitur enterprise sep
 
 | Issue | Fitur | Prioritas | Estimasi |
 |:-----:|-------|:---------:|:--------:|
-| #25 | PWA & Offline Mode | 🟠 High | 3 hari |
-| #48 | AI Smart Suggestions | 🟡 Medium | 3 hari |
-| #23 | Email-to-Board | 🟢 Low | 2 hari |
-| #43 | Import dari Trello/Jira | 🟡 Medium | 2 hari |
-| #44 | Public Forms | 🟢 Low | 1 hari |
-| #50 | Card Mirroring | 🟢 Low | 1 hari |
-| #56 | Map View | 🟢 Low | 1 hari |
+| #37 | PWA & Offline Mode | 🟠 High | 3 hari |
+| #39 | AI Smart Suggestions | 🟡 Medium | 3 hari |
+| #44 | Email-to-Board | 🟢 Low | 2 hari |
+| #32 | Import dari Trello/Jira | 🟡 Medium | 2 hari |
+| #33 | Public Forms | 🟢 Low | 1 hari |
+| #34 | Card Mirroring | 🟢 Low | 1 hari |
+| #51 | Map View | 🟢 Low | 1 hari |
 
 **Deliverable**: Aplikasi bisa diakses offline, AI membantu produktivitas, dan migrasi mudah dari tools lain.
 
@@ -527,14 +527,14 @@ Flux menggabungkan kesederhanaan visual Kanban dengan fitur-fitur enterprise sep
 
 | Fase | Issues | Total |
 |------|--------|:-----:|
-| Phase 1 — Foundation | #01, #02, #03, #04, #05, #37, #42 | 7 |
-| Phase 2 — Core | #06, #07, #08, #09, #10, #11, #12, #41 | 8 |
-| Phase 3 — Productivity | #13, #14, #15, #16, #20, #27, #39 | 7 |
-| Phase 4 — Agile | #17, #28, #29, #32, #35, #36, #38, #40, #45, #46 | 10 |
-| Phase 5 — Real-time | #24, #26, #33, #34, #53 | 5 |
-| Phase 6 — Integrations | #18, #19, #22, #30, #31, #51, #52, #57 | 8 |
-| Phase 7 — Enterprise | #21, #47, #49, #54, #55 | 5 |
-| Phase 8 — Platform & AI | #23, #25, #43, #44, #48, #50, #56 | 7 |
+| Phase 1 — Foundation | #01, #02, #03, #06, #09, #05, #10 | 7 |
+| Phase 2 — Core | #17, #04, #07, #18, #08, #15, #16, #19 | 8 |
+| Phase 3 — Productivity | #41, #43, #25, #42, #46, #47, #38 | 7 |
+| Phase 4 — Agile | #26, #27, #28, #11, #29, #50, #54, #12, #56, #52 | 10 |
+| Phase 5 — Real-time | #49, #22, #20, #21, #45 | 5 |
+| Phase 6 — Integrations | #30, #31, #36, #53, #48, #57, #35, #55 | 8 |
+| Phase 7 — Enterprise | #23, #24, #14, #13, #40 | 5 |
+| Phase 8 — Platform & AI | #44, #37, #32, #33, #39, #34, #51 | 7 |
 | Phase 9 — DevOps | #58, #59 | 2 |
 | **Total** | | **59** |
 
