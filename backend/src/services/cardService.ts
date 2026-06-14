@@ -5,11 +5,17 @@ export async function create(data: {
   title: string
   description?: string
   position?: number
+  start_date?: string
   due_date?: string
   assignee_id?: number
   story_points?: number
   is_recurring?: boolean
 }) {
+  if (data.start_date && data.due_date) {
+    if (new Date(data.start_date) > new Date(data.due_date)) {
+      throw new Error('start_date must be before or equal to due_date')
+    }
+  }
   let position = data.position
   if (position === undefined) {
     const maxPosition =
@@ -18,8 +24,8 @@ export async function create(data: {
   }
 
   const result = await db`
-    INSERT INTO cards (list_id, title, description, position, due_date, assignee_id, story_points, is_recurring)
-    VALUES (${data.list_id}, ${data.title}, ${data.description || null}, ${position}, ${data.due_date || null}, ${data.assignee_id || null}, ${data.story_points || null}, ${data.is_recurring || false})
+    INSERT INTO cards (list_id, title, description, position, start_date, due_date, assignee_id, story_points, is_recurring)
+    VALUES (${data.list_id}, ${data.title}, ${data.description || null}, ${position}, ${data.start_date || null}, ${data.due_date || null}, ${data.assignee_id || null}, ${data.story_points || null}, ${data.is_recurring || false})
     RETURNING *
   `
   return result[0]
@@ -66,6 +72,7 @@ export async function update(
     title?: string
     description?: string | null
     position?: number
+    start_date?: string | null
     due_date?: string | null
     assignee_id?: number | null
     parent_card_id?: number | null
@@ -85,7 +92,14 @@ export async function update(
   const title = data.title !== undefined ? data.title : row.title
   const description = data.description !== undefined ? data.description : row.description
   const position = data.position !== undefined ? data.position : row.position
+  const start_date = data.start_date !== undefined ? data.start_date : row.start_date
   const due_date = data.due_date !== undefined ? data.due_date : row.due_date
+
+  if (start_date && due_date) {
+    if (new Date(start_date) > new Date(due_date)) {
+      throw new Error('start_date must be before or equal to due_date')
+    }
+  }
   const assignee_id = data.assignee_id !== undefined ? data.assignee_id : row.assignee_id
   const parent_card_id =
     data.parent_card_id !== undefined ? data.parent_card_id : row.parent_card_id
@@ -103,6 +117,7 @@ export async function update(
       title = ${title},
       description = ${description},
       position = ${position},
+      start_date = ${start_date},
       due_date = ${due_date},
       assignee_id = ${assignee_id},
       parent_card_id = ${parent_card_id},

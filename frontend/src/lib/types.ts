@@ -1,9 +1,12 @@
+export type BoardViewType = 'kanban' | 'table' | 'calendar' | 'timeline'
+
 export interface Card {
   id: number
   list_id: number
   title: string
   description?: string | null
   position: number
+  start_date?: string | null
   due_date?: string | null
   assignee_id?: number | null
   parent_card_id?: number | null

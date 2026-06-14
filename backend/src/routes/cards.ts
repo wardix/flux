@@ -92,6 +92,7 @@ const createCardRoute = createRoute({
         'application/json': {
           schema: CreateCardRequest.extend({
             story_points: z.number().nullable().optional().openapi({ example: 5 }),
+            start_date: z.string().nullable().optional().openapi({ example: '2026-06-25T00:00:00.000Z' }),
             is_recurring: z.boolean().optional(),
           }),
         },
@@ -221,6 +222,11 @@ const updateCardRoute = createRoute({
               .openapi({ example: 'Updated Description' }),
             list_id: z.number().optional().openapi({ example: 1 }),
             position: z.number().optional().openapi({ example: 1 }),
+            start_date: z
+              .string()
+              .nullable()
+              .optional()
+              .openapi({ example: '2026-06-25T00:00:00.000Z' }),
             due_date: z
               .string()
               .nullable()
@@ -505,6 +511,9 @@ cardRoutes.openapi(updateCardRoute, async (c) => {
     }
     if (body.description !== undefined && body.description !== oldCard.description) {
       await logActivity(id, userId, 'updated_description', body.description)
+    }
+    if (body.start_date !== undefined && body.start_date !== oldCard.start_date) {
+      await logActivity(id, userId, 'updated_start_date', body.start_date)
     }
     if (body.due_date !== undefined && body.due_date !== oldCard.due_date) {
       await logActivity(id, userId, 'updated_due_date', body.due_date)
