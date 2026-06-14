@@ -3,6 +3,7 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useState } from 'react'
 import type { List } from '../../lib/types'
 import { useBoardStore } from '../../stores/boardStore'
+import { useSearchStore } from '../../stores/searchStore'
 import { CardItem } from './CardItem'
 
 interface BoardColumnProps {
@@ -47,7 +48,57 @@ export function BoardColumn({ list }: BoardColumnProps) {
     }
   }
 
-  const totalStoryPoints = list.cards?.reduce((sum, card) => sum + (card.story_points || 0), 0) || 0
+  const { activeFilters } = useSearchStore()
+
+  const filteredCards = (list.cards || []).filter((card) => {
+    // 1. Assignee Filter
+    if (activeFilters.assigneeIds.length > 0) {
+      if (!card.assignee_id || !activeFilters.assigneeIds.includes(card.assignee_id)) {
+        return false
+      }
+    }
+
+    // 2. Labels Filter
+    if (activeFilters.labelIds.length > 0) {
+      const cardLabelIds = card.labels?.map((l) => l.id) || []
+      const hasMatchingLabel = cardLabelIds.some((id) => activeFilters.labelIds.includes(id))
+      if (!hasMatchingLabel) {
+        return false
+      }
+    }
+
+    // 3. Due Date Filter
+    if (activeFilters.dueStatus !== 'all') {
+      if (activeFilters.dueStatus === 'no_date') {
+        if (card.due_date) return false
+      } else {
+        if (!card.due_date) return false
+        const d = new Date(card.due_date)
+        const now = new Date()
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+
+        if (activeFilters.dueStatus === 'overdue') {
+          if (card.is_completed || d >= startOfToday) {
+            return false
+          }
+        } else if (activeFilters.dueStatus === 'due_today') {
+          const isToday =
+            d.getFullYear() === now.getFullYear() &&
+            d.getMonth() === now.getMonth() &&
+            d.getDate() === now.getDate()
+          if (!isToday) return false
+        } else if (activeFilters.dueStatus === 'due_week') {
+          const sevenDaysFromNow = new Date(startOfToday.getTime() + 7 * 24 * 60 * 60 * 1000)
+          const isThisWeek = d >= startOfToday && d <= sevenDaysFromNow
+          if (!isThisWeek) return false
+        }
+      }
+    }
+
+    return true
+  })
+
+  const totalStoryPoints = filteredCards.reduce((sum, card) => sum + (card.story_points || 0), 0) || 0
   const userRole = useBoardStore((s) => s.userRole)
   const isObserver = userRole === 'observer'
 
@@ -56,7 +107,7 @@ export function BoardColumn({ list }: BoardColumnProps) {
       <div className="flex items-center justify-between pb-3 border-b border-base-300">
         <div className="flex items-center gap-2">
           <h3 className="font-semibold text-base-content/90 text-sm tracking-wide">
-            {list.title} ({list.cards?.length || 0})
+            {list.title} ({filteredCards.length})
             {totalStoryPoints > 0 && ` • ${totalStoryPoints} pts`}
           </h3>
         </div>
@@ -96,10 +147,10 @@ export function BoardColumn({ list }: BoardColumnProps) {
 
       <div ref={setNodeRef} className="flex-1 overflow-y-auto py-3 space-y-3 scrollbar-thin">
         <SortableContext
-          items={list.cards?.map((c) => c.id) || []}
+          items={filteredCards.map((c) => c.id)}
           strategy={verticalListSortingStrategy}
         >
-          {list.cards?.map((card) => (
+          {filteredCards.map((card) => (
             <CardItem
               key={card.id}
               card={card}

@@ -33,6 +33,9 @@ import { LoginPage } from './pages/LoginPage'
 import { PublicFormPage } from './pages/PublicFormPage'
 import { SettingsPage } from './pages/SettingsPage'
 import { useBoardStore } from './stores/boardStore'
+import { SearchBar } from './components/shared/SearchBar'
+import { FilterPanel } from './components/board/FilterPanel'
+import { useSearchStore } from './stores/searchStore'
 
 function decodeToken(token: string | null) {
   if (!token) return null
@@ -62,6 +65,7 @@ function App() {
   const [showAdminPage, setShowAdminPage] = useState(false)
   const [isExportOpen, setIsExportOpen] = useState(false)
   const [isImportOpen, setIsImportOpen] = useState(false)
+  const { isFilterPanelOpen, toggleFilterPanel } = useSearchStore()
 
   const { theme, setTheme, accentColor, setAccentColor } = useTheme()
   const {
@@ -1270,6 +1274,19 @@ function App() {
                   </button>
                 )}
 
+                {/* Filter Cards Toggle */}
+                {activeBoard && (
+                  <button
+                    type="button"
+                    onClick={toggleFilterPanel}
+                    className={`btn btn-xs gap-1 font-semibold uppercase tracking-wider ${
+                      isFilterPanelOpen ? 'btn-primary text-white' : 'btn-outline'
+                    }`}
+                  >
+                    🔍 Filter
+                  </button>
+                )}
+
                 {/* Sprints Tab Switchers */}
                 {activeBoard && sprintViewEnabled && (
                   <div className="join border border-base-300">
@@ -1640,6 +1657,7 @@ function App() {
                 )}
               </div>
               <div className="flex items-center gap-4">
+                {activeBoard && <SearchBar />}
                 <ActiveTimerIndicator />
                 <PresenceIndicator users={onlineUsers} />
                 <span className="text-xs text-base-content/50">
@@ -1647,6 +1665,12 @@ function App() {
                 </span>
               </div>
             </header>
+
+            {activeBoard && isFilterPanelOpen && (
+              <div className="px-6 pt-4 z-20">
+                <FilterPanel />
+              </div>
+            )}
 
             {/* Conditional Sprints or Columns Board view */}
             {sprintViewEnabled && activeBoard ? (
