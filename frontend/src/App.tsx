@@ -16,10 +16,13 @@ import { SprintBoard } from './components/board/SprintBoard'
 import { SprintPlanning } from './components/board/SprintPlanning'
 import { WebhookList } from './components/board/WebhookList'
 import { ActiveTimerIndicator } from './components/shared/ActiveTimerIndicator'
+import { OfflineIndicator } from './components/shared/OfflineIndicator'
 import { PresenceIndicator } from './components/shared/PresenceIndicator'
+import { SyncStatus } from './components/shared/SyncStatus'
 import { useTheme } from './hooks/useTheme'
 import { useWebSocket } from './hooks/useWebSocket'
 import { api } from './lib/api'
+import { getPendingMutations } from './lib/offlineQueue'
 import type { Card, List, Sprint } from './lib/types'
 import { AdminDashboardPage } from './pages/AdminDashboardPage'
 import { GoalsPage } from './pages/GoalsPage'
@@ -196,6 +199,37 @@ function App() {
 
   // Background picker state
   const [isBackgroundPickerOpen, setIsBackgroundPickerOpen] = useState(false)
+
+  // Pending offline mutations tracking
+  const [pendingMutationsCount, setPendingMutationsCount] = useState(0)
+  const [isSyncing, setIsSyncing] = useState(false)
+
+  useEffect(() => {
+    const checkQueue = async () => {
+      try {
+        const pending = await getPendingMutations()
+        setPendingMutationsCount(pending.length)
+      } catch (err) {
+        console.error(err)
+      }
+    }
+    checkQueue()
+    const interval = setInterval(checkQueue, 3000)
+
+    const handleOnlineStatus = () => {
+      if (navigator.onLine) {
+        setIsSyncing(true)
+        // give it a brief moment
+        setTimeout(() => setIsSyncing(false), 2000)
+      }
+    }
+    window.addEventListener('online', handleOnlineStatus)
+
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener('online', handleOnlineStatus)
+    }
+  }, [])
 
   useEffect(() => {
     if (location.pathname === '/goals') {
@@ -936,6 +970,7 @@ function App() {
           </div>
         ) : (
           <>
+            <OfflineIndicator />
             {/* Top Board Bar */}
             <header className="navbar bg-base-100 border-b border-base-200/50 px-6 justify-between z-10 shadow-sm">
               <div className="flex items-center gap-3">
@@ -943,6 +978,7 @@ function App() {
                   <h2 className="text-xl font-bold tracking-tight text-base-content/90">
                     {activeBoard ? activeBoard.title : 'Loading Board...'}
                   </h2>
+                  <SyncStatus pendingCount={pendingMutationsCount} isSyncing={isSyncing} />
                   {activeBoard && (
                     <button
                       type="button"

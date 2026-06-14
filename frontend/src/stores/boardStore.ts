@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { api } from '../lib/api'
 import type { ActiveTimer, Board, Card, Label, List, Workspace } from '../lib/types'
+import { enqueueMutation } from '../lib/offlineQueue'
 
 interface BoardState {
   boards: Board[]
@@ -354,15 +355,59 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   },
 
   createCard: async (listId: number, title: string) => {
+    // Generate optimistic/mock card details
+    const mockCard: Card = {
+      id: Math.floor(Math.random() * 100000) + 5000,
+      list_id: listId,
+      title,
+      position: 99,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      labels: [],
+    }
+
+    // Always do local optimistic update first
+    set((state) => {
+      if (!state.activeBoard?.lists) return {}
+      const updatedLists = state.activeBoard.lists.map((list) => {
+        if (list.id === listId) {
+          return {
+            ...list,
+            cards: [...(list.cards || []), mockCard],
+          }
+        }
+        return list
+      })
+      return {
+        activeBoard: {
+          ...state.activeBoard,
+          lists: updatedLists,
+        },
+      }
+    })
+
+    if (!navigator.onLine) {
+      await enqueueMutation({
+        type: 'create_card',
+        payload: { list_id: listId, title },
+        endpoint: '/cards',
+        method: 'POST',
+      })
+      return
+    }
+
     try {
       const { data } = await api.post<{ data: Card }>('/cards', { list_id: listId, title })
+      // Swap out the mockCard with real response data
       set((state) => {
         if (!state.activeBoard?.lists) return {}
         const updatedLists = state.activeBoard.lists.map((list) => {
           if (list.id === listId) {
+            const currentCards = list.cards || []
+            const filtered = currentCards.filter((c) => c.id !== mockCard.id)
             return {
               ...list,
-              cards: [...(list.cards || []), { ...data, labels: [] }],
+              cards: [...filtered, { ...data, labels: [] }],
             }
           }
           return list
@@ -374,34 +419,8 @@ export const useBoardStore = create<BoardState>((set, get) => ({
           },
         }
       })
-    } catch {
-      const mockCard: Card = {
-        id: Math.floor(Math.random() * 1000) + 1000,
-        list_id: listId,
-        title,
-        position: 99,
-        created_at: '',
-        updated_at: '',
-        labels: [],
-      }
-      set((state) => {
-        if (!state.activeBoard?.lists) return {}
-        const updatedLists = state.activeBoard.lists.map((list) => {
-          if (list.id === listId) {
-            return {
-              ...list,
-              cards: [...(list.cards || []), mockCard],
-            }
-          }
-          return list
-        })
-        return {
-          activeBoard: {
-            ...state.activeBoard,
-            lists: updatedLists,
-          },
-        }
-      })
+    } catch (err) {
+      console.error('Failed to create card on server, keeping mock card:', err)
     }
   },
 
@@ -699,6 +718,16 @@ export const useBoardStore = create<BoardState>((set, get) => ({
         for (const c of targetList.cards) {
           cardsToUpdate.push({ id: c.id, list_id: targetListId, position: c.position })
         }
+      }
+
+      if (!navigator.onLine) {
+        await enqueueMutation({
+          type: 'move_card',
+          payload: { cards: cardsToUpdate },
+          endpoint: '/cards/positions',
+          method: 'PUT',
+        })
+        return
       }
 
       await api.put('/cards/positions', { cards: cardsToUpdate })
