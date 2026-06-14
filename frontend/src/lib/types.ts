@@ -38,6 +38,28 @@ export interface Card {
   latitude?: number | null
   longitude?: number | null
   address?: string | null
+  github_links?: GithubLink[]
+}
+
+export interface GithubLink {
+  id: number
+  card_id: number
+  type: 'branch' | 'pull_request'
+  github_id?: string
+  title: string
+  url: string
+  state: string
+  created_at: string
+  updated_at: string
+}
+
+export interface GithubInstallation {
+  id: number
+  board_id: number
+  repo_full_name: string
+  in_progress_list_id?: number | null
+  review_list_id?: number | null
+  done_list_id?: number | null
 }
 
 export interface Webhook {

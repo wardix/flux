@@ -11,6 +11,8 @@ import type { AISuggestionResult } from '../../lib/types'
 import { MarkdownRenderer } from '../shared/MarkdownRenderer'
 import { CardActivities } from './CardActivities'
 import { CardAttachments } from './CardAttachments'
+import { GitHubLinksSection } from '../github/GitHubLinksSection'
+import { GitHubLinkBadge } from '../github/GitHubLinkBadge'
 import { CardChecklists } from './CardChecklists'
 import { CardComments } from './CardComments'
 import { CardCoverPicker } from './CardCoverPicker'
@@ -838,6 +840,12 @@ export function CardItem({
                   }}
                 />
               </div>
+
+              {card.github_links && card.github_links.length > 0 && (
+                <div className="border-t border-base-200 pt-3">
+                  <GitHubLinksSection card={card} />
+                </div>
+              )}
             </>
           )}
 
@@ -1267,6 +1275,14 @@ export function CardItem({
               <p className="text-xs text-base-content/65 line-clamp-2 leading-relaxed">
                 {card.description}
               </p>
+            )}
+
+            {card.github_links && card.github_links.length > 0 && (
+              <div className="flex flex-wrap gap-1 pt-1">
+                {card.github_links.map(link => (
+                  <GitHubLinkBadge key={link.id} link={link} />
+                ))}
+              </div>
             )}
 
             <div className="flex items-center justify-between pt-1">

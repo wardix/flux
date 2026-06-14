@@ -63,7 +63,12 @@ export async function getById(id: number) {
         SELECT file_path FROM attachments
         WHERE card_id = c.id AND is_cover = TRUE
         LIMIT 1
-      ) as cover_file_path
+      ) as cover_file_path,
+      COALESCE((
+        SELECT json_agg(row_to_json(gl))
+        FROM github_links gl
+        WHERE gl.card_id = c.id
+      ), '[]'::json) as github_links
     FROM cards c
     LEFT JOIN users u ON c.assignee_id = u.id
     WHERE c.id = ${id} AND c.deleted_at IS NULL

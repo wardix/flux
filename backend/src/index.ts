@@ -49,6 +49,8 @@ import { chatRoutes } from './routes/chat'
 import { workspaceRoutes } from './routes/workspaces'
 import { websocket } from './websocket'
 import { approvalsRoutes } from './routes/approvals'
+import { githubWebhookRoutes } from './routes/githubWebhook'
+import { githubInstallationRoutes } from './routes/githubInstallations'
 
 // Trigger database old trash clean up on server startup
 cleanOldTrash().catch((err) => console.error('Trash cleanup failed:', err))
@@ -79,6 +81,7 @@ app.openAPIRegistry.registerComponent('securitySchemes', 'bearerAuth', {
 app.doc('/api/docs/openapi.json', apiDoc)
 
 // Mount route handlers
+app.route('/api/webhooks/github', githubWebhookRoutes)
 app.route('/api/docs', docsRoutes)
 app.route('/api/auth/2fa', twoFactorRoutes)
 app.route('/api/auth', oauthRoutes)
@@ -109,6 +112,7 @@ app.route('/api', timeTrackingRoutes)
 app.route('/api', voteRoutes)
 app.route('/api', approvalsRoutes)
 app.route('/api', adminRoutes)
+
 app.route('/api', exportRoutes)
 app.route('/api', userRoutes)
 app.route('/api/boards/:boardId/custom-fields', boardCustomFieldRoutes)
@@ -124,6 +128,7 @@ app.route('/api/webhooks', emailWebhooksRoutes)
 app.route('/api/import', importRoutes)
 app.route('/api', formRoutes)
 app.route('/api/chat', chatRoutes)
+app.route('/api/boards/:boardId/github', githubInstallationRoutes)
 
 export default {
   port: process.env.PORT || 3000,
