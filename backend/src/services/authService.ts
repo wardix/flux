@@ -16,7 +16,7 @@ export async function register(email: string, password: string) {
   const result = await db`
     INSERT INTO users (email, password_hash, avatar_url)
     VALUES (${email}, ${passwordHash}, ${avatarUrl})
-    RETURNING id, email, avatar_url, created_at
+    RETURNING id, email, avatar_url, locale, created_at
   `
   return result[0]
 }
@@ -63,12 +63,13 @@ export async function login(email: string, password: string) {
       id: user.id,
       email: user.email,
       avatar_url: user.avatar_url,
+      locale: user.locale,
     },
     token,
   }
 }
 
 export async function getMe(userId: number) {
-  const users = await db`SELECT id, email, avatar_url, is_super_admin, is_suspended, created_at FROM users WHERE id = ${userId}`
+  const users = await db`SELECT id, email, avatar_url, is_super_admin, is_suspended, locale, created_at FROM users WHERE id = ${userId}`
   return users[0] || null
 }

@@ -28,6 +28,7 @@ CREATE TABLE users (
     avatar_url VARCHAR(255),
     is_super_admin BOOLEAN NOT NULL DEFAULT FALSE,
     is_suspended BOOLEAN NOT NULL DEFAULT FALSE,
+    locale VARCHAR(10) NOT NULL DEFAULT 'en',
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
