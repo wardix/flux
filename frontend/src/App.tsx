@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Route, Routes, useLocation } from 'react-router-dom'
 import { AutomationList } from './components/board/AutomationList'
+import { BackgroundPicker } from './components/board/BackgroundPicker'
 import { BoardColumn } from './components/board/BoardColumn'
 import { BurndownChart } from './components/board/BurndownChart'
 import { CustomFieldEditor } from './components/board/CustomFieldEditor'
@@ -193,6 +194,9 @@ function App() {
   // Goals related States
   const [goalsViewEnabled, setGoalsViewEnabled] = useState(false)
 
+  // Background picker state
+  const [isBackgroundPickerOpen, setIsBackgroundPickerOpen] = useState(false)
+
   useEffect(() => {
     if (location.pathname === '/goals') {
       setGoalsViewEnabled(true)
@@ -365,6 +369,36 @@ function App() {
     alert(`Mock Invitation sent to ${inviteEmail} for workspace: ${activeWorkspace.name}`)
     setInviteEmail('')
     setIsInviting(false)
+  }
+
+  const handleSelectBgColor = async (color: string) => {
+    if (!activeBoard) return
+    try {
+      await api.put(`/boards/${activeBoard.id}`, { bg_color: color, bg_image_url: null })
+      await fetchBoard(activeBoard.id)
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const handleSelectBgImage = async (url: string) => {
+    if (!activeBoard) return
+    try {
+      await api.put(`/boards/${activeBoard.id}`, { bg_image_url: url, bg_color: null })
+      await fetchBoard(activeBoard.id)
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const handleRemoveBg = async () => {
+    if (!activeBoard) return
+    try {
+      await api.put(`/boards/${activeBoard.id}`, { bg_color: null, bg_image_url: null })
+      await fetchBoard(activeBoard.id)
+    } catch (err) {
+      console.error(err)
+    }
   }
 
   const handleDragEnd = async (event: DragEndEvent) => {
@@ -860,8 +894,21 @@ function App() {
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col overflow-hidden relative">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(15,23,42,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(15,23,42,0.02)_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:4rem_4rem] pointer-events-none" />
+      <main
+        className="flex-1 flex flex-col overflow-hidden relative transition-all duration-300"
+        style={{
+          backgroundImage: activeBoard?.bg_image_url
+            ? `url(${activeBoard.bg_image_url})`
+            : undefined,
+          backgroundColor: activeBoard?.bg_color ? activeBoard.bg_color : undefined,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        {activeBoard?.bg_image_url && (
+          <div className="absolute inset-0 bg-black/30 pointer-events-none z-0" />
+        )}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(15,23,42,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(15,23,42,0.02)_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:4rem_4rem] pointer-events-none z-0" />
 
         {showAdminPage && user?.is_super_admin ? (
           <div className="flex-1 overflow-y-auto z-10 bg-base-100">
@@ -979,6 +1026,28 @@ function App() {
                   >
                     👥 Clone Board
                   </button>
+                )}
+
+                {/* Change Background Option */}
+                {activeBoard && userRole !== 'observer' && (
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setIsBackgroundPickerOpen(!isBackgroundPickerOpen)}
+                      className="btn btn-outline btn-xs gap-1 font-semibold uppercase tracking-wider text-base-content/85 hover:bg-base-200"
+                    >
+                      🎨 Background
+                    </button>
+                    <BackgroundPicker
+                      currentBgColor={activeBoard.bg_color ?? null}
+                      currentBgImageUrl={activeBoard.bg_image_url ?? null}
+                      onSelectColor={handleSelectBgColor}
+                      onSelectImage={handleSelectBgImage}
+                      onRemove={handleRemoveBg}
+                      isOpen={isBackgroundPickerOpen}
+                      onClose={() => setIsBackgroundPickerOpen(false)}
+                    />
+                  </div>
                 )}
 
                 {/* Board Sorting Options */}

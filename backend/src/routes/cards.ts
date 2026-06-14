@@ -229,6 +229,8 @@ const updateCardRoute = createRoute({
             assignee_id: z.number().nullable().optional().openapi({ example: 1 }),
             is_completed: z.boolean().optional().openapi({ example: true }),
             story_points: z.number().nullable().optional().openapi({ example: 8 }),
+            cover_color: z.string().nullable().optional().openapi({ example: '#ff0000' }),
+            cover_image_url: z.string().nullable().optional().openapi({ example: 'https://example.com/cover.png' }),
             archived_at: z.string().nullable().optional(),
             deleted_at: z.string().nullable().optional(),
             is_recurring: z.boolean().optional(),

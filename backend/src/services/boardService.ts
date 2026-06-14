@@ -215,9 +215,11 @@ export async function create(
 export async function update(
   id: number,
   data: {
-    title?: string
+  title?: string
     visibility?: string
     background?: string
+    bg_image_url?: string | null
+    bg_color?: string | null
     archived_at?: string | null
     deleted_at?: string | null
   },
@@ -229,12 +231,14 @@ export async function update(
   const title = data.title !== undefined ? data.title : row.title
   const visibility = data.visibility !== undefined ? data.visibility : row.visibility
   const background = data.background !== undefined ? data.background : row.background
+  const bg_image_url = data.bg_image_url !== undefined ? data.bg_image_url : row.bg_image_url
+  const bg_color = data.bg_color !== undefined ? data.bg_color : row.bg_color
   const archived_at = data.archived_at !== undefined ? data.archived_at : row.archived_at
   const deleted_at = data.deleted_at !== undefined ? data.deleted_at : row.deleted_at
 
   const result = await db`
     UPDATE boards
-    SET title = ${title}, visibility = ${visibility}, background = ${background}, archived_at = ${archived_at}, deleted_at = ${deleted_at}, updated_at = NOW()
+    SET title = ${title}, visibility = ${visibility}, background = ${background}, bg_image_url = ${bg_image_url}, bg_color = ${bg_color}, archived_at = ${archived_at}, deleted_at = ${deleted_at}, updated_at = NOW()
     WHERE id = ${id}
     RETURNING *
   `
