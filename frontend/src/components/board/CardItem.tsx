@@ -32,9 +32,18 @@ import { VoterList } from './VoterList'
 interface CardItemProps {
   card: Card
   isSubtask?: boolean
+  isSelected?: boolean
+  isMultiSelectMode?: boolean
+  onSelect?: (cardId: number, isShiftClick: boolean) => void
 }
 
-export function CardItem({ card, isSubtask = false }: CardItemProps) {
+export function CardItem({
+  card,
+  isSubtask = false,
+  isSelected = false,
+  isMultiSelectMode = false,
+  onSelect,
+}: CardItemProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: card.id,
     disabled: isSubtask, // Disable dragging for subtasks
@@ -915,8 +924,6 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
 
   return (
     <>
-      {/* Card Body */}
-      {/* biome-ignore lint/a11y/useSemanticElements: using div as button for complex CardItem trigger */}
       <div
         ref={setNodeRef}
         style={style}
@@ -924,9 +931,37 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
         {...listeners}
         role="button"
         tabIndex={0}
-        onClick={() => setIsOpen(true)}
-        onKeyDown={(e) => e.key === 'Enter' && setIsOpen(true)}
-        className="card bg-base-100 shadow-sm border border-base-200/50 hover:shadow-md hover:border-primary/30 transition-all p-3 space-y-2 group relative cursor-pointer text-left focus:outline-none focus:ring-2 focus:ring-primary/40 overflow-hidden"
+        onClick={(e) => {
+          if (isSubtask) {
+            setIsOpen(true)
+            return
+          }
+          const isCmdOrCtrl = e.metaKey || e.ctrlKey
+          const isShift = e.shiftKey
+          if (isMultiSelectMode || isCmdOrCtrl || isShift) {
+            e.preventDefault()
+            e.stopPropagation()
+            if (onSelect) {
+              onSelect(card.id, isShift)
+            }
+            return
+          }
+          setIsOpen(true)
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            if (isMultiSelectMode) {
+              if (onSelect) onSelect(card.id, false)
+            } else {
+              setIsOpen(true)
+            }
+          }
+        }}
+        className={`card shadow-sm border transition-all p-3 space-y-2 group relative cursor-pointer text-left focus:outline-none focus:ring-2 focus:ring-primary/40 overflow-hidden ${
+          isSelected
+            ? 'border-primary bg-primary/5'
+            : 'bg-base-100 border-base-200/50 hover:shadow-md hover:border-primary/30'
+        }`}
       >
         {/* Cover Image/Color */}
         {card.cover_image_url ? (
@@ -944,117 +979,131 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
           </div>
         ) : null}
 
-        {/* Labels header */}
-        {card.labels && card.labels.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {card.labels.map((l) => (
-              <span
-                key={l.id}
-                style={{ backgroundColor: l.color }}
-                className="text-[9px] text-white px-1.5 py-0.5 rounded font-semibold tracking-wider uppercase"
-              >
-                {l.name}
-              </span>
-            ))}
-          </div>
-        )}
-
-        {/* Custom Fields Badge preview */}
-        <CustomFieldBadge cardId={card.id} />
-
-        {/* Epic Badge preview */}
-        {card.epic_id && (
-          <div className="flex">
-            <EpicBadge title="Epic" color="#6366f1" />
-          </div>
-        )}
-
-        {/* Recurring Badge preview */}
-        {card.is_recurring && (
-          <div className="flex">
-            <span className="badge badge-sm badge-info text-white text-[10px] uppercase font-bold tracking-wider">
-              🔁 Recurring
-            </span>
-          </div>
-        )}
-
-        {/* Mirror Badge preview */}
-        {card.is_mirror && card.source_board_title && card.source_board_id && (
-          <div className="flex">
-            <MirrorBadge
-              sourceBoardTitle={card.source_board_title}
-              onClick={() => {
-                if (card.source_board_id) {
-                  const fetchBoard = useBoardStore.getState().fetchBoard
-                  fetchBoard(card.source_board_id)
-                }
-              }}
+        <div className="flex gap-2.5 items-start w-full">
+          {isMultiSelectMode && (
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={() => {}}
+              className="checkbox checkbox-primary checkbox-xs mt-1 flex-shrink-0 z-10"
             />
-          </div>
-        )}
-
-        {/* Linked Goals Badges */}
-        {linkedGoals.length > 0 && <CardGoalBadge goals={linkedGoals} />}
-
-        <div className="flex items-start justify-between">
-          <h4 className="font-medium text-sm text-base-content/90 line-clamp-2 pr-6">
-            {card.title}
-          </h4>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation()
-              deleteCard(card.id)
-            }}
-            className="btn btn-ghost btn-xs btn-circle absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity text-error hover:bg-error/10"
-            title="Delete Card"
-          >
-            ✕
-          </button>
-        </div>
-
-        {card.description && (
-          <p className="text-xs text-base-content/65 line-clamp-2 leading-relaxed">
-            {card.description}
-          </p>
-        )}
-
-        <div className="flex items-center justify-between pt-1">
-          <div className="flex items-center gap-2">
-            {card.due_date && (
-              <span
-                className={`text-[10px] font-medium flex items-center gap-1 ${
-                  isOverdue ? 'text-error font-bold' : 'text-base-content/50'
-                }`}
-              >
-                {isOverdue ? '⚠️ Overdue:' : '📅'} {new Date(card.due_date).toLocaleDateString()}
-              </span>
-            )}
-            {card.subtask_count && card.subtask_count.total > 0 && (
-              <SubtaskProgress
-                completed={card.subtask_count.completed}
-                total={card.subtask_count.total}
-              />
-            )}
-            {card.checklist_count && card.checklist_count.total > 0 && (
-              <ChecklistProgress
-                completed={card.checklist_count.completed}
-                total={card.checklist_count.total}
-              />
-            )}
-            <VoteCount card={card} />
-          </div>
-          <div className="flex items-center gap-1.5">
-            {card.assignee_avatar && (
-              <div className="avatar" title={card.assignee_email || 'Assigned User'}>
-                <div className="w-5 h-5 rounded-full ring ring-primary ring-offset-base-100 ring-offset-1">
-                  <img src={card.assignee_avatar} alt="Avatar" />
-                </div>
+          )}
+          <div className="flex-1 min-w-0 space-y-2">
+            {/* Labels header */}
+            {card.labels && card.labels.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {card.labels.map((l) => (
+                  <span
+                    key={l.id}
+                    style={{ backgroundColor: l.color }}
+                    className="text-[9px] text-white px-1.5 py-0.5 rounded font-semibold tracking-wider uppercase"
+                  >
+                    {l.name}
+                  </span>
+                ))}
               </div>
             )}
-            {card.story_points !== null && card.story_points !== undefined && (
-              <StoryPointBadge points={card.story_points} />
+
+            {/* Custom Fields Badge preview */}
+            <CustomFieldBadge cardId={card.id} />
+
+            {/* Epic Badge preview */}
+            {card.epic_id && (
+              <div className="flex">
+                <EpicBadge title="Epic" color="#6366f1" />
+              </div>
             )}
+
+            {/* Recurring Badge preview */}
+            {card.is_recurring && (
+              <div className="flex">
+                <span className="badge badge-sm badge-info text-white text-[10px] uppercase font-bold tracking-wider">
+                  🔁 Recurring
+                </span>
+              </div>
+            )}
+
+            {/* Mirror Badge preview */}
+            {card.is_mirror && card.source_board_title && card.source_board_id && (
+              <div className="flex">
+                <MirrorBadge
+                  sourceBoardTitle={card.source_board_title}
+                  onClick={() => {
+                    if (card.source_board_id) {
+                      const fetchBoard = useBoardStore.getState().fetchBoard
+                      fetchBoard(card.source_board_id)
+                    }
+                  }}
+                />
+              </div>
+            )}
+
+            {/* Linked Goals Badges */}
+            {linkedGoals.length > 0 && <CardGoalBadge goals={linkedGoals} />}
+
+            <div className="flex items-start justify-between relative">
+              <h4 className="font-medium text-sm text-base-content/90 line-clamp-2 pr-6">
+                {card.title}
+              </h4>
+              {!isMultiSelectMode && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    deleteCard(card.id)
+                  }}
+                  className="btn btn-ghost btn-xs btn-circle absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity text-error hover:bg-error/10"
+                  title="Delete Card"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
+            {card.description && (
+              <p className="text-xs text-base-content/65 line-clamp-2 leading-relaxed">
+                {card.description}
+              </p>
+            )}
+
+            <div className="flex items-center justify-between pt-1">
+              <div className="flex items-center gap-2">
+                {card.due_date && (
+                  <span
+                    className={`text-[10px] font-medium flex items-center gap-1 ${
+                      isOverdue ? 'text-error font-bold' : 'text-base-content/50'
+                    }`}
+                  >
+                    {isOverdue ? '⚠️ Overdue:' : '📅'} {new Date(card.due_date).toLocaleDateString()}
+                  </span>
+                )}
+                {card.subtask_count && card.subtask_count.total > 0 && (
+                  <SubtaskProgress
+                    completed={card.subtask_count.completed}
+                    total={card.subtask_count.total}
+                  />
+                )}
+                {card.checklist_count && card.checklist_count.total > 0 && (
+                  <ChecklistProgress
+                    completed={card.checklist_count.completed}
+                    total={card.checklist_count.total}
+                  />
+                )}
+                <VoteCount card={card} />
+              </div>
+              <div className="flex items-center gap-1.5">
+                {card.assignee_avatar && (
+                  <div className="avatar" title={card.assignee_email || 'Assigned User'}>
+                    <div className="w-5 h-5 rounded-full ring ring-primary ring-offset-base-100 ring-offset-1">
+                      <img src={card.assignee_avatar} alt="Avatar" />
+                    </div>
+                  </div>
+                )}
+                {card.story_points !== null && card.story_points !== undefined && (
+                  <StoryPointBadge points={card.story_points} />
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>

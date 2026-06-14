@@ -28,6 +28,25 @@ export function BoardColumn({ list }: BoardColumnProps) {
     setIsAdding(false)
   }
 
+  const isMultiSelectMode = useBoardStore((s) => s.isMultiSelectMode)
+  const selectedCardIds = useBoardStore((s) => s.selectedCardIds)
+  const selectCard = useBoardStore((s) => s.selectCard)
+  const deselectCard = useBoardStore((s) => s.deselectCard)
+  const selectRange = useBoardStore((s) => s.selectRange)
+
+  const handleSelect = (cardId: number, isShiftClick: boolean) => {
+    if (isShiftClick && selectedCardIds.length > 0) {
+      const lastSelectedId = selectedCardIds[selectedCardIds.length - 1]
+      selectRange(lastSelectedId, cardId)
+    } else {
+      if (selectedCardIds.includes(cardId)) {
+        deselectCard(cardId)
+      } else {
+        selectCard(cardId)
+      }
+    }
+  }
+
   const totalStoryPoints = list.cards?.reduce((sum, card) => sum + (card.story_points || 0), 0) || 0
   const userRole = useBoardStore((s) => s.userRole)
   const isObserver = userRole === 'observer'
@@ -81,7 +100,13 @@ export function BoardColumn({ list }: BoardColumnProps) {
           strategy={verticalListSortingStrategy}
         >
           {list.cards?.map((card) => (
-            <CardItem key={card.id} card={card} />
+            <CardItem
+              key={card.id}
+              card={card}
+              isSelected={selectedCardIds.includes(card.id)}
+              isMultiSelectMode={isMultiSelectMode}
+              onSelect={handleSelect}
+            />
           ))}
         </SortableContext>
       </div>

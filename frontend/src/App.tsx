@@ -15,6 +15,7 @@ import { PublicFormSettings } from './components/board/PublicFormSettings'
 import { SprintBoard } from './components/board/SprintBoard'
 import { SprintPlanning } from './components/board/SprintPlanning'
 import { WebhookList } from './components/board/WebhookList'
+import { FloatingActionBar } from './components/board/FloatingActionBar'
 import { ActiveTimerIndicator } from './components/shared/ActiveTimerIndicator'
 import { OfflineIndicator } from './components/shared/OfflineIndicator'
 import { PresenceIndicator } from './components/shared/PresenceIndicator'
@@ -100,6 +101,10 @@ function App() {
     fetchActiveTimer,
     currentSort,
     setSort,
+    selectedCardIds,
+    selectAll,
+    clearSelection,
+    executeBatchAction,
   } = useBoardStore()
 
   const decoded = decodeToken(token)
@@ -352,6 +357,32 @@ function App() {
       fetchBoard(filteredBoards[0].id)
     }
   }, [filteredBoards, activeBoard, fetchBoard])
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isCmdOrCtrl = e.metaKey || e.ctrlKey
+      if (isCmdOrCtrl && (e.key === 'a' || e.key === 'A')) {
+        const target = e.target as HTMLElement
+        if (
+          target &&
+          (target.tagName === 'INPUT' ||
+            target.tagName === 'TEXTAREA' ||
+            target.isContentEditable)
+        ) {
+          return
+        }
+        e.preventDefault()
+        selectAll()
+      } else if (e.key === 'Escape') {
+        clearSelection()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [selectAll, clearSelection])
 
   const handleCreateWorkspace = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -1732,6 +1763,15 @@ function App() {
           workspaceId={activeWorkspace.id}
           onSuccess={() => setIsImportOpen(false)}
           onClose={() => setIsImportOpen(false)}
+        />
+      )}
+
+      {selectedCardIds.length > 0 && (
+        <FloatingActionBar
+          selectedCount={selectedCardIds.length}
+          selectedCardIds={selectedCardIds}
+          onAction={executeBatchAction}
+          onClearSelection={clearSelection}
         />
       )}
     </div>
