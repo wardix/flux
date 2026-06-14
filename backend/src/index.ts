@@ -19,6 +19,7 @@ import { checklistRoutes } from './routes/checklists'
 import { attachmentRoutes } from './routes/attachments'
 import { commentRoutes } from './routes/comments'
 import { activityRoutes } from './routes/activities'
+import { timeTrackingRoutes } from './routes/timeTracking'
 
 
 
@@ -63,6 +64,7 @@ app.route('/api', checklistRoutes)
 app.route('/api', attachmentRoutes)
 app.route('/api', commentRoutes)
 app.route('/api', activityRoutes)
+app.route('/api', timeTrackingRoutes)
 
 
 export default {

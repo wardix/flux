@@ -94,3 +94,35 @@ export interface PresenceUser {
   avatar_url: string | null
 }
 
+export interface TimeLog {
+  id: number
+  card_id: number
+  user_id: number
+  started_at: string
+  ended_at: string | null
+  duration_seconds: number | null
+  description: string | null
+  is_running: boolean
+  created_at: string
+  updated_at: string
+  email?: string
+}
+
+export interface ActiveTimer extends TimeLog {
+  elapsed_seconds: number
+}
+
+export interface UserTimeSummary {
+  user_id: number
+  email: string
+  duration_seconds: number
+}
+
+export interface ManualTimeLogRequest {
+  started_at: string
+  ended_at?: string
+  duration_seconds?: number
+  description?: string
+}
+
+
