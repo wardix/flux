@@ -13,7 +13,7 @@ export async function getAll(userId: number) {
   `
 }
 
-export async function getById(id: number, userId?: number) {
+export async function getById(id: number, userId?: number, sort?: string) {
   let boards
   if (userId) {
     boards = await db`
@@ -40,37 +40,75 @@ export async function getById(id: number, userId?: number) {
   // biome-ignore lint/suspicious/noExplicitAny: cards variable type is dynamic from DB query
   let cards: any[] = []
   if (listIds.length > 0) {
-    cards = await db`
-      SELECT c.*,
-        u.email as assignee_email,
-        u.avatar_url as assignee_avatar,
-        COALESCE((
-          SELECT json_build_object(
-            'total', COUNT(*)::integer,
-            'completed', COUNT(CASE WHEN is_completed = TRUE THEN 1 END)::integer
-          )
-          FROM cards sub
-          WHERE sub.parent_card_id = c.id AND sub.deleted_at IS NULL
-        ), json_build_object('total', 0, 'completed', 0)) as subtask_count,
-        COALESCE((
-          SELECT json_build_object(
-            'total', COUNT(*)::integer,
-            'completed', COUNT(CASE WHEN is_completed = TRUE THEN 1 END)::integer
-          )
-          FROM checklist_items ci
-          JOIN checklists ch ON ci.checklist_id = ch.id
-          WHERE ch.card_id = c.id
-        ), json_build_object('total', 0, 'completed', 0)) as checklist_count,
-        (
-          SELECT file_path FROM attachments
-          WHERE card_id = c.id AND is_cover = TRUE
-          LIMIT 1
-        ) as cover_file_path
-      FROM cards c
-      LEFT JOIN users u ON c.assignee_id = u.id
-      WHERE c.list_id IN (${listIds}) AND c.parent_card_id IS NULL AND c.archived_at IS NULL AND c.deleted_at IS NULL 
-      ORDER BY c.position ASC, c.id ASC
-    `
+    if (sort === 'votes') {
+      cards = await db`
+        SELECT c.*,
+          u.email as assignee_email,
+          u.avatar_url as assignee_avatar,
+          COALESCE((
+            SELECT json_build_object(
+              'total', COUNT(*)::integer,
+              'completed', COUNT(CASE WHEN is_completed = TRUE THEN 1 END)::integer
+            )
+            FROM cards sub
+            WHERE sub.parent_card_id = c.id AND sub.deleted_at IS NULL
+          ), json_build_object('total', 0, 'completed', 0)) as subtask_count,
+          COALESCE((
+            SELECT json_build_object(
+              'total', COUNT(*)::integer,
+              'completed', COUNT(CASE WHEN is_completed = TRUE THEN 1 END)::integer
+            )
+            FROM checklist_items ci
+            JOIN checklists ch ON ci.checklist_id = ch.id
+            WHERE ch.card_id = c.id
+          ), json_build_object('total', 0, 'completed', 0)) as checklist_count,
+          (
+            SELECT file_path FROM attachments
+            WHERE card_id = c.id AND is_cover = TRUE
+            LIMIT 1
+          ) as cover_file_path,
+          COALESCE((SELECT COUNT(*)::integer FROM card_votes WHERE card_id = c.id), 0) as vote_count,
+          CASE WHEN EXISTS(SELECT 1 FROM card_votes WHERE card_id = c.id AND user_id = ${userId || 0}) THEN TRUE ELSE FALSE END as user_voted
+        FROM cards c
+        LEFT JOIN users u ON c.assignee_id = u.id
+        WHERE c.list_id IN (${listIds}) AND c.parent_card_id IS NULL AND c.archived_at IS NULL AND c.deleted_at IS NULL 
+        ORDER BY vote_count DESC, c.position ASC, c.id ASC
+      `
+    } else {
+      cards = await db`
+        SELECT c.*,
+          u.email as assignee_email,
+          u.avatar_url as assignee_avatar,
+          COALESCE((
+            SELECT json_build_object(
+              'total', COUNT(*)::integer,
+              'completed', COUNT(CASE WHEN is_completed = TRUE THEN 1 END)::integer
+            )
+            FROM cards sub
+            WHERE sub.parent_card_id = c.id AND sub.deleted_at IS NULL
+          ), json_build_object('total', 0, 'completed', 0)) as subtask_count,
+          COALESCE((
+            SELECT json_build_object(
+              'total', COUNT(*)::integer,
+              'completed', COUNT(CASE WHEN is_completed = TRUE THEN 1 END)::integer
+            )
+            FROM checklist_items ci
+            JOIN checklists ch ON ci.checklist_id = ch.id
+            WHERE ch.card_id = c.id
+          ), json_build_object('total', 0, 'completed', 0)) as checklist_count,
+          (
+            SELECT file_path FROM attachments
+            WHERE card_id = c.id AND is_cover = TRUE
+            LIMIT 1
+          ) as cover_file_path,
+          COALESCE((SELECT COUNT(*)::integer FROM card_votes WHERE card_id = c.id), 0) as vote_count,
+          CASE WHEN EXISTS(SELECT 1 FROM card_votes WHERE card_id = c.id AND user_id = ${userId || 0}) THEN TRUE ELSE FALSE END as user_voted
+        FROM cards c
+        LEFT JOIN users u ON c.assignee_id = u.id
+        WHERE c.list_id IN (${listIds}) AND c.parent_card_id IS NULL AND c.archived_at IS NULL AND c.deleted_at IS NULL 
+        ORDER BY c.position ASC, c.id ASC
+      `
+    }
   }
 
   const listsWithCards = lists.map((list) => {
