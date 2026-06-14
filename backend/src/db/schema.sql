@@ -1,4 +1,6 @@
 -- Drop tables if they exist (for easy migration reset)
+DROP TABLE IF EXISTS user_2fa CASCADE;
+DROP TABLE IF EXISTS oauth_accounts CASCADE;
 DROP TABLE IF EXISTS card_labels CASCADE;
 DROP TABLE IF EXISTS labels CASCADE;
 DROP TABLE IF EXISTS cards CASCADE;
@@ -125,3 +127,30 @@ CREATE TRIGGER update_boards_updated_at BEFORE UPDATE ON boards FOR EACH ROW EXE
 CREATE TRIGGER update_lists_updated_at BEFORE UPDATE ON lists FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_cards_updated_at BEFORE UPDATE ON cards FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_labels_updated_at BEFORE UPDATE ON labels FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Two-Factor Authentication (2FA) Table
+CREATE TABLE user_2fa (
+    user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    secret VARCHAR(255) NOT NULL,
+    enabled BOOLEAN NOT NULL DEFAULT FALSE,
+    recovery_codes TEXT[] NOT NULL DEFAULT '{}',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- OAuth Accounts Table
+CREATE TABLE oauth_accounts (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    provider VARCHAR(50) NOT NULL,
+    provider_user_id VARCHAR(255) NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE (provider, provider_user_id)
+);
+
+CREATE TRIGGER update_user_2fa_updated_at BEFORE UPDATE ON user_2fa FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_oauth_accounts_updated_at BEFORE UPDATE ON oauth_accounts FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE INDEX idx_oauth_accounts_user_id ON oauth_accounts(user_id);
+

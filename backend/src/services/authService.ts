@@ -33,6 +33,23 @@ export async function login(email: string, password: string) {
     throw new Error('Invalid email or password')
   }
 
+  // Check if 2FA is enabled for the user
+  const user2fa = await db`SELECT enabled FROM user_2fa WHERE user_id = ${user.id}`
+  if (user2fa.length > 0 && user2fa[0].enabled) {
+    // Generate a temporary 5-minute token
+    const tempPayload = {
+      sub: user.id,
+      email: user.email,
+      temp: true,
+      exp: Math.floor(Date.now() / 1000) + 60 * 5, // 5 minutes
+    }
+    const tempToken = await sign(tempPayload, JWT_SECRET)
+    return {
+      requires_2fa: true,
+      temp_token: tempToken,
+    }
+  }
+
   const payload = {
     sub: user.id,
     email: user.email,

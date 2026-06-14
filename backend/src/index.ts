@@ -11,6 +11,9 @@ import { workspaceRoutes } from './routes/workspaces'
 import { docsRoutes } from './routes/docs'
 import { apiDoc } from './lib/openapi'
 
+import { twoFactorRoutes } from './routes/twoFactor'
+import { oauthRoutes } from './routes/oauth'
+
 // Trigger database old trash clean up on server startup
 cleanOldTrash().catch((err) => console.error('Trash cleanup failed:', err))
 
@@ -39,6 +42,8 @@ app.doc('/api/docs/openapi.json', apiDoc)
 
 // Mount route handlers
 app.route('/api/docs', docsRoutes)
+app.route('/api/auth/2fa', twoFactorRoutes)
+app.route('/api/auth', oauthRoutes)
 app.route('/api/auth', authRoutes)
 app.route('/api/boards', boardRoutes)
 app.route('/api/lists', listRoutes)

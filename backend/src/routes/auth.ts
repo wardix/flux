@@ -66,7 +66,7 @@ const loginRoute = createRoute({
   path: '/login',
   tags: ['Auth'],
   summary: 'User Login',
-  description: 'Authenticate user with email and password and return a JWT token',
+  description: 'Authenticate user with email and password and return a JWT token or require 2FA',
   request: {
     body: {
       content: {
@@ -81,15 +81,23 @@ const loginRoute = createRoute({
   },
   responses: {
     200: {
-      description: 'Successfully authenticated',
+      description: 'Successfully authenticated or requires 2FA verification',
       content: {
         'application/json': {
-          schema: z.object({
-            data: z.object({
-              token: z.string().openapi({ example: 'eyJhbGciOiJIUzI1NiIsIn...' }),
-              user: UserSchema,
+          schema: z.union([
+            z.object({
+              data: z.object({
+                token: z.string().openapi({ example: 'eyJhbGciOiJIUzI1NiIsIn...' }),
+                user: UserSchema,
+              }),
             }),
-          }),
+            z.object({
+              data: z.object({
+                requires_2fa: z.boolean().openapi({ example: true }),
+                temp_token: z.string().openapi({ example: 'eyJhbGciOiJIUzI1NiIsIn...' }),
+              }),
+            }),
+          ]),
         },
       },
     },

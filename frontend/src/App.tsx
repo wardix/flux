@@ -3,8 +3,15 @@ import { useEffect, useState } from 'react'
 import { BoardColumn } from './components/board/BoardColumn'
 import { useTheme } from './hooks/useTheme'
 import { useBoardStore } from './stores/boardStore'
+import { LoginPage } from './pages/LoginPage'
+import { TwoFactorSetup } from './components/settings/TwoFactorSetup'
+import type { List, Card } from './lib/types'
 
 function App() {
+  const [token, setToken] = useState<string | null>(localStorage.getItem('token'))
+  const [_user, setUser] = useState<any>(null)
+  const [show2FASettings, setShow2FASettings] = useState(false)
+
   const { theme, setTheme, accentColor, setAccentColor } = useTheme()
   const {
     boards,
@@ -73,9 +80,11 @@ function App() {
   ]
 
   useEffect(() => {
-    fetchWorkspaces()
-    fetchBoards()
-  }, [fetchWorkspaces, fetchBoards])
+    if (token) {
+      fetchWorkspaces()
+      fetchBoards()
+    }
+  }, [fetchWorkspaces, fetchBoards, token])
 
   useEffect(() => {
     if (activeBoard?.id) {
@@ -170,6 +179,17 @@ function App() {
     if (targetListId !== null) {
       await moveCard(cardId, sourceListId, targetListId, targetIndex)
     }
+  }
+
+  if (!token) {
+    return (
+      <LoginPage
+        onLoginSuccess={(t, u) => {
+          setToken(t)
+          setUser(u)
+        }}
+      />
+    )
   }
 
   return (
@@ -298,9 +318,12 @@ function App() {
                 <li key={b.id}>
                   <button
                     type="button"
-                    onClick={() => fetchBoard(b.id)}
+                    onClick={() => {
+                      setShow2FASettings(false)
+                      fetchBoard(b.id)
+                    }}
                     className={`flex items-center justify-between py-2 px-3 rounded-lg text-left ${
-                      activeBoard?.id === b.id
+                      !show2FASettings && activeBoard?.id === b.id
                         ? 'active bg-primary text-primary-content font-semibold'
                         : 'hover:bg-base-200'
                     }`}
@@ -367,6 +390,31 @@ function App() {
               )}
             </div>
           )}
+
+          {/* Settings Section */}
+          <div className="space-y-2 pb-2 border-b border-base-200/50">
+            <button
+              type="button"
+              onClick={() => setShow2FASettings(true)}
+              className={`btn btn-sm btn-block justify-start capitalize ${
+                show2FASettings ? 'btn-primary text-white' : 'btn-ghost'
+              }`}
+            >
+              🔒 Security & 2FA
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                localStorage.removeItem('token')
+                setToken(null)
+                setUser(null)
+                window.location.href = '/'
+              }}
+              className="btn btn-ghost btn-sm btn-block justify-start text-error hover:bg-error/10 capitalize"
+            >
+              🚪 Log Out
+            </button>
+          </div>
 
           {/* Accent Pickers */}
           <div className="space-y-2">
@@ -436,369 +484,377 @@ function App() {
       <main className="flex-1 flex flex-col overflow-hidden relative">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(15,23,42,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(15,23,42,0.02)_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:4rem_4rem] pointer-events-none" />
 
-        {/* Top Board Bar */}
-        <header className="navbar bg-base-100 border-b border-base-200/50 px-6 justify-between z-10 shadow-sm">
-          <div className="flex items-center gap-3">
-            <h2 className="text-xl font-bold tracking-tight text-base-content/90">
-              {activeBoard ? activeBoard.title : 'Loading Board...'}
-            </h2>
+        {show2FASettings ? (
+          <div className="flex-1 overflow-y-auto p-8 max-w-2xl mx-auto w-full z-10">
+            <TwoFactorSetup />
+          </div>
+        ) : (
+          <>
+            {/* Top Board Bar */}
+            <header className="navbar bg-base-100 border-b border-base-200/50 px-6 justify-between z-10 shadow-sm">
+              <div className="flex items-center gap-3">
+                <h2 className="text-xl font-bold tracking-tight text-base-content/90">
+                  {activeBoard ? activeBoard.title : 'Loading Board...'}
+                </h2>
 
-            {/* Board Visibility Selector */}
-            {activeBoard && (
-              <div className="dropdown dropdown-bottom">
-                <button
-                  type="button"
-                  tabIndex={0}
-                  className="btn btn-outline btn-xs uppercase tracking-wider font-semibold"
-                >
-                  👁️ {activeBoard.visibility}
-                </button>
-                <ul className="dropdown-content menu bg-base-200 rounded-box z-[1] w-40 p-2 shadow-lg gap-1 border border-base-300 mt-1">
-                  <li>
+                {/* Board Visibility Selector */}
+                {activeBoard && (
+                  <div className="dropdown dropdown-bottom">
                     <button
                       type="button"
-                      onClick={() => updateBoardVisibility(activeBoard.id, 'private')}
-                      className={activeBoard.visibility === 'private' ? 'active' : ''}
+                      tabIndex={0}
+                      className="btn btn-outline btn-xs uppercase tracking-wider font-semibold"
                     >
-                      Private
+                      👁️ {activeBoard.visibility}
                     </button>
-                  </li>
-                  <li>
-                    <button
-                      type="button"
-                      onClick={() => updateBoardVisibility(activeBoard.id, 'workspace-only')}
-                      className={activeBoard.visibility === 'workspace-only' ? 'active' : ''}
-                    >
-                      Workspace Only
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      type="button"
-                      onClick={() => updateBoardVisibility(activeBoard.id, 'public')}
-                      className={activeBoard.visibility === 'public' ? 'active' : ''}
-                    >
-                      Public
-                    </button>
-                  </li>
-                  <li className="border-t border-base-300 mt-1 pt-1">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (confirm('Move this board to Trash?')) {
-                          deleteBoard(activeBoard.id)
-                        }
-                      }}
-                      className="text-error font-semibold hover:bg-error/10"
-                    >
-                      🗑️ Delete Board
-                    </button>
-                  </li>
-                </ul>
-              </div>
-            )}
-
-            {/* Board Labels Manager */}
-            {activeBoard && (
-              <div className="dropdown dropdown-bottom">
-                <button
-                  type="button"
-                  tabIndex={0}
-                  className="btn btn-outline btn-xs gap-1 font-semibold uppercase tracking-wider"
-                >
-                  🏷️ Labels
-                </button>
-                <div className="dropdown-content menu bg-base-200 rounded-box z-[1] w-64 p-3 shadow-lg gap-2 border border-base-300 mt-1">
-                  <span className="text-[10px] font-bold text-base-content/50 uppercase tracking-wide">
-                    Board Labels
-                  </span>
-                  <div className="flex flex-wrap gap-1.5 py-1">
-                    {labels.map((l) => (
-                      <span
-                        key={l.id}
-                        style={{ backgroundColor: l.color }}
-                        className="badge text-white border-none text-[9px] font-bold uppercase px-2 py-0.5 rounded"
-                      >
-                        {l.name}
-                      </span>
-                    ))}
-                    {labels.length === 0 && (
-                      <span className="text-xs text-base-content/40">No labels created</span>
-                    )}
+                    <ul className="dropdown-content menu bg-base-200 rounded-box z-[1] w-40 p-2 shadow-lg gap-1 border border-base-300 mt-1">
+                      <li>
+                        <button
+                          type="button"
+                          onClick={() => updateBoardVisibility(activeBoard.id, 'private')}
+                          className={activeBoard.visibility === 'private' ? 'active' : ''}
+                        >
+                          Private
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          type="button"
+                          onClick={() => updateBoardVisibility(activeBoard.id, 'workspace-only')}
+                          className={activeBoard.visibility === 'workspace-only' ? 'active' : ''}
+                        >
+                          Workspace Only
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          type="button"
+                          onClick={() => updateBoardVisibility(activeBoard.id, 'public')}
+                          className={activeBoard.visibility === 'public' ? 'active' : ''}
+                        >
+                          Public
+                        </button>
+                      </li>
+                      <li className="border-t border-base-300 mt-1 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (confirm('Move this board to Trash?')) {
+                              deleteBoard(activeBoard.id)
+                            }
+                          }}
+                          className="text-error font-semibold hover:bg-error/10"
+                        >
+                          🗑️ Delete Board
+                        </button>
+                      </li>
+                    </ul>
                   </div>
-                  <form
-                    onSubmit={(e) => {
-                      e.preventDefault()
-                      const form = e.currentTarget
-                      const name = (form.elements.namedItem('labelName') as HTMLInputElement).value
-                      const color = (form.elements.namedItem('labelColor') as HTMLInputElement)
-                        .value
-                      if (name && color) {
-                        createLabel(activeBoard.id, name, color)
-                        form.reset()
-                      }
-                    }}
-                    className="space-y-2 pt-2 border-t border-base-300"
-                  >
-                    <input
-                      name="labelName"
-                      type="text"
-                      placeholder="New label name..."
-                      className="input input-xs input-bordered w-full focus:outline-none"
-                      required
-                    />
-                    <div className="flex items-center justify-between gap-2">
-                      <input
-                        name="labelColor"
-                        type="color"
-                        defaultValue="#4f46e5"
-                        className="w-8 h-6 rounded cursor-pointer border-none bg-transparent"
-                      />
-                      <button type="submit" className="btn btn-primary btn-xs flex-1 text-white">
-                        Add Label
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </div>
-            )}
+                )}
 
-            {/* Archive Manager */}
-            {activeBoard && (
-              <div className="dropdown dropdown-bottom">
-                <button
-                  type="button"
-                  tabIndex={0}
-                  onClick={loadArchive}
-                  className="btn btn-outline btn-xs gap-1 font-semibold uppercase tracking-wider"
-                >
-                  📦 Archive
-                </button>
-                <div className="dropdown-content menu bg-base-200 rounded-box z-[1] w-72 p-3 shadow-lg gap-2 border border-base-300 mt-1 max-h-[300px] overflow-y-auto">
-                  <span className="text-[10px] font-bold text-base-content/50 uppercase tracking-wide">
-                    Archived Items
-                  </span>
-
-                  {/* Lists */}
-                  {archivedItems.lists.length > 0 && (
-                    <div className="space-y-1">
-                      <span className="text-[9px] font-bold text-warning uppercase">Columns</span>
-                      {archivedItems.lists.map((l) => (
-                        <div
-                          key={l.id}
-                          className="flex items-center justify-between gap-2 bg-base-100 p-1.5 rounded border border-base-300"
-                        >
-                          <span className="text-xs truncate font-medium">{l.title}</span>
-                          <button
-                            type="button"
-                            onClick={async () => {
-                              await restoreList(l.id)
-                              loadArchive()
-                            }}
-                            className="btn btn-xs btn-primary text-white"
+                {/* Board Labels Manager */}
+                {activeBoard && (
+                  <div className="dropdown dropdown-bottom">
+                    <button
+                      type="button"
+                      tabIndex={0}
+                      className="btn btn-outline btn-xs gap-1 font-semibold uppercase tracking-wider"
+                    >
+                      🏷️ Labels
+                    </button>
+                    <div className="dropdown-content menu bg-base-200 rounded-box z-[1] w-64 p-3 shadow-lg gap-2 border border-base-300 mt-1">
+                      <span className="text-[10px] font-bold text-base-content/50 uppercase tracking-wide">
+                        Board Labels
+                      </span>
+                      <div className="flex flex-wrap gap-1.5 py-1">
+                        {labels.map((l) => (
+                          <span
+                              key={l.id}
+                              style={{ backgroundColor: l.color }}
+                              className="badge text-white border-none text-[9px] font-bold uppercase px-2 py-0.5 rounded"
                           >
-                            Restore
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Cards */}
-                  {archivedItems.cards.length > 0 && (
-                    <div className="space-y-1 pt-1.5 border-t border-base-300">
-                      <span className="text-[9px] font-bold text-warning uppercase">Cards</span>
-                      {archivedItems.cards.map((c) => (
-                        <div
-                          key={c.id}
-                          className="flex items-center justify-between gap-2 bg-base-100 p-1.5 rounded border border-base-300"
-                        >
-                          <span className="text-xs truncate font-medium">{c.title}</span>
-                          <button
-                            type="button"
-                            onClick={async () => {
-                              await restoreCard(c.id)
-                              loadArchive()
-                            }}
-                            className="btn btn-xs btn-primary text-white"
-                          >
-                            Restore
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {archivedItems.lists.length === 0 && archivedItems.cards.length === 0 && (
-                    <span className="text-xs text-base-content/40 py-2 text-center">
-                      No archived items
-                    </span>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Trash Manager */}
-            {activeBoard && (
-              <div className="dropdown dropdown-bottom">
-                <button
-                  type="button"
-                  tabIndex={0}
-                  onClick={loadTrash}
-                  className="btn btn-outline btn-xs gap-1 font-semibold uppercase tracking-wider text-error hover:bg-error/10 hover:border-error"
-                >
-                  🗑️ Trash
-                </button>
-                <div className="dropdown-content menu bg-base-200 rounded-box z-[1] w-80 p-3 shadow-lg gap-2 border border-base-300 mt-1 max-h-[300px] overflow-y-auto">
-                  <span className="text-[10px] font-bold text-base-content/50 uppercase tracking-wide">
-                    Trash Bin (Auto-deletes in 30 days)
-                  </span>
-
-                  {/* Lists */}
-                  {trashedItems.lists.length > 0 && (
-                    <div className="space-y-1">
-                      <span className="text-[9px] font-bold text-error uppercase">Columns</span>
-                      {trashedItems.lists.map((l) => (
-                        <div
-                          key={l.id}
-                          className="flex items-center justify-between gap-2 bg-base-100 p-1.5 rounded border border-base-300"
-                        >
-                          <span className="text-xs truncate font-medium">{l.title}</span>
-                          <div className="flex gap-1">
-                            <button
-                              type="button"
-                              onClick={async () => {
-                                await restoreList(l.id)
-                                loadTrash()
-                              }}
-                              className="btn btn-xs btn-primary text-white"
-                            >
-                              Restore
-                            </button>
-                            <button
-                              type="button"
-                              onClick={async () => {
-                                if (confirm('Permanently delete list and all its cards?')) {
-                                  await deleteListPermanently(l.id)
-                                  loadTrash()
-                                }
-                              }}
-                              className="btn btn-xs btn-error text-white"
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Cards */}
-                  {trashedItems.cards.length > 0 && (
-                    <div className="space-y-1 pt-1.5 border-t border-base-300">
-                      <span className="text-[9px] font-bold text-error uppercase">Cards</span>
-                      {trashedItems.cards.map((c) => (
-                        <div
-                          key={c.id}
-                          className="flex items-center justify-between gap-2 bg-base-100 p-1.5 rounded border border-base-300"
-                        >
-                          <span className="text-xs truncate font-medium">{c.title}</span>
-                          <div className="flex gap-1">
-                            <button
-                              type="button"
-                              onClick={async () => {
-                                await restoreCard(c.id)
-                                loadTrash()
-                              }}
-                              className="btn btn-xs btn-primary text-white"
-                            >
-                              Restore
-                            </button>
-                            <button
-                              type="button"
-                              onClick={async () => {
-                                if (confirm('Permanently delete card?')) {
-                                  await deleteCardPermanently(c.id)
-                                  loadTrash()
-                                }
-                              }}
-                              className="btn btn-xs btn-error text-white"
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {trashedItems.lists.length === 0 && trashedItems.cards.length === 0 && (
-                    <span className="text-xs text-base-content/40 py-2 text-center">
-                      Trash is empty
-                    </span>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-base-content/50">
-              Active Workspace: {activeWorkspace ? activeWorkspace.name : 'None'}
-            </span>
-          </div>
-        </header>
-
-        {/* Columns Board view */}
-        <DndContext onDragEnd={handleDragEnd}>
-          <div className="flex-1 overflow-x-auto p-6 flex gap-6 items-start">
-            {activeBoard?.lists?.map((list) => (
-              <BoardColumn key={list.id} list={list} />
-            ))}
-
-            {/* Add Column Button */}
-            {activeBoard && (
-              <div className="w-80 flex-shrink-0">
-                {isAddingColumn ? (
-                  <form
-                    onSubmit={handleCreateColumn}
-                    className="bg-base-100 border border-base-200 rounded-2xl p-4 shadow-md space-y-2"
-                  >
-                    <input
-                      type="text"
-                      placeholder="Enter list title..."
-                      value={newColumnTitle}
-                      onChange={(e) => setNewColumnTitle(e.target.value)}
-                      className="input input-sm input-bordered input-primary w-full focus:outline-none"
-                    />
-                    <div className="flex gap-2">
-                      <button type="submit" className="btn btn-primary btn-xs flex-1">
-                        Add List
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsAddingColumn(false)
-                          setNewColumnTitle('')
+                            {l.name}
+                          </span>
+                        ))}
+                        {labels.length === 0 && (
+                          <span className="text-xs text-base-content/40">No labels created</span>
+                        )}
+                      </div>
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault()
+                          const form = e.currentTarget
+                          const name = (form.elements.namedItem('labelName') as HTMLInputElement).value
+                          const color = (form.elements.namedItem('labelColor') as HTMLInputElement)
+                            .value
+                          if (name && color) {
+                            createLabel(activeBoard.id, name, color)
+                            form.reset()
+                          }
                         }}
-                        className="btn btn-ghost btn-xs flex-1"
+                        className="space-y-2 pt-2 border-t border-base-300"
                       >
-                        Cancel
-                      </button>
+                        <input
+                          name="labelName"
+                          type="text"
+                          placeholder="New label name..."
+                          className="input input-xs input-bordered w-full focus:outline-none"
+                          required
+                        />
+                        <div className="flex items-center justify-between gap-2">
+                          <input
+                            name="labelColor"
+                            type="color"
+                            defaultValue="#4f46e5"
+                            className="w-8 h-6 rounded cursor-pointer border-none bg-transparent"
+                          />
+                          <button type="submit" className="btn btn-primary btn-xs flex-1 text-white">
+                            Add Label
+                          </button>
+                        </div>
+                      </form>
                     </div>
-                  </form>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setIsAddingColumn(true)}
-                    className="btn btn-block bg-base-100/60 hover:bg-base-100 border border-dashed border-base-content/10 hover:border-primary/40 rounded-2xl p-4 text-left font-semibold text-sm text-base-content/60 hover:text-primary transition-all duration-200 flex items-center gap-2 h-14"
-                  >
-                    + Add List
-                  </button>
+                  </div>
+                )}
+
+                {/* Archive Manager */}
+                {activeBoard && (
+                  <div className="dropdown dropdown-bottom">
+                    <button
+                      type="button"
+                      tabIndex={0}
+                      onClick={loadArchive}
+                      className="btn btn-outline btn-xs gap-1 font-semibold uppercase tracking-wider"
+                    >
+                      📦 Archive
+                    </button>
+                    <div className="dropdown-content menu bg-base-200 rounded-box z-[1] w-72 p-3 shadow-lg gap-2 border border-base-300 mt-1 max-h-[300px] overflow-y-auto">
+                      <span className="text-[10px] font-bold text-base-content/50 uppercase tracking-wide">
+                        Archived Items
+                      </span>
+
+                      {/* Lists */}
+                      {archivedItems.lists.length > 0 && (
+                        <div className="space-y-1">
+                          <span className="text-[9px] font-bold text-warning uppercase">Columns</span>
+                          {archivedItems.lists.map((l) => (
+                            <div
+                              key={l.id}
+                              className="flex items-center justify-between gap-2 bg-base-100 p-1.5 rounded border border-base-300"
+                            >
+                              <span className="text-xs truncate font-medium">{l.title}</span>
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  await restoreList(l.id)
+                                  loadArchive()
+                                }}
+                                className="btn btn-xs btn-primary text-white"
+                              >
+                                Restore
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Cards */}
+                      {archivedItems.cards.length > 0 && (
+                        <div className="space-y-1 pt-1.5 border-t border-base-300">
+                          <span className="text-[9px] font-bold text-warning uppercase">Cards</span>
+                          {archivedItems.cards.map((c) => (
+                            <div
+                              key={c.id}
+                              className="flex items-center justify-between gap-2 bg-base-100 p-1.5 rounded border border-base-300"
+                            >
+                              <span className="text-xs truncate font-medium">{c.title}</span>
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  await restoreCard(c.id)
+                                  loadArchive()
+                                }}
+                                className="btn btn-xs btn-primary text-white"
+                              >
+                                Restore
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {archivedItems.lists.length === 0 && archivedItems.cards.length === 0 && (
+                        <span className="text-xs text-base-content/40 py-2 text-center">
+                          No archived items
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Trash Manager */}
+                {activeBoard && (
+                  <div className="dropdown dropdown-bottom">
+                    <button
+                      type="button"
+                      tabIndex={0}
+                      onClick={loadTrash}
+                      className="btn btn-outline btn-xs gap-1 font-semibold uppercase tracking-wider text-error hover:bg-error/10 hover:border-error"
+                    >
+                      🗑️ Trash
+                    </button>
+                    <div className="dropdown-content menu bg-base-200 rounded-box z-[1] w-80 p-3 shadow-lg gap-2 border border-base-300 mt-1 max-h-[300px] overflow-y-auto">
+                      <span className="text-[10px] font-bold text-base-content/50 uppercase tracking-wide">
+                        Trash Bin (Auto-deletes in 30 days)
+                      </span>
+
+                      {/* Lists */}
+                      {trashedItems.lists.length > 0 && (
+                        <div className="space-y-1">
+                          <span className="text-[9px] font-bold text-error uppercase">Columns</span>
+                          {trashedItems.lists.map((l) => (
+                            <div
+                              key={l.id}
+                              className="flex items-center justify-between gap-2 bg-base-100 p-1.5 rounded border border-base-300"
+                            >
+                              <span className="text-xs truncate font-medium">{l.title}</span>
+                              <div className="flex gap-1">
+                                <button
+                                  type="button"
+                                  onClick={async () => {
+                                    await restoreList(l.id)
+                                    loadTrash()
+                                  }}
+                                  className="btn btn-xs btn-primary text-white"
+                                >
+                                  Restore
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={async () => {
+                                    if (confirm('Permanently delete list and all its cards?')) {
+                                      await deleteListPermanently(l.id)
+                                      loadTrash()
+                                    }
+                                  }}
+                                  className="btn btn-xs btn-error text-white"
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Cards */}
+                      {trashedItems.cards.length > 0 && (
+                        <div className="space-y-1 pt-1.5 border-t border-base-300">
+                          <span className="text-[9px] font-bold text-error uppercase">Cards</span>
+                          {trashedItems.cards.map((c) => (
+                            <div
+                              key={c.id}
+                              className="flex items-center justify-between gap-2 bg-base-100 p-1.5 rounded border border-base-300"
+                            >
+                              <span className="text-xs truncate font-medium">{c.title}</span>
+                              <div className="flex gap-1">
+                                <button
+                                  type="button"
+                                  onClick={async () => {
+                                    await restoreCard(c.id)
+                                    loadTrash()
+                                  }}
+                                  className="btn btn-xs btn-primary text-white"
+                                >
+                                  Restore
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={async () => {
+                                    if (confirm('Permanently delete card?')) {
+                                      await deleteCardPermanently(c.id)
+                                      loadTrash()
+                                    }
+                                  }}
+                                  className="btn btn-xs btn-error text-white"
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {trashedItems.lists.length === 0 && trashedItems.cards.length === 0 && (
+                        <span className="text-xs text-base-content/40 py-2 text-center">
+                          Trash is empty
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 )}
               </div>
-            )}
-          </div>
-        </DndContext>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-base-content/50">
+                  Active Workspace: {activeWorkspace ? activeWorkspace.name : 'None'}
+                </span>
+              </div>
+            </header>
+
+            {/* Columns Board view */}
+            <DndContext onDragEnd={handleDragEnd}>
+              <div className="flex-1 overflow-x-auto p-6 flex gap-6 items-start">
+                {activeBoard?.lists?.map((list) => (
+                  <BoardColumn key={list.id} list={list} />
+                ))}
+
+                {/* Add Column Button */}
+                {activeBoard && (
+                  <div className="w-80 flex-shrink-0">
+                    {isAddingColumn ? (
+                      <form
+                        onSubmit={handleCreateColumn}
+                        className="bg-base-100 border border-base-200 rounded-2xl p-4 shadow-md space-y-2"
+                      >
+                        <input
+                          type="text"
+                          placeholder="Enter list title..."
+                          value={newColumnTitle}
+                          onChange={(e) => setNewColumnTitle(e.target.value)}
+                          className="input input-sm input-bordered input-primary w-full focus:outline-none"
+                        />
+                        <div className="flex gap-2">
+                          <button type="submit" className="btn btn-primary btn-xs flex-1">
+                            Add List
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsAddingColumn(false)
+                              setNewColumnTitle('')
+                            }}
+                            className="btn btn-ghost btn-xs flex-1"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </form>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setIsAddingColumn(true)}
+                        className="btn btn-block bg-base-100/60 hover:bg-base-100 border border-dashed border-base-content/10 hover:border-primary/40 rounded-2xl p-4 text-left font-semibold text-sm text-base-content/60 hover:text-primary transition-all duration-200 flex items-center gap-2 h-14"
+                      >
+                        + Add List
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            </DndContext>
+          </>
+        )}
       </main>
     </div>
   )
