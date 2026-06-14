@@ -11,6 +11,9 @@ import { SubtaskProgress } from './SubtaskProgress'
 import { CardChecklists } from './CardChecklists'
 import { CardAttachments } from './CardAttachments'
 import { ChecklistProgress } from './ChecklistProgress'
+import { CardComments } from './CardComments'
+import { CardActivities } from './CardActivities'
+
 
 
 interface CardItemProps {
@@ -39,6 +42,8 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
   const [subtasks, setSubtasks] = useState<SubtaskCard[]>([])
   const [subtaskTotal, setSubtaskTotal] = useState(0)
   const [subtaskCompleted, setSubtaskCompleted] = useState(0)
+  const [refreshActivitiesTrigger, setRefreshActivitiesTrigger] = useState(0)
+
 
   const updateCard = useBoardStore((s) => s.updateCard)
   const deleteCard = useBoardStore((s) => s.deleteCard)
@@ -258,6 +263,26 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
                 )
               })}
             </div>
+          </div>
+
+          <div className="border-t border-base-200 pt-3">
+            <span className="text-xs text-base-content/50 font-bold uppercase block mb-2">
+              Komentar
+            </span>
+            <CardComments
+              cardId={card.id}
+              onCommentsChange={() => setRefreshActivitiesTrigger((t) => t + 1)}
+            />
+          </div>
+
+          <div className="border-t border-base-200 pt-3">
+            <span className="text-xs text-base-content/50 font-bold uppercase block mb-2">
+              Aktivitas
+            </span>
+            <CardActivities
+              cardId={card.id}
+              refreshTrigger={refreshActivitiesTrigger}
+            />
           </div>
         </div>
 

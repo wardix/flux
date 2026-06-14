@@ -1,7 +1,11 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
 import { authMiddleware } from '../middleware/auth'
+import { db } from '../db'
 import * as cardService from '../services/cardService'
+import { logActivity } from '../services/activityService'
+
 import { ErrorSchema, CardSchema, CreateCardRequest } from '../lib/schemas'
+
 
 const cardRoutes = new OpenAPIHono()
 
@@ -330,6 +334,7 @@ cardRoutes.openapi(getCardByIdRoute, async (c) => {
 
 cardRoutes.openapi(createCardRoute, async (c) => {
   try {
+    const userId = c.get('userId')
     const body = await c.req.json()
     if (!body.list_id) return c.json({ error: 'list_id is required' }, 400)
     if (!body.title) return c.json({ error: 'Title is required' }, 400)
@@ -344,6 +349,7 @@ cardRoutes.openapi(createCardRoute, async (c) => {
     }
 
     const card = await cardService.create(body)
+    await logActivity(card.id, userId, 'created', card.title)
     return c.json({ data: card }, 201)
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Internal Server Error'
@@ -368,8 +374,13 @@ cardRoutes.openapi(updateCardPositionsRoute, async (c) => {
 
 cardRoutes.openapi(updateCardRoute, async (c) => {
   try {
+    const userId = c.get('userId')
     const id = Number(c.req.param('id'))
     if (Number.isNaN(id)) return c.json({ error: 'Invalid ID' }, 400)
+
+    const oldCards = await db`SELECT * FROM cards WHERE id = ${id}`
+    if (oldCards.length === 0) return c.json({ error: 'Card not found' }, 404)
+    const oldCard = oldCards[0]
 
     const body = await c.req.json()
     if ('story_points' in body) {
@@ -383,6 +394,34 @@ cardRoutes.openapi(updateCardRoute, async (c) => {
     const card = await cardService.update(id, body)
     if (!card) return c.json({ error: 'Card not found' }, 404)
 
+    // Log what changed
+    if (body.title && body.title !== oldCard.title) {
+      await logActivity(id, userId, 'updated_title', body.title)
+    }
+    if (body.description !== undefined && body.description !== oldCard.description) {
+      await logActivity(id, userId, 'updated_description', body.description)
+    }
+    if (body.due_date !== undefined && body.due_date !== oldCard.due_date) {
+      await logActivity(id, userId, 'updated_due_date', body.due_date)
+    }
+    if (body.story_points !== undefined && body.story_points !== oldCard.story_points) {
+      await logActivity(
+        id,
+        userId,
+        'updated_story_points',
+        body.story_points ? String(body.story_points) : 'removed',
+      )
+    }
+    if (body.list_id !== undefined && body.list_id !== oldCard.list_id) {
+      await logActivity(id, userId, 'moved_list', String(body.list_id))
+    }
+    if (body.assignee_id !== undefined && body.assignee_id !== oldCard.assignee_id) {
+      await logActivity(id, userId, 'updated_assignee', body.assignee_id ? String(body.assignee_id) : 'unassigned')
+    }
+    if (body.archived_at !== undefined && body.archived_at !== oldCard.archived_at) {
+      await logActivity(id, userId, body.archived_at ? 'archived' : 'restored')
+    }
+
     return c.json({ data: card }, 200)
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Internal Server Error'
@@ -391,6 +430,7 @@ cardRoutes.openapi(updateCardRoute, async (c) => {
 })
 
 cardRoutes.openapi(deleteCardRoute, async (c) => {
+  const userId = c.get('userId')
   const id = Number(c.req.param('id'))
   if (Number.isNaN(id)) return c.json({ error: 'Invalid ID' }, 400)
 
@@ -399,6 +439,10 @@ cardRoutes.openapi(deleteCardRoute, async (c) => {
     ? await cardService.remove(id)
     : await cardService.update(id, { deleted_at: new Date().toISOString() })
   if (!card) return c.json({ error: 'Card not found' }, 404)
+
+  if (!permanent) {
+    await logActivity(id, userId, 'deleted')
+  }
 
   return c.body(null, 204)
 })

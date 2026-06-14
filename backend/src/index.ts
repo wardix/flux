@@ -15,6 +15,9 @@ import { twoFactorRoutes } from './routes/twoFactor'
 import { oauthRoutes } from './routes/oauth'
 import { checklistRoutes } from './routes/checklists'
 import { attachmentRoutes } from './routes/attachments'
+import { commentRoutes } from './routes/comments'
+import { activityRoutes } from './routes/activities'
+
 
 
 // Trigger database old trash clean up on server startup
@@ -56,6 +59,9 @@ app.route('/api/labels', labelRoutes)
 app.route('/api', subtaskRoutes)
 app.route('/api', checklistRoutes)
 app.route('/api', attachmentRoutes)
+app.route('/api', commentRoutes)
+app.route('/api', activityRoutes)
+
 
 export default {
   port: process.env.PORT || 3000,

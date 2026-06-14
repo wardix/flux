@@ -1,4 +1,6 @@
 -- Drop tables if they exist (for easy migration reset)
+DROP TABLE IF EXISTS activity_logs CASCADE;
+DROP TABLE IF EXISTS comments CASCADE;
 DROP TABLE IF EXISTS attachments CASCADE;
 DROP TABLE IF EXISTS checklist_items CASCADE;
 DROP TABLE IF EXISTS checklists CASCADE;
@@ -202,5 +204,35 @@ CREATE TRIGGER update_attachments_updated_at BEFORE UPDATE ON attachments FOR EA
 CREATE INDEX idx_checklists_card_id ON checklists(card_id);
 CREATE INDEX idx_checklist_items_checklist_id ON checklist_items(checklist_id);
 CREATE INDEX idx_attachments_card_id ON attachments(card_id);
+
+-- Comments Table
+CREATE TABLE comments (
+    id SERIAL PRIMARY KEY,
+    card_id INTEGER NOT NULL REFERENCES cards(id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    content TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Activity Logs Table
+CREATE TABLE activity_logs (
+    id SERIAL PRIMARY KEY,
+    card_id INTEGER NOT NULL REFERENCES cards(id) ON DELETE CASCADE,
+    user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    action VARCHAR(255) NOT NULL,
+    details TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Triggers for comments updated_at
+CREATE TRIGGER update_comments_updated_at BEFORE UPDATE ON comments FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Indexes for comments and activity logs
+CREATE INDEX idx_comments_card_id ON comments(card_id);
+CREATE INDEX idx_comments_user_id ON comments(user_id);
+CREATE INDEX idx_activity_logs_card_id ON activity_logs(card_id);
+CREATE INDEX idx_activity_logs_user_id ON activity_logs(user_id);
+
 
 
