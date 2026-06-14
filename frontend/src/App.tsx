@@ -44,6 +44,11 @@ import { useSearchStore } from './stores/searchStore'
 import { NotificationBell } from './components/shared/NotificationBell'
 import { ChatPanel } from './components/chat/ChatPanel'
 import { useChatStore } from './stores/chatStore'
+import { ShortcutProvider } from './components/shared/ShortcutProvider'
+import { ShortcutHelpModal } from './components/shared/ShortcutHelpModal'
+import { useUiStore } from './stores/uiStore'
+import { useKeyboardShortcut } from './hooks/useKeyboardShortcut'
+import { BoardShortcuts } from './components/board/BoardShortcuts'
 
 function decodeToken(token: string | null) {
   if (!token) return null
@@ -240,6 +245,12 @@ function App() {
   // Pending offline mutations tracking
   const [pendingMutationsCount, setPendingMutationsCount] = useState(0)
   const [isSyncing, setIsSyncing] = useState(false)
+
+  const { isShortcutHelpOpen, closeShortcutHelp, openShortcutHelp } = useUiStore()
+
+  useKeyboardShortcut('?', () => {
+    openShortcutHelp()
+  }, { description: 'Show Keyboard Shortcuts', category: 'General', modifiers: { shift: true } })
 
   useEffect(() => {
     const checkQueue = async () => {
@@ -1872,6 +1883,8 @@ function App() {
                 )}
               </>
             )}
+            
+            {activeBoard && <BoardShortcuts />}
           </main>
 
       {activeBoard && (
@@ -1900,14 +1913,17 @@ function App() {
         />
       )}
       <ChatPanel />
+      <ShortcutHelpModal isOpen={isShortcutHelpOpen} onClose={closeShortcutHelp} />
     </div>
   )
 }
 
 export default function AppWrapper() {
   return (
-    <BrandingProvider>
-      <App />
-    </BrandingProvider>
+    <ShortcutProvider>
+      <BrandingProvider>
+        <App />
+      </BrandingProvider>
+    </ShortcutProvider>
   )
 }

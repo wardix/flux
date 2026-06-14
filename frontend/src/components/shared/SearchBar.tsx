@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { Search, Loader2, X } from 'lucide-react'
 import { useSearchStore } from '../../stores/searchStore'
 import { SearchResultsDropdown } from './SearchResultsDropdown'
+import { useKeyboardShortcut } from '../../hooks/useKeyboardShortcut'
 
 interface SearchBarProps {
   onSearch?: (query: string) => void
@@ -16,25 +17,10 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, isLoading }) => 
 
   const { searchResults, isSearching, searchGlobal, clearSearch } = useSearchStore()
 
-  // Handle global keyboard shortcut "/"
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const activeEl = document.activeElement
-      const isInput =
-        activeEl &&
-        (activeEl.tagName === 'INPUT' ||
-          activeEl.tagName === 'TEXTAREA' ||
-          (activeEl as HTMLElement).isContentEditable)
-
-      if (e.key === '/' && !isInput) {
-        e.preventDefault()
-        inputRef.current?.focus()
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [])
+  useKeyboardShortcut('/', (e) => {
+    e.preventDefault()
+    inputRef.current?.focus()
+  }, { description: 'Focus Search Bar', category: 'General' })
 
   // Handle local query debouncing
   useEffect(() => {

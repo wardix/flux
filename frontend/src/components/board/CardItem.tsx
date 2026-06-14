@@ -1009,8 +1009,9 @@ export function CardItem({
         style={style}
         {...attributes}
         {...listeners}
-        role="button"
+        role="option"
         tabIndex={0}
+        data-card-id={card.id}
         onClick={(e) => {
           if (isSubtask) {
             setIsOpen(true)
