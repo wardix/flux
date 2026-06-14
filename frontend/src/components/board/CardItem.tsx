@@ -13,6 +13,8 @@ import { CardAttachments } from './CardAttachments'
 import { ChecklistProgress } from './ChecklistProgress'
 import { CardComments } from './CardComments'
 import { CardActivities } from './CardActivities'
+import { MarkdownRenderer } from '../shared/MarkdownRenderer'
+
 
 
 
@@ -43,6 +45,24 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
   const [subtaskTotal, setSubtaskTotal] = useState(0)
   const [subtaskCompleted, setSubtaskCompleted] = useState(0)
   const [refreshActivitiesTrigger, setRefreshActivitiesTrigger] = useState(0)
+  const [isEditingDescription, setIsEditingDescription] = useState(false)
+  const activeCardId = useBoardStore((s) => s.activeCardId)
+  const setActiveCardId = useBoardStore((s) => s.setActiveCardId)
+
+  useEffect(() => {
+    if (activeCardId === card.id) {
+      setIsOpen(true)
+    }
+  }, [activeCardId, card.id])
+
+  const closeOpenedModal = () => {
+    setIsOpen(false)
+    if (activeCardId === card.id) {
+      setActiveCardId(null)
+    }
+  }
+
+
 
 
   const updateCard = useBoardStore((s) => s.updateCard)
@@ -122,7 +142,7 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
       due_date: dueDate ? new Date(dueDate).toISOString() : null,
       story_points: storyPoints,
     })
-    setIsOpen(false)
+    closeOpenedModal()
   }
 
   const toggleLabel = async (label: (typeof labels)[0]) => {
@@ -139,7 +159,7 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
       <div className="modal-box bg-base-100 border border-base-200 shadow-2xl relative space-y-4 max-w-lg">
         <button
           type="button"
-          onClick={() => setIsOpen(false)}
+          onClick={closeOpenedModal}
           className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
         >
           ✕
@@ -160,14 +180,36 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
           </div>
 
           <div>
-            <span className="text-xs text-base-content/50 font-bold uppercase block mb-1">
-              Description
-            </span>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="textarea textarea-bordered textarea-sm w-full h-24 focus:outline-none focus:textarea-primary"
-            />
+            <div className="flex justify-between items-baseline mb-1">
+              <span className="text-xs text-base-content/50 font-bold uppercase">
+                Description (Markdown)
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsEditingDescription(!isEditingDescription)}
+                className="text-xs text-primary hover:underline font-semibold"
+              >
+                {isEditingDescription ? '👁️ Preview' : '✏️ Edit'}
+              </button>
+            </div>
+            {isEditingDescription ? (
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Tulis deskripsi menggunakan Markdown..."
+                className="textarea textarea-bordered textarea-sm w-full h-24 focus:outline-none focus:textarea-primary font-mono text-xs"
+              />
+            ) : (
+              <div
+                role="button"
+                tabIndex={0}
+                className="border border-base-200 rounded-lg p-3 bg-base-50 min-h-[6rem] hover:bg-base-100 transition-colors cursor-pointer"
+                onClick={() => setIsEditingDescription(true)}
+                onKeyDown={(e) => e.key === 'Enter' && setIsEditingDescription(true)}
+              >
+                <MarkdownRenderer content={description || '*Tidak ada deskripsi. Klik untuk menulis.*'} />
+              </div>
+            )}
           </div>
 
           {/* SubtaskList rendering for parent cards only */}
@@ -291,7 +333,7 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
             type="button"
             onClick={async () => {
               await archiveCard(card.id)
-              setIsOpen(false)
+              closeOpenedModal()
             }}
             className="btn btn-warning btn-sm btn-outline gap-1"
           >
@@ -301,7 +343,7 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
             <button type="button" onClick={handleUpdate} className="btn btn-primary btn-sm px-6">
               Save
             </button>
-            <button type="button" onClick={() => setIsOpen(false)} className="btn btn-ghost btn-sm">
+            <button type="button" onClick={closeOpenedModal} className="btn btn-ghost btn-sm">
               Cancel
             </button>
           </div>

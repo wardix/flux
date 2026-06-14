@@ -45,6 +45,8 @@ interface BoardState {
   deleteBoardPermanently: (boardId: number) => Promise<void>
   fetchArchive: (boardId: number) => Promise<{ lists: List[]; cards: Card[] }>
   fetchTrash: (boardId: number) => Promise<{ lists: List[]; cards: Card[] }>
+  activeCardId: number | null
+  setActiveCardId: (id: number | null) => void
 }
 
 export const useBoardStore = create<BoardState>((set, get) => ({
@@ -749,4 +751,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       return { lists: [], cards: [] }
     }
   },
+
+  activeCardId: null,
+  setActiveCardId: (id: number | null) => set({ activeCardId: id }),
 }))
