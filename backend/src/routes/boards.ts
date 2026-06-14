@@ -430,4 +430,159 @@ boardRoutes.openapi(deleteBoardRoute, async (c) => {
   return c.body(null, 204)
 })
 
+const getBoardMembersRoute = createRoute({
+  method: 'get',
+  path: '/{id}/members',
+  tags: ['Boards'],
+  summary: 'Get board members',
+  description: 'Get list of users invited to this board along with their roles',
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      id: z.string().openapi({ example: '1' }),
+    }),
+  },
+  responses: {
+    200: {
+      description: 'List of members',
+      content: {
+        'application/json': {
+          schema: z.array(z.any()),
+        },
+      },
+    },
+    400: {
+      description: 'Invalid parameters',
+      content: {
+        'application/json': {
+          schema: ErrorSchema,
+        },
+      },
+    },
+  },
+})
+
+const addBoardMemberRoute = createRoute({
+  method: 'post',
+  path: '/{id}/members',
+  tags: ['Boards'],
+  summary: 'Invite or update member on board',
+  description: 'Add a user to a board by email and assign role (admin, observer, member)',
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      id: z.string().openapi({ example: '1' }),
+    }),
+    body: {
+      content: {
+        'application/json': {
+          schema: z.object({
+            email: z.string().email().openapi({ example: 'collab@example.com' }),
+            role: z.enum(['admin', 'observer', 'member']).openapi({ example: 'observer' }),
+          }),
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Member added or updated successfully',
+      content: {
+        'application/json': {
+          schema: z.object({
+            data: z.any(),
+          }),
+        },
+      },
+    },
+    400: {
+      description: 'Invalid parameters',
+      content: {
+        'application/json': {
+          schema: ErrorSchema,
+        },
+      },
+    },
+    404: {
+      description: 'User not found',
+      content: {
+        'application/json': {
+          schema: ErrorSchema,
+        },
+      },
+    },
+  },
+})
+
+const getBoardRoleRoute = createRoute({
+  method: 'get',
+  path: '/{id}/role',
+  tags: ['Boards'],
+  summary: 'Get user role on board',
+  description: 'Check role of current logged-in user on a board',
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      id: z.string().openapi({ example: '1' }),
+    }),
+  },
+  responses: {
+    200: {
+      description: 'User role',
+      content: {
+        'application/json': {
+          schema: z.object({
+            role: z.string().nullable().openapi({ example: 'observer' }),
+          }),
+        },
+      },
+    },
+  },
+})
+
+boardRoutes.openapi(getBoardMembersRoute, async (c) => {
+  try {
+    const id = Number(c.req.param('id'))
+    if (Number.isNaN(id)) return c.json({ error: 'Invalid ID' }, 400)
+    const members = await boardService.getBoardMembers(id)
+    return c.json(members, 200)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Internal Server Error'
+    return c.json({ error: message }, 500)
+  }
+})
+
+boardRoutes.openapi(addBoardMemberRoute, async (c) => {
+  try {
+    const id = Number(c.req.param('id'))
+    if (Number.isNaN(id)) return c.json({ error: 'Invalid ID' }, 400)
+    const body = await c.req.json()
+    if (!body.email || !body.role) {
+      return c.json({ error: 'Email and role are required' }, 400)
+    }
+    const member = await boardService.addBoardMember(id, body.email, body.role)
+    return c.json({ data: member }, 200)
+  } catch (error) {
+    if (error instanceof Error && error.message === 'USER_NOT_FOUND') {
+      return c.json({ error: 'User with this email not found' }, 404)
+    }
+    const message = error instanceof Error ? error.message : 'Internal Server Error'
+    return c.json({ error: message }, 500)
+  }
+})
+
+boardRoutes.openapi(getBoardRoleRoute, async (c) => {
+  try {
+    const id = Number(c.req.param('id'))
+    if (Number.isNaN(id)) return c.json({ error: 'Invalid ID' }, 400)
+    const userId = c.get('userId')
+    const role = await boardService.getBoardRole(id, userId)
+    return c.json({ role }, 200)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Internal Server Error'
+    return c.json({ error: message }, 500)
+  }
+})
+
 export { boardRoutes }
+

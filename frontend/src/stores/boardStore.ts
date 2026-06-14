@@ -45,6 +45,11 @@ interface BoardState {
   deleteBoardPermanently: (boardId: number) => Promise<void>
   fetchArchive: (boardId: number) => Promise<{ lists: List[]; cards: Card[] }>
   fetchTrash: (boardId: number) => Promise<{ lists: List[]; cards: Card[] }>
+  boardMembers: any[]
+  userRole: string | null
+  fetchBoardMembers: (boardId: number) => Promise<void>
+  fetchUserRole: (boardId: number) => Promise<void>
+  inviteBoardMember: (boardId: number, email: string, role: string) => Promise<void>
   activeCardId: number | null
   setActiveCardId: (id: number | null) => void
 }
@@ -142,6 +147,8 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     try {
       const { data } = await api.get<{ data: Board }>(`/boards/${id}`)
       set({ activeBoard: data, isLoading: false })
+      get().fetchBoardMembers(id).catch(console.error)
+      get().fetchUserRole(id).catch(console.error)
     } catch {
       const mockBoard: Board = {
         id,
@@ -752,6 +759,40 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     }
   },
 
+  boardMembers: [],
+  userRole: null,
+
+  fetchBoardMembers: async (boardId: number) => {
+    try {
+      const res = await api.get<any[]>(`/boards/${boardId}/members`)
+      set({ boardMembers: res })
+    } catch (err) {
+      console.error(err)
+      set({ boardMembers: [] })
+    }
+  },
+
+  fetchUserRole: async (boardId: number) => {
+    try {
+      const res = await api.get<{ role: string | null }>(`/boards/${boardId}/role`)
+      set({ userRole: res.role })
+    } catch (err) {
+      console.error(err)
+      set({ userRole: null })
+    }
+  },
+
+  inviteBoardMember: async (boardId: number, email: string, role: string) => {
+    try {
+      await api.post(`/boards/${boardId}/members`, { email, role })
+      await get().fetchBoardMembers(boardId)
+    } catch (err) {
+      console.error(err)
+      throw err
+    }
+  },
+
   activeCardId: null,
   setActiveCardId: (id: number | null) => set({ activeCardId: id }),
 }))
+

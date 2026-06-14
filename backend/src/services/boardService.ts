@@ -27,6 +27,8 @@ export async function getById(id: number) {
   if (listIds.length > 0) {
     cards = await db`
       SELECT c.*,
+        u.email as assignee_email,
+        u.avatar_url as assignee_avatar,
         COALESCE((
           SELECT json_build_object(
             'total', COUNT(*)::integer,
@@ -50,6 +52,7 @@ export async function getById(id: number) {
           LIMIT 1
         ) as cover_file_path
       FROM cards c
+      LEFT JOIN users u ON c.assignee_id = u.id
       WHERE c.list_id IN (${listIds}) AND c.parent_card_id IS NULL AND c.archived_at IS NULL AND c.deleted_at IS NULL 
       ORDER BY c.position ASC, c.id ASC
     `
@@ -104,7 +107,16 @@ export async function create(
     VALUES (${workspaceId}, ${data.title}, ${data.visibility || 'private'}, ${data.background || null}, ${userId})
     RETURNING *
   `
-  return result[0]
+  
+  const board = result[0]
+  
+  // Add creator to board_members as 'admin'
+  await db`
+    INSERT INTO board_members (board_id, user_id, role)
+    VALUES (${board.id}, ${userId}, 'admin')
+  `
+
+  return board
 }
 
 export async function update(
@@ -140,3 +152,61 @@ export async function remove(id: number) {
   const result = await db`DELETE FROM boards WHERE id = ${id} RETURNING *`
   return result[0] || null
 }
+
+export async function getBoardMembers(boardId: number) {
+  return await db`
+    SELECT bm.*, u.email, u.avatar_url
+    FROM board_members bm
+    JOIN users u ON bm.user_id = u.id
+    WHERE bm.board_id = ${boardId}
+    ORDER BY bm.created_at ASC
+  `
+}
+
+export async function addBoardMember(boardId: number, email: string, role: string) {
+  const users = await db`SELECT id FROM users WHERE email = ${email}`
+  if (users.length === 0) {
+    throw new Error('USER_NOT_FOUND')
+  }
+  const userId = users[0].id
+
+  // Upsert board member
+  const existing = await db`
+    SELECT * FROM board_members WHERE board_id = ${boardId} AND user_id = ${userId}
+  `
+  
+  if (existing.length > 0) {
+    const result = await db`
+      UPDATE board_members
+      SET role = ${role}, updated_at = NOW()
+      WHERE board_id = ${boardId} AND user_id = ${userId}
+      RETURNING *
+    `
+    return result[0]
+  }
+
+  const result = await db`
+    INSERT INTO board_members (board_id, user_id, role)
+    VALUES (${boardId}, ${userId}, ${role})
+    RETURNING *
+  `
+  return result[0]
+}
+
+export async function getBoardRole(boardId: number, userId: number): Promise<string | null> {
+  const members = await db`
+    SELECT role FROM board_members WHERE board_id = ${boardId} AND user_id = ${userId}
+  `
+  if (members.length > 0) {
+    return members[0].role
+  }
+
+  // Fallback check if user is creator
+  const boards = await db`SELECT created_by FROM boards WHERE id = ${boardId}`
+  if (boards.length > 0 && boards[0].created_by === userId) {
+    return 'admin'
+  }
+
+  return null
+}
+

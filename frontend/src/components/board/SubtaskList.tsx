@@ -11,6 +11,7 @@ interface SubtaskListProps {
   onAdd: (data: CreateSubtaskRequest) => void
   onToggle: (subtaskId: number, isCompleted: boolean) => void
   onDelete: (subtaskId: number) => void
+  disabled?: boolean
 }
 
 export function SubtaskList({
@@ -20,6 +21,7 @@ export function SubtaskList({
   onAdd,
   onToggle,
   onDelete,
+  disabled = false,
 }: SubtaskListProps) {
   const [isAdding, setIsAdding] = useState(false)
 
@@ -37,7 +39,7 @@ export function SubtaskList({
           </span>
           {total > 0 && <SubtaskProgress completed={completed} total={total} />}
         </div>
-        {!isAdding && (
+        {!isAdding && !disabled && (
           <button
             type="button"
             onClick={() => setIsAdding(true)}
@@ -63,6 +65,7 @@ export function SubtaskList({
                   <input
                     type="checkbox"
                     checked={subtask.is_completed}
+                    disabled={disabled}
                     onChange={(e) => onToggle(subtask.id, e.target.checked)}
                     className="checkbox checkbox-xs checkbox-primary"
                   />
@@ -89,14 +92,16 @@ export function SubtaskList({
                     </span>
                   )}
 
-                  <button
-                    type="button"
-                    onClick={() => onDelete(subtask.id)}
-                    className="btn btn-ghost btn-xs btn-circle text-error hover:bg-error/10"
-                    title="Delete subtask"
-                  >
-                    ✕
-                  </button>
+                  {!disabled && (
+                    <button
+                      type="button"
+                      onClick={() => onDelete(subtask.id)}
+                      className="btn btn-ghost btn-xs btn-circle text-error hover:bg-error/10"
+                      title="Delete subtask"
+                    >
+                      ✕
+                    </button>
+                  )}
                 </div>
               </div>
             )

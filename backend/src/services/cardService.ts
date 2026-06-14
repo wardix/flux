@@ -27,6 +27,8 @@ export async function create(data: {
 export async function getById(id: number) {
   const result = await db`
     SELECT c.*,
+      u.email as assignee_email,
+      u.avatar_url as assignee_avatar,
       COALESCE((
         SELECT json_build_object(
           'total', COUNT(*)::integer,
@@ -50,6 +52,7 @@ export async function getById(id: number) {
         LIMIT 1
       ) as cover_file_path
     FROM cards c
+    LEFT JOIN users u ON c.assignee_id = u.id
     WHERE c.id = ${id} AND c.deleted_at IS NULL
   `
   return result[0] || null

@@ -20,9 +20,10 @@ interface UserProfile {
 interface CardCommentsProps {
   cardId: number
   onCommentsChange?: () => void
+  disabled?: boolean
 }
 
-export function CardComments({ cardId, onCommentsChange }: CardCommentsProps) {
+export function CardComments({ cardId, onCommentsChange, disabled = false }: CardCommentsProps) {
   const [comments, setComments] = useState<Comment[]>([])
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null)
   const [newComment, setNewComment] = useState('')
@@ -96,18 +97,20 @@ export function CardComments({ cardId, onCommentsChange }: CardCommentsProps) {
   return (
     <div className="space-y-4">
       {/* Add comment form */}
-      <form onSubmit={handleSubmit} className="flex gap-2">
-        <input
-          type="text"
-          placeholder="Tulis komentar..."
-          value={newComment}
-          onChange={(e) => setNewComment(e.target.value)}
-          className="input input-bordered input-sm flex-1 focus:outline-none focus:input-primary"
-        />
-        <button type="submit" className="btn btn-primary btn-sm">
-          Kirim
-        </button>
-      </form>
+      {!disabled && (
+        <form onSubmit={handleSubmit} className="flex gap-2">
+          <input
+            type="text"
+            placeholder="Tulis komentar..."
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            className="input input-bordered input-sm flex-1 focus:outline-none focus:input-primary"
+          />
+          <button type="submit" className="btn btn-primary btn-sm">
+            Kirim
+          </button>
+        </form>
+      )}
 
       {/* List comments */}
       {comments.length > 0 ? (
@@ -141,7 +144,7 @@ export function CardComments({ cardId, onCommentsChange }: CardCommentsProps) {
                     </span>
                   </div>
 
-                  {editingCommentId === comment.id ? (
+                  {editingCommentId === comment.id && !disabled ? (
                     <div className="flex gap-2 mt-1">
                       <input
                         type="text"
@@ -171,7 +174,7 @@ export function CardComments({ cardId, onCommentsChange }: CardCommentsProps) {
                   )}
 
                   {/* Actions (Edit / Delete) for owner */}
-                  {isOwner && editingCommentId !== comment.id && (
+                  {isOwner && editingCommentId !== comment.id && !disabled && (
                     <div className="flex gap-2 mt-1">
                       <button
                         type="button"
@@ -203,3 +206,4 @@ export function CardComments({ cardId, onCommentsChange }: CardCommentsProps) {
     </div>
   )
 }
+

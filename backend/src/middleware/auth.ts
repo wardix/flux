@@ -1,5 +1,6 @@
 import type { Context, Next } from 'hono'
 import { verify } from 'hono/jwt'
+import { checkObserverPermission } from './permission'
 
 export async function authMiddleware(c: Context, next: Next) {
   const token = c.req.header('Authorization')?.replace('Bearer ', '')
@@ -12,9 +13,10 @@ export async function authMiddleware(c: Context, next: Next) {
       'HS256',
     )
     c.set('userId', Number(payload.sub))
-    await next()
+    return await checkObserverPermission(c, next)
   } catch (err) {
     console.error('JWT verification error:', err)
     return c.json({ error: 'Invalid token' }, 401)
   }
 }
+
