@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 
 interface PublicFormInfo {
@@ -12,7 +12,7 @@ export function PublicFormPage() {
   const [formInfo, setFormInfo] = useState<PublicFormInfo | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  
+
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -92,7 +92,9 @@ export function PublicFormPage() {
       <div className="card w-full max-w-lg bg-base-100 border border-base-200/50 shadow-xl overflow-hidden">
         {/* Colorful gradient header */}
         <div className="bg-gradient-to-r from-primary to-secondary p-8 text-white relative">
-          <div className="absolute top-0 right-0 p-4 opacity-10 text-8xl font-bold font-mono">FLUX</div>
+          <div className="absolute top-0 right-0 p-4 opacity-10 text-8xl font-bold font-mono">
+            FLUX
+          </div>
           <h1 className="text-2xl font-black tracking-tight">{formInfo?.title}</h1>
           {formInfo?.description && (
             <p className="text-xs text-white/80 mt-2 whitespace-pre-wrap">{formInfo.description}</p>
@@ -102,9 +104,13 @@ export function PublicFormPage() {
         <div className="p-8 space-y-6">
           {submitted ? (
             <div className="text-center space-y-4 py-8 animate-fade-in">
-              <div className="w-16 h-16 bg-success/15 text-success rounded-full flex items-center justify-center mx-auto text-3xl">✓</div>
+              <div className="w-16 h-16 bg-success/15 text-success rounded-full flex items-center justify-center mx-auto text-3xl">
+                ✓
+              </div>
               <h2 className="text-xl font-bold text-base-content">Submission Successful!</h2>
-              <p className="text-sm text-base-content/60">Thank you for your response. Your entry has been recorded.</p>
+              <p className="text-sm text-base-content/60">
+                Thank you for your response. Your entry has been recorded.
+              </p>
               <button
                 type="button"
                 onClick={() => setSubmitted(false)}
@@ -124,7 +130,9 @@ export function PublicFormPage() {
 
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text text-sm font-semibold">Title <span className="text-error">*</span></span>
+                  <span className="label-text text-sm font-semibold">
+                    Title <span className="text-error">*</span>
+                  </span>
                 </label>
                 <input
                   type="text"

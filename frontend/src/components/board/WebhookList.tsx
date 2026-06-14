@@ -87,7 +87,11 @@ export function WebhookList({ boardId, disabled = false }: WebhookListProps) {
               onChange={(e) => setNewSecret(e.target.value)}
               className="input input-xs input-bordered flex-1 focus:outline-none"
             />
-            <button type="submit" disabled={isLoading} className="btn btn-primary btn-xs text-white">
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="btn btn-primary btn-xs text-white"
+            >
               Add Webhook
             </button>
           </div>
@@ -96,7 +100,9 @@ export function WebhookList({ boardId, disabled = false }: WebhookListProps) {
 
       <div className="space-y-2">
         {webhooks.length === 0 ? (
-          <p className="text-xs text-base-content/40 italic py-2 text-center">No webhooks registered.</p>
+          <p className="text-xs text-base-content/40 italic py-2 text-center">
+            No webhooks registered.
+          </p>
         ) : (
           <div className="space-y-1.5 max-h-48 overflow-y-auto">
             {webhooks.map((wh) => (

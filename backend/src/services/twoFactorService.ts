@@ -50,7 +50,7 @@ export function verifyTOTP(secret: string, code: string): boolean {
     period: 30,
     secret: secret,
   })
-  
+
   // Verify with a time window of 1 step (30 seconds) forward/backward
   const delta = totp.validate({ token: code, window: 1 })
   return delta !== null
@@ -73,7 +73,7 @@ export function generateRecoveryCodes(): string[] {
  * Hash recovery codes using Bun's native bcrypt implementation.
  */
 export async function hashRecoveryCodes(codes: string[]): Promise<string[]> {
-  return await Promise.all(codes.map(code => Bun.password.hash(code)))
+  return await Promise.all(codes.map((code) => Bun.password.hash(code)))
 }
 
 /**

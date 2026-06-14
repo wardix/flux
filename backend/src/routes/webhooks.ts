@@ -1,7 +1,7 @@
-import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi'
+import { ErrorSchema } from '../lib/schemas'
 import { authMiddleware } from '../middleware/auth'
 import * as webhookService from '../services/webhookService'
-import { ErrorSchema } from '../lib/schemas'
 
 const webhookRoutes = new OpenAPIHono()
 webhookRoutes.use('*', authMiddleware)
@@ -81,7 +81,7 @@ const listWebhooksRoute = createRoute({
                 secret: z.string().nullable(),
                 is_active: z.boolean(),
                 created_at: z.any(),
-              })
+              }),
             ),
           }),
         },

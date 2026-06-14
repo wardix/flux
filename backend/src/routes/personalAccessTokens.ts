@@ -1,7 +1,7 @@
-import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi'
+import { ErrorSchema } from '../lib/schemas'
 import { authMiddleware } from '../middleware/auth'
 import * as patService from '../services/personalAccessService'
-import { ErrorSchema } from '../lib/schemas'
 
 const personalAccessRoutes = new OpenAPIHono()
 personalAccessRoutes.use('*', authMiddleware)
@@ -70,7 +70,7 @@ const listPATsRoute = createRoute({
                 name: z.string(),
                 token: z.string(),
                 created_at: z.any(),
-              })
+              }),
             ),
           }),
         },

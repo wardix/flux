@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import type { WSEvent, PresenceUser } from '../lib/types'
+import type { PresenceUser, WSEvent } from '../lib/types'
 
 interface UseWebSocketOptions {
   boardId: number
@@ -17,7 +17,11 @@ const INITIAL_DELAY = 1000
 const MAX_DELAY = 30000
 const BACKOFF_FACTOR = 2
 
-export function useWebSocket({ boardId, onEvent, enabled = true }: UseWebSocketOptions): UseWebSocketReturn {
+export function useWebSocket({
+  boardId,
+  onEvent,
+  enabled = true,
+}: UseWebSocketOptions): UseWebSocketReturn {
   const [isConnected, setIsConnected] = useState(false)
   const [onlineUsers, setOnlineUsers] = useState<PresenceUser[]>([])
   const [reconnectAttempts, setReconnectAttempts] = useState(0)
@@ -81,11 +85,11 @@ export function useWebSocket({ boardId, onEvent, enabled = true }: UseWebSocketO
         if (!isMounted) return
         setIsConnected(false)
         setOnlineUsers([])
-        
+
         // Exponential backoff reconnect
-        const delay = Math.min(INITIAL_DELAY * Math.pow(BACKOFF_FACTOR, attempt), MAX_DELAY)
+        const delay = Math.min(INITIAL_DELAY * BACKOFF_FACTOR ** attempt, MAX_DELAY)
         setReconnectAttempts(attempt + 1)
-        
+
         reconnectTimeoutRef.current = setTimeout(() => {
           attempt++
           connect()

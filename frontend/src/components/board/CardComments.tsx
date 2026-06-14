@@ -206,4 +206,3 @@ export function CardComments({ cardId, onCommentsChange, disabled = false }: Car
     </div>
   )
 }
-

@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react'
+import type React from 'react'
+import { useEffect, useState } from 'react'
 import { api } from '../../lib/api'
 import type { Epic, Workspace } from '../../lib/types'
 import { EpicProgress } from './EpicProgress'
@@ -54,7 +55,8 @@ export function EpicList({ workspace, onSelectEpic }: EpicListProps) {
 
   const handleDelete = async (epicId: number, e: React.MouseEvent) => {
     e.stopPropagation()
-    if (!confirm('Are you sure you want to delete this Epic? Linked cards will be unassigned.')) return
+    if (!confirm('Are you sure you want to delete this Epic? Linked cards will be unassigned.'))
+      return
 
     try {
       await api.delete(`/workspaces/${workspace.id}/epics/${epicId}`)
@@ -82,22 +84,26 @@ export function EpicList({ workspace, onSelectEpic }: EpicListProps) {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-xl font-bold text-base-content">Epic Tracking</h2>
-          <p className="text-xs text-base-content/60">Manage epics and track their card progress in {workspace.name}</p>
+          <p className="text-xs text-base-content/60">
+            Manage epics and track their card progress in {workspace.name}
+          </p>
         </div>
-        <button
-          onClick={() => setShowAddForm(!showAddForm)}
-          className="btn btn-primary btn-sm"
-        >
+        <button onClick={() => setShowAddForm(!showAddForm)} className="btn btn-primary btn-sm">
           {showAddForm ? 'Cancel' : '➕ New Epic'}
         </button>
       </div>
 
       {showAddForm && (
-        <form onSubmit={handleCreate} className="card bg-base-100 border border-base-200 p-4 space-y-3 shadow-sm">
+        <form
+          onSubmit={handleCreate}
+          className="card bg-base-100 border border-base-200 p-4 space-y-3 shadow-sm"
+        >
           <h3 className="font-bold text-sm">Create New Epic</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <label className="label text-xs font-bold uppercase text-base-content/60">Title</label>
+              <label className="label text-xs font-bold uppercase text-base-content/60">
+                Title
+              </label>
               <input
                 type="text"
                 required
@@ -108,7 +114,9 @@ export function EpicList({ workspace, onSelectEpic }: EpicListProps) {
               />
             </div>
             <div>
-              <label className="label text-xs font-bold uppercase text-base-content/60">Color</label>
+              <label className="label text-xs font-bold uppercase text-base-content/60">
+                Color
+              </label>
               <div className="flex gap-2 items-center">
                 <input
                   type="color"
@@ -121,7 +129,9 @@ export function EpicList({ workspace, onSelectEpic }: EpicListProps) {
             </div>
           </div>
           <div>
-            <label className="label text-xs font-bold uppercase text-base-content/60">Description</label>
+            <label className="label text-xs font-bold uppercase text-base-content/60">
+              Description
+            </label>
             <textarea
               value={newDescription}
               onChange={(e) => setNewDescription(e.target.value)}
@@ -129,15 +139,21 @@ export function EpicList({ workspace, onSelectEpic }: EpicListProps) {
               className="textarea textarea-bordered textarea-sm w-full h-20"
             />
           </div>
-          <button type="submit" className="btn btn-primary btn-sm w-full">Save Epic</button>
+          <button type="submit" className="btn btn-primary btn-sm w-full">
+            Save Epic
+          </button>
         </form>
       )}
 
       {isLoading ? (
-        <div className="flex justify-center p-8"><span className="loading loading-spinner text-primary"></span></div>
+        <div className="flex justify-center p-8">
+          <span className="loading loading-spinner text-primary"></span>
+        </div>
       ) : epics.length === 0 ? (
         <div className="text-center py-12 bg-base-100 rounded-lg border border-dashed border-base-300">
-          <p className="text-base-content/50">No Epics found. Create one to start tracking large initiatives!</p>
+          <p className="text-base-content/50">
+            No Epics found. Create one to start tracking large initiatives!
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -149,11 +165,10 @@ export function EpicList({ workspace, onSelectEpic }: EpicListProps) {
             >
               <div className="flex justify-between items-start">
                 <div className="flex items-center gap-2">
-                  <span
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: epic.color }}
-                  />
-                  <h3 className="font-bold text-base text-base-content line-clamp-1">{epic.title}</h3>
+                  <span className="w-3 h-3 rounded-full" style={{ backgroundColor: epic.color }} />
+                  <h3 className="font-bold text-base text-base-content line-clamp-1">
+                    {epic.title}
+                  </h3>
                 </div>
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
@@ -174,7 +189,9 @@ export function EpicList({ workspace, onSelectEpic }: EpicListProps) {
               </div>
 
               {epic.description && (
-                <p className="text-xs text-base-content/60 line-clamp-2 leading-relaxed">{epic.description}</p>
+                <p className="text-xs text-base-content/60 line-clamp-2 leading-relaxed">
+                  {epic.description}
+                </p>
               )}
 
               {epic.progress && (

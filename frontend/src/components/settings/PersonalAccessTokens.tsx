@@ -101,9 +101,13 @@ export function PersonalAccessTokens() {
       )}
 
       <div className="space-y-2">
-        <span className="text-xs font-semibold text-base-content/50 uppercase block">Active Tokens</span>
+        <span className="text-xs font-semibold text-base-content/50 uppercase block">
+          Active Tokens
+        </span>
         {tokens.length === 0 ? (
-          <p className="text-xs text-base-content/40 italic">No personal access tokens generated yet.</p>
+          <p className="text-xs text-base-content/40 italic">
+            No personal access tokens generated yet.
+          </p>
         ) : (
           <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
             {tokens.map((token) => (

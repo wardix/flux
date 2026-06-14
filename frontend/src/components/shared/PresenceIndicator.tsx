@@ -15,9 +15,9 @@ export function PresenceIndicator({ users, maxDisplay = 5 }: PresenceIndicatorPr
     <div className="flex items-center">
       <div className="avatar-group -space-x-4 rtl:space-x-reverse">
         {displayUsers.map((user) => (
-          <div 
-            key={user.id} 
-            className="avatar placeholder relative group cursor-pointer" 
+          <div
+            key={user.id}
+            className="avatar placeholder relative group cursor-pointer"
             title={user.name}
           >
             <div className="w-7 h-7 rounded-full bg-primary/20 text-primary ring-2 ring-base-100 flex items-center justify-center overflow-hidden">
@@ -31,7 +31,7 @@ export function PresenceIndicator({ users, maxDisplay = 5 }: PresenceIndicatorPr
             </div>
             {/* Green dot online indicator */}
             <span className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full bg-success ring-2 ring-base-100 z-10 animate-pulse" />
-            
+
             {/* Custom Tooltip */}
             <div className="absolute bottom-full mb-1.5 hidden group-hover:block bg-slate-800 text-white text-[9px] px-2 py-0.5 rounded shadow-lg whitespace-nowrap z-50 left-1/2 -translate-x-1/2 font-semibold">
               {user.name}

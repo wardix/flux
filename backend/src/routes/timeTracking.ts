@@ -1,7 +1,7 @@
-import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi'
+import { ErrorSchema } from '../lib/schemas'
 import { authMiddleware } from '../middleware/auth'
 import * as timeTrackingService from '../services/timeTrackingService'
-import { ErrorSchema } from '../lib/schemas'
 
 const timeTrackingRoutes = new OpenAPIHono()
 
@@ -183,17 +183,21 @@ const getCardTimeLogsRoute = createRoute({
       content: {
         'application/json': {
           schema: z.object({
-            data: z.array(TimeLogSchema.extend({
-              email: z.string(),
-            })),
+            data: z.array(
+              TimeLogSchema.extend({
+                email: z.string(),
+              }),
+            ),
             meta: z.object({
               total_duration_seconds: z.number(),
               total_logs: z.number(),
-              by_user: z.array(z.object({
-                user_id: z.number(),
-                email: z.string(),
-                duration_seconds: z.number(),
-              })),
+              by_user: z.array(
+                z.object({
+                  user_id: z.number(),
+                  email: z.string(),
+                  duration_seconds: z.number(),
+                }),
+              ),
             }),
           }),
         },

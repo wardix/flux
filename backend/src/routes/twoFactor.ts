@@ -1,9 +1,9 @@
-import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
-import { authMiddleware } from '../middleware/auth'
-import { db } from '../db'
-import * as twoFactorService from '../services/twoFactorService'
-import { ErrorSchema } from '../lib/schemas'
+import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi'
 import { sign } from 'hono/jwt'
+import { db } from '../db'
+import { ErrorSchema } from '../lib/schemas'
+import { authMiddleware } from '../middleware/auth'
+import * as twoFactorService from '../services/twoFactorService'
 
 const twoFactorRoutes = new OpenAPIHono()
 
@@ -52,7 +52,8 @@ const verify2FARoute = createRoute({
   path: '/verify',
   tags: ['Auth'],
   summary: 'Verify and enable 2FA',
-  description: 'Verifies the TOTP code against the secret to enable 2FA and returns recovery codes.',
+  description:
+    'Verifies the TOTP code against the secret to enable 2FA and returns recovery codes.',
   security: [{ bearerAuth: [] }],
   request: {
     body: {
@@ -249,12 +250,15 @@ twoFactorRoutes.openapi(verify2FARoute, async (c) => {
     WHERE user_id = ${userId}
   `
 
-  return c.json({
-    data: {
-      enabled: true,
-      recovery_codes: recoveryCodes,
+  return c.json(
+    {
+      data: {
+        enabled: true,
+        recovery_codes: recoveryCodes,
+      },
     },
-  }, 200)
+    200,
+  )
 })
 
 // Setup disable2FARoute handler (authenticated)
@@ -273,7 +277,10 @@ twoFactorRoutes.openapi(disable2FARoute, async (c) => {
   let isRecoveryValid = false
 
   if (!isTotpValid) {
-    const recoveryIndex = await twoFactorService.verifyRecoveryCode(code, existing[0].recovery_codes)
+    const recoveryIndex = await twoFactorService.verifyRecoveryCode(
+      code,
+      existing[0].recovery_codes,
+    )
     if (recoveryIndex !== -1) {
       isRecoveryValid = true
       // Remove the used recovery code from the array
@@ -289,11 +296,14 @@ twoFactorRoutes.openapi(disable2FARoute, async (c) => {
 
   await db`UPDATE user_2fa SET enabled = false, recovery_codes = '{}' WHERE user_id = ${userId}`
 
-  return c.json({
-    data: {
-      enabled: false,
+  return c.json(
+    {
+      data: {
+        enabled: false,
+      },
     },
-  }, 200)
+    200,
+  )
 })
 
 // Setup login2FARoute handler (unauthenticated)
@@ -324,7 +334,10 @@ twoFactorRoutes.openapi(login2FARoute, async (c) => {
     let isRecoveryValid = false
 
     if (!isTotpValid) {
-      const recoveryIndex = await twoFactorService.verifyRecoveryCode(code, existing[0].recovery_codes)
+      const recoveryIndex = await twoFactorService.verifyRecoveryCode(
+        code,
+        existing[0].recovery_codes,
+      )
       if (recoveryIndex !== -1) {
         isRecoveryValid = true
         // Remove the used recovery code from the array
@@ -351,16 +364,19 @@ twoFactorRoutes.openapi(login2FARoute, async (c) => {
     }
     const token = await sign(tokenPayload, secretKey)
 
-    return c.json({
-      data: {
-        token,
-        user: {
-          id: user[0].id,
-          email: user[0].email,
-          avatar_url: user[0].avatar_url,
+    return c.json(
+      {
+        data: {
+          token,
+          user: {
+            id: user[0].id,
+            email: user[0].email,
+            avatar_url: user[0].avatar_url,
+          },
         },
       },
-    }, 200)
+      200,
+    )
   } catch (error) {
     return c.json({ error: 'Invalid or expired temporary token' }, 400)
   }

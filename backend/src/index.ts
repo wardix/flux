@@ -1,47 +1,41 @@
 import { OpenAPIHono } from '@hono/zod-openapi'
 import { cors } from 'hono/cors'
-import { cleanOldTrash, db, startRecurringTasksScheduler } from './db'
 import { verify } from 'hono/jwt'
-import { websocket } from './websocket'
+import { cleanOldTrash, db, startRecurringTasksScheduler } from './db'
+import { apiDoc } from './lib/openapi'
+import { corsMiddleware } from './middleware/cors'
+import { rateLimitMiddleware } from './middleware/rateLimit'
+import { activityRoutes } from './routes/activities'
+import { adminRoutes } from './routes/admin'
+import { attachmentRoutes } from './routes/attachments'
 import { authRoutes } from './routes/auth'
+import { automationRoutes } from './routes/automations'
 import { boardRoutes } from './routes/boards'
+import { boardTemplateRoutes } from './routes/boardTemplates'
 import { cardRoutes } from './routes/cards'
+import { checklistRoutes } from './routes/checklists'
+import { commentRoutes } from './routes/comments'
+import { boardCustomFieldRoutes, cardCustomFieldRoutes } from './routes/customFields'
+import { docsRoutes } from './routes/docs'
+import { epicRoutes } from './routes/epics'
+import { exportRoutes } from './routes/export'
+import { importRoutes } from './routes/import'
 import { labelRoutes } from './routes/labels'
 import { listRoutes } from './routes/lists'
-import { subtaskRoutes } from './routes/subtasks'
-import { workspaceRoutes } from './routes/workspaces'
-import { docsRoutes } from './routes/docs'
-import { apiDoc } from './lib/openapi'
-
-import { twoFactorRoutes } from './routes/twoFactor'
+import { mirrorRoutes } from './routes/mirrors'
 import { oauthRoutes } from './routes/oauth'
-import { checklistRoutes } from './routes/checklists'
-import { attachmentRoutes } from './routes/attachments'
-import { commentRoutes } from './routes/comments'
-import { activityRoutes } from './routes/activities'
-import { timeTrackingRoutes } from './routes/timeTracking'
-import { voteRoutes } from './routes/votes'
-import { rateLimitMiddleware } from './middleware/rateLimit'
-import { corsMiddleware } from './middleware/cors'
-import { adminRoutes } from './routes/admin'
-import { exportRoutes } from './routes/export'
-import { userRoutes } from './routes/users'
-import { boardCustomFieldRoutes, cardCustomFieldRoutes } from './routes/customFields'
-import { automationRoutes } from './routes/automations'
-import { sprintRoutes } from './routes/sprints'
-import { epicRoutes } from './routes/epics'
-import { recurringRoutes } from './routes/recurring'
-import { boardTemplateRoutes } from './routes/boardTemplates'
 import { personalAccessRoutes } from './routes/personalAccessTokens'
-import { webhookRoutes } from './routes/webhooks'
-import { importRoutes } from './routes/import'
 import { formRoutes } from './routes/publicForms'
-
-
-
-
-
-
+import { recurringRoutes } from './routes/recurring'
+import { sprintRoutes } from './routes/sprints'
+import { subtaskRoutes } from './routes/subtasks'
+import { timeTrackingRoutes } from './routes/timeTracking'
+import { twoFactorRoutes } from './routes/twoFactor'
+import { userRoutes } from './routes/users'
+import { voteRoutes } from './routes/votes'
+import { webhookRoutes } from './routes/webhooks'
+import { workspaceRoutes } from './routes/workspaces'
+import { websocket } from './websocket'
 
 // Trigger database old trash clean up on server startup
 cleanOldTrash().catch((err) => console.error('Trash cleanup failed:', err))
@@ -81,6 +75,8 @@ app.route('/api/boards', boardRoutes)
 app.route('/api/lists', listRoutes)
 
 app.route('/api/cards', cardRoutes)
+app.route('/api/cards', mirrorRoutes)
+
 app.route('/api/workspaces', workspaceRoutes)
 app.route('/api/labels', labelRoutes)
 app.route('/api', subtaskRoutes)
@@ -104,10 +100,6 @@ app.route('/api/boards/:boardId/webhooks', webhookRoutes)
 app.route('/api/import', importRoutes)
 app.route('/api', formRoutes)
 
-
-
-
-
 export default {
   port: process.env.PORT || 3000,
   async fetch(req: Request, server: any) {
@@ -121,14 +113,14 @@ export default {
         const secretKey = process.env.JWT_SECRET || 'your-jwt-secret-here-change-in-production'
         const payload = await verify(token, secretKey, 'HS256')
         const userId = Number(payload.sub)
-        
+
         const users = await db`SELECT id, email, avatar_url FROM users WHERE id = ${userId}`
         if (users.length === 0) {
           return new Response('Unauthorized', { status: 401 })
         }
         const user = users[0]
         const userName = user.email.split('@')[0]
-        
+
         const upgraded = server.upgrade(req, {
           data: {
             userId,

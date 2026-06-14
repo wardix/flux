@@ -1,6 +1,6 @@
-import { describe, test, expect, beforeAll, afterAll } from 'bun:test'
-import server from '../../src/index'
+import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import { db } from '../../src/db'
+import server from '../../src/index'
 
 describe('Recurring Tasks API', () => {
   let userId: number
@@ -23,7 +23,11 @@ describe('Recurring Tasks API', () => {
     // Generate token
     const { sign } = await import('hono/jwt')
     const secretKey = process.env.JWT_SECRET || 'your-jwt-secret-here-change-in-production'
-    testToken = await sign({ sub: userId, exp: Math.floor(Date.now() / 1000) + 3600 }, secretKey, 'HS256')
+    testToken = await sign(
+      { sub: userId, exp: Math.floor(Date.now() / 1000) + 3600 },
+      secretKey,
+      'HS256',
+    )
 
     // Create workspace
     const [ws] = await db`
@@ -73,7 +77,7 @@ describe('Recurring Tasks API', () => {
             card_id: cardId,
             frequency: 'weekly',
           }),
-        })
+        }),
       )
       expect(res.status).toBe(201)
       const { data } = await res.json()
@@ -96,7 +100,7 @@ describe('Recurring Tasks API', () => {
             card_id: cardId,
             frequency: 'hourly',
           }),
-        })
+        }),
       )
       expect(res.status).toBe(400)
     })
@@ -107,7 +111,7 @@ describe('Recurring Tasks API', () => {
       const res = await server.fetch(
         new Request(`http://localhost/api/recurring-tasks/card/${cardId}`, {
           headers: { Authorization: `Bearer ${testToken}` },
-        })
+        }),
       )
       expect(res.status).toBe(200)
       const { data } = await res.json()
@@ -125,7 +129,7 @@ describe('Recurring Tasks API', () => {
             frequency: 'daily',
             is_active: false,
           }),
-        })
+        }),
       )
       expect(res.status).toBe(200)
       const { data } = await res.json()
@@ -142,12 +146,12 @@ describe('Recurring Tasks API', () => {
     test('should delete recurring rule and set is_recurring to false', async () => {
       // Re-enable first
       await db`UPDATE cards SET is_recurring = TRUE WHERE id = ${cardId}`
-      
+
       const res = await server.fetch(
         new Request(`http://localhost/api/recurring-tasks/${ruleId}`, {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${testToken}` },
-        })
+        }),
       )
       expect(res.status).toBe(204)
 

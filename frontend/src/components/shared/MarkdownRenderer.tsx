@@ -8,7 +8,7 @@ interface MarkdownRendererProps {
 
 export function preprocessMentions(text: string): string {
   if (!text) return ''
-  
+
   // Match user emails: @email@domain.com
   let result = text.replace(
     /(\s|^)@([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/g,

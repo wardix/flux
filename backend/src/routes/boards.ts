@@ -1,7 +1,7 @@
-import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi'
+import { BoardSchema, CreateBoardRequest, ErrorSchema } from '../lib/schemas'
 import { authMiddleware } from '../middleware/auth'
 import * as boardService from '../services/boardService'
-import { ErrorSchema, BoardSchema, CreateBoardRequest } from '../lib/schemas'
 
 const boardRoutes = new OpenAPIHono()
 
@@ -668,5 +668,3 @@ boardRoutes.openapi(unstarBoardRoute, async (c) => {
 })
 
 export { boardRoutes }
-
-

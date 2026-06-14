@@ -1,7 +1,7 @@
-import { describe, test, expect } from 'vitest'
+import { fireEvent, render, screen } from '@testing-library/react'
 // biome-ignore lint/correctness/noUnusedImports: React is required for JSX in Vitest environment
 import React from 'react'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { describe, expect, test } from 'vitest'
 import { LanguageSwitcher } from '../../src/components/settings/LanguageSwitcher'
 import '../../src/i18n'
 

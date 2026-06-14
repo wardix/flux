@@ -1,5 +1,5 @@
-import { BoardColumn } from './BoardColumn'
 import type { List, Sprint } from '../../lib/types'
+import { BoardColumn } from './BoardColumn'
 
 interface SprintBoardProps {
   sprint: Sprint
@@ -24,9 +24,7 @@ export function SprintBoard({ sprint, lists }: SprintBoardProps) {
             Active Sprint Kanban: {sprint.title}
           </h3>
           {sprint.goal && (
-            <p className="text-xs text-base-content/65 mt-0.5 font-medium">
-              Goal: {sprint.goal}
-            </p>
+            <p className="text-xs text-base-content/65 mt-0.5 font-medium">Goal: {sprint.goal}</p>
           )}
         </div>
         <div className="flex items-center gap-2 text-[10px] text-base-content/50">

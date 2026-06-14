@@ -87,4 +87,3 @@ export async function checkObserverPermission(c: Context, next: Next) {
 
   await next()
 }
-

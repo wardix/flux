@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
-import { api } from '../lib/api'
+import { useTranslation } from 'react-i18next'
 import { OAuthButtons } from '../components/auth/OAuthButtons'
 import { TwoFactorLoginForm } from '../components/auth/TwoFactorLoginForm'
-import { useTranslation } from 'react-i18next'
+import { api } from '../lib/api'
 
 interface LoginPageProps {
   onLoginSuccess: (token: string, user: any) => void
@@ -123,7 +123,9 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
 
             <div className="relative flex py-2 items-center">
               <div className="flex-grow border-t border-base-300"></div>
-              <span className="flex-shrink mx-4 text-base-content/40 text-xs font-semibold uppercase">{t('auth.loginWith', { provider: 'OAuth' })}</span>
+              <span className="flex-shrink mx-4 text-base-content/40 text-xs font-semibold uppercase">
+                {t('auth.loginWith', { provider: 'OAuth' })}
+              </span>
               <div className="flex-grow border-t border-base-300"></div>
             </div>
 

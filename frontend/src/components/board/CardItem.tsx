@@ -2,32 +2,30 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useEffect, useState } from 'react'
 import { api } from '../../lib/api'
-import type { Card, CreateSubtaskRequest, SubtaskCard } from '../../lib/types'
+import type { Card, CardMirror, CreateSubtaskRequest, Epic, SubtaskCard } from '../../lib/types'
 import { useBoardStore } from '../../stores/boardStore'
+import { MarkdownRenderer } from '../shared/MarkdownRenderer'
+import { CardActivities } from './CardActivities'
+import { CardAttachments } from './CardAttachments'
+import { CardChecklists } from './CardChecklists'
+import { CardComments } from './CardComments'
+import { ChecklistProgress } from './ChecklistProgress'
+import { CustomFieldBadge } from './CustomFieldBadge'
+import { CustomFieldValues } from './CustomFieldValues'
+import { EpicBadge } from './EpicBadge'
+import { ManualTimeForm } from './ManualTimeForm'
+import { MirrorBadge } from './MirrorBadge'
+import { MirrorList } from './MirrorList'
+import { MirrorSelector } from './MirrorSelector'
 import { StoryPointBadge } from './StoryPointBadge'
 import { StoryPointPicker } from './StoryPointPicker'
 import { SubtaskList } from './SubtaskList'
 import { SubtaskProgress } from './SubtaskProgress'
-import { CardChecklists } from './CardChecklists'
-import { CardAttachments } from './CardAttachments'
-import { ChecklistProgress } from './ChecklistProgress'
-import { CardComments } from './CardComments'
-import { CardActivities } from './CardActivities'
-import { MarkdownRenderer } from '../shared/MarkdownRenderer'
-import { TimeTracker } from './TimeTracker'
 import { TimeLogList } from './TimeLogList'
-import { ManualTimeForm } from './ManualTimeForm'
-import { VoteCount } from './VoteCount'
+import { TimeTracker } from './TimeTracker'
 import { VoteButton } from './VoteButton'
+import { VoteCount } from './VoteCount'
 import { VoterList } from './VoterList'
-import { CustomFieldValues } from './CustomFieldValues'
-import { CustomFieldBadge } from './CustomFieldBadge'
-import { EpicBadge } from './EpicBadge'
-import type { Epic } from '../../lib/types'
-
-
-
-
 
 interface CardItemProps {
   card: Card
@@ -60,7 +58,11 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
   const activeCardId = useBoardStore((s) => s.activeCardId)
 
   const [timeLogs, setTimeLogs] = useState<any[]>([])
-  const [timeMeta, setTimeMeta] = useState<any>({ total_duration_seconds: 0, total_logs: 0, by_user: [] })
+  const [timeMeta, setTimeMeta] = useState<any>({
+    total_duration_seconds: 0,
+    total_logs: 0,
+    by_user: [],
+  })
 
   const fetchTimeLogs = async () => {
     try {
@@ -106,7 +108,9 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
   }, [card.epic_id])
 
   const [isRecurring, setIsRecurring] = useState(card.is_recurring ?? false)
-  const [recurringFrequency, setRecurringFrequency] = useState<'daily' | 'weekly' | 'monthly'>('weekly')
+  const [recurringFrequency, setRecurringFrequency] = useState<'daily' | 'weekly' | 'monthly'>(
+    'weekly',
+  )
   const [recurringRuleId, setRecurringRuleId] = useState<number | null>(null)
 
   const fetchRecurringRule = async () => {
@@ -131,7 +135,37 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
     }
   }, [isOpen])
 
+  const [mirrors, setMirrors] = useState<CardMirror[]>([])
+  const [showMirrorSelector, setShowMirrorSelector] = useState(false)
 
+  const fetchMirrors = async () => {
+    try {
+      const res = await api.get<{ data: CardMirror[] }>(`/cards/${card.id}/mirrors`)
+      setMirrors(res.data || [])
+    } catch (err) {
+      console.error('Failed to fetch mirrors:', err)
+    }
+  }
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchMirrors()
+    }
+  }, [isOpen])
+
+  const handleRemoveMirror = async (mirrorId: number) => {
+    try {
+      await api.delete(`/cards/${card.id}/mirror/${mirrorId}`)
+      fetchMirrors()
+    } catch (err) {
+      console.error('Failed to delete mirror:', err)
+    }
+  }
+
+  const handleMirrorCreated = (newMirror: CardMirror) => {
+    setMirrors((prev) => [...prev, newMirror])
+    fetchMirrors()
+  }
 
   useEffect(() => {
     if (activeCardId === card.id) {
@@ -149,9 +183,6 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
       setActiveCardId(null)
     }
   }
-
-
-
 
   const updateCard = useBoardStore((s) => s.updateCard)
   const deleteCard = useBoardStore((s) => s.deleteCard)
@@ -236,7 +267,7 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
       story_points: storyPoints,
       assignee_id: assigneeId,
     })
-    
+
     // Assign to Epic
     if (selectedEpicId !== card.epic_id) {
       try {
@@ -276,11 +307,9 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
     if (activeBoard?.id) {
       await useBoardStore.getState().fetchBoard(activeBoard.id)
     }
-    
+
     closeOpenedModal()
   }
-
-
 
   const toggleLabel = async (label: (typeof labels)[0]) => {
     const hasLabel = card.labels?.some((l) => l.id === label.id)
@@ -301,7 +330,9 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
         >
           ✕
         </button>
-        <h3 className="font-bold text-lg text-primary">{isObserver ? 'Card Details (Read-only)' : 'Edit Card Details'}</h3>
+        <h3 className="font-bold text-lg text-primary">
+          {isObserver ? 'Card Details (Read-only)' : 'Edit Card Details'}
+        </h3>
 
         <div className="space-y-3">
           <div>
@@ -347,7 +378,14 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
                 onClick={() => !isObserver && setIsEditingDescription(true)}
                 onKeyDown={(e) => e.key === 'Enter' && !isObserver && setIsEditingDescription(true)}
               >
-                <MarkdownRenderer content={description || (isObserver ? '*Tidak ada deskripsi.*' : '*Tidak ada deskripsi. Klik untuk menulis.*')} />
+                <MarkdownRenderer
+                  content={
+                    description ||
+                    (isObserver
+                      ? '*Tidak ada deskripsi.*'
+                      : '*Tidak ada deskripsi. Klik untuk menulis.*')
+                  }
+                />
               </div>
             )}
           </div>
@@ -419,11 +457,12 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
             </div>
           )}
 
-
           {!card.parent_card_id && (
             <div className="border border-base-200 rounded-lg p-3 bg-base-50 space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs text-base-content/60 font-bold uppercase">🔁 Recurring Task</span>
+                <span className="text-xs text-base-content/60 font-bold uppercase">
+                  🔁 Recurring Task
+                </span>
                 <input
                   type="checkbox"
                   checked={isRecurring}
@@ -434,7 +473,9 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
               </div>
               {isRecurring && (
                 <div className="space-y-1">
-                  <span className="text-[10px] text-base-content/50 uppercase block">Frequency</span>
+                  <span className="text-[10px] text-base-content/50 uppercase block">
+                    Frequency
+                  </span>
                   <select
                     value={recurringFrequency}
                     onChange={(e: any) => setRecurringFrequency(e.target.value)}
@@ -456,7 +497,6 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
             </span>
             <StoryPointPicker value={storyPoints} onChange={setStoryPoints} disabled={isObserver} />
           </div>
-
 
           {!card.parent_card_id && (
             <>
@@ -562,6 +602,26 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
             />
           </div>
 
+          {!card.parent_card_id && (
+            <div className="border-t border-base-200 pt-3 space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-base-content/50 font-bold uppercase">
+                  Card Mirroring
+                </span>
+                {!isObserver && (
+                  <button
+                    type="button"
+                    onClick={() => setShowMirrorSelector(true)}
+                    className="btn btn-xs btn-primary btn-outline"
+                  >
+                    🔗 Mirror to...
+                  </button>
+                )}
+              </div>
+              <MirrorList cardId={card.id} mirrors={mirrors} onRemoveMirror={handleRemoveMirror} />
+            </div>
+          )}
+
           <div className="border-t border-base-200 pt-3">
             <span className="text-xs text-base-content/50 font-bold uppercase block mb-2">
               Komentar
@@ -577,10 +637,7 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
             <span className="text-xs text-base-content/50 font-bold uppercase block mb-2">
               Aktivitas
             </span>
-            <CardActivities
-              cardId={card.id}
-              refreshTrigger={refreshActivitiesTrigger}
-            />
+            <CardActivities cardId={card.id} refreshTrigger={refreshActivitiesTrigger} />
           </div>
         </div>
 
@@ -602,7 +659,11 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
           <div className="flex gap-2">
             {!isObserver ? (
               <>
-                <button type="button" onClick={handleUpdate} className="btn btn-primary btn-sm px-6">
+                <button
+                  type="button"
+                  onClick={handleUpdate}
+                  className="btn btn-primary btn-sm px-6"
+                >
                   Save
                 </button>
                 <button type="button" onClick={closeOpenedModal} className="btn btn-ghost btn-sm">
@@ -610,12 +671,24 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
                 </button>
               </>
             ) : (
-              <button type="button" onClick={closeOpenedModal} className="btn btn-primary btn-sm px-6">
+              <button
+                type="button"
+                onClick={closeOpenedModal}
+                className="btn btn-primary btn-sm px-6"
+              >
                 Close
               </button>
             )}
           </div>
         </div>
+        {showMirrorSelector && (
+          <MirrorSelector
+            cardId={card.id}
+            currentBoardId={useBoardStore.getState().activeBoard?.id || 0}
+            onMirrorCreated={handleMirrorCreated}
+            onClose={() => setShowMirrorSelector(false)}
+          />
+        )}
       </div>
     </div>
   )
@@ -658,11 +731,7 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
         {/* Cover Image */}
         {card.cover_file_path && (
           <div className="w-[calc(100%+1.5rem)] h-28 -mt-3 -mx-3 mb-2 overflow-hidden relative">
-            <img
-              src={card.cover_file_path}
-              alt="Cover"
-              className="w-full h-full object-cover"
-            />
+            <img src={card.cover_file_path} alt="Cover" className="w-full h-full object-cover" />
           </div>
         )}
 
@@ -700,7 +769,20 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
           </div>
         )}
 
-
+        {/* Mirror Badge preview */}
+        {card.is_mirror && card.source_board_title && card.source_board_id && (
+          <div className="flex">
+            <MirrorBadge
+              sourceBoardTitle={card.source_board_title}
+              onClick={() => {
+                if (card.source_board_id) {
+                  const fetchBoard = useBoardStore.getState().fetchBoard
+                  fetchBoard(card.source_board_id)
+                }
+              }}
+            />
+          </div>
+        )}
 
         <div className="flex items-start justify-between">
           <h4 className="font-medium text-sm text-base-content/90 line-clamp-2 pr-6">

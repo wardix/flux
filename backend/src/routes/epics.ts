@@ -1,7 +1,7 @@
-import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi'
+import { ErrorSchema } from '../lib/schemas'
 import { authMiddleware } from '../middleware/auth'
 import * as epicService from '../services/epicService'
-import { ErrorSchema } from '../lib/schemas'
 
 const epicRoutes = new OpenAPIHono()
 epicRoutes.use('*', authMiddleware)

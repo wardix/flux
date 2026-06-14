@@ -9,7 +9,8 @@ export function OAuthButtons({ mode }: OAuthButtonsProps) {
     window.location.href = `${API_BASE_URL}/auth/${provider}`
   }
 
-  const labelPrefix = mode === 'link' ? 'Link' : mode === 'register' ? 'Sign up with' : 'Log in with'
+  const labelPrefix =
+    mode === 'link' ? 'Link' : mode === 'register' ? 'Sign up with' : 'Log in with'
 
   return (
     <div className="flex flex-col gap-2 w-full mt-4">

@@ -1,34 +1,30 @@
-import { Routes, Route, useLocation } from 'react-router-dom'
-import { PublicFormPage } from './pages/PublicFormPage'
 import { DndContext, type DragEndEvent } from '@dnd-kit/core'
 import { useEffect, useState } from 'react'
-import { BoardColumn } from './components/board/BoardColumn'
-import { useTheme } from './hooks/useTheme'
 import { useTranslation } from 'react-i18next'
-import { useBoardStore } from './stores/boardStore'
-import { LoginPage } from './pages/LoginPage'
-import { SettingsPage } from './pages/SettingsPage'
-import type { List, Card } from './lib/types'
-import { useWebSocket } from './hooks/useWebSocket'
-import { PresenceIndicator } from './components/shared/PresenceIndicator'
-import { ActiveTimerIndicator } from './components/shared/ActiveTimerIndicator'
-import { AdminDashboardPage } from './pages/AdminDashboardPage'
-import { ExportDialog } from './components/board/ExportDialog'
-import { CustomFieldEditor } from './components/board/CustomFieldEditor'
+import { Route, Routes, useLocation } from 'react-router-dom'
 import { AutomationList } from './components/board/AutomationList'
-import { SprintPlanning } from './components/board/SprintPlanning'
-import { SprintBoard } from './components/board/SprintBoard'
+import { BoardColumn } from './components/board/BoardColumn'
 import { BurndownChart } from './components/board/BurndownChart'
-import { api } from './lib/api'
-import type { Sprint } from './lib/types'
-import { EpicList } from './components/board/EpicList'
+import { CustomFieldEditor } from './components/board/CustomFieldEditor'
 import { EpicDetail } from './components/board/EpicDetail'
-import { WebhookList } from './components/board/WebhookList'
+import { EpicList } from './components/board/EpicList'
+import { ExportDialog } from './components/board/ExportDialog'
 import { ImportDialog } from './components/board/ImportDialog'
 import { PublicFormSettings } from './components/board/PublicFormSettings'
-
-
-
+import { SprintBoard } from './components/board/SprintBoard'
+import { SprintPlanning } from './components/board/SprintPlanning'
+import { WebhookList } from './components/board/WebhookList'
+import { ActiveTimerIndicator } from './components/shared/ActiveTimerIndicator'
+import { PresenceIndicator } from './components/shared/PresenceIndicator'
+import { useTheme } from './hooks/useTheme'
+import { useWebSocket } from './hooks/useWebSocket'
+import { api } from './lib/api'
+import type { Card, List, Sprint } from './lib/types'
+import { AdminDashboardPage } from './pages/AdminDashboardPage'
+import { LoginPage } from './pages/LoginPage'
+import { PublicFormPage } from './pages/PublicFormPage'
+import { SettingsPage } from './pages/SettingsPage'
+import { useBoardStore } from './stores/boardStore'
 
 function decodeToken(token: string | null) {
   if (!token) return null
@@ -40,7 +36,7 @@ function decodeToken(token: string | null) {
         .atob(base64)
         .split('')
         .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-        .join('')
+        .join(''),
     )
     return JSON.parse(jsonPayload)
   } catch (e) {
@@ -105,7 +101,8 @@ function App() {
 
   useEffect(() => {
     if (token) {
-      api.get<{ data: any }>('/auth/me')
+      api
+        .get<{ data: any }>('/auth/me')
         .then((res) => {
           if (res.data.is_suspended) {
             alert('Your account has been suspended by an admin.')
@@ -190,7 +187,6 @@ function App() {
   // Epics related States
   const [epicViewEnabled, setEpicViewEnabled] = useState(false)
   const [selectedEpicId, setSelectedEpicId] = useState<number | null>(null)
-
 
   const fetchSprints = async () => {
     if (!activeBoard) return
@@ -412,7 +408,6 @@ function App() {
     )
   }
 
-
   return (
     <div className="flex h-screen bg-base-300 text-base-content overflow-hidden selection:bg-primary selection:text-primary-content transition-colors duration-300">
       {/* Sidebar */}
@@ -611,7 +606,6 @@ function App() {
                         ? 'active bg-primary text-primary-content font-semibold'
                         : 'hover:bg-base-200'
                     }`}
-
                   >
                     <span className="truncate">📋 {b.title}</span>
                     <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
@@ -619,7 +613,9 @@ function App() {
                         type="button"
                         onClick={() => toggleStarBoard(b.id)}
                         className={`text-xs focus:outline-none hover:scale-110 transition-transform ${
-                          b.is_starred ? 'text-yellow-500' : 'text-base-content/30 hover:text-yellow-500'
+                          b.is_starred
+                            ? 'text-yellow-500'
+                            : 'text-base-content/30 hover:text-yellow-500'
                         }`}
                         title={b.is_starred ? 'Unstar Board' : 'Star Board'}
                       >
@@ -698,7 +694,9 @@ function App() {
                   setShow2FASettings(false)
                 }}
                 className={`btn btn-sm btn-block justify-start capitalize ${
-                  showAdminPage ? 'btn-primary text-white' : 'btn-outline border-base-300 hover:bg-base-200'
+                  showAdminPage
+                    ? 'btn-primary text-white'
+                    : 'btn-outline border-base-300 hover:bg-base-200'
                 }`}
               >
                 🛠️ Admin Panel
@@ -830,15 +828,11 @@ function App() {
                 onBack={() => setSelectedEpicId(null)}
               />
             ) : (
-              <EpicList
-                workspace={activeWorkspace}
-                onSelectEpic={(id) => setSelectedEpicId(id)}
-              />
+              <EpicList workspace={activeWorkspace} onSelectEpic={(id) => setSelectedEpicId(id)} />
             )}
           </div>
         ) : (
           <>
-
             {/* Top Board Bar */}
             <header className="navbar bg-base-100 border-b border-base-200/50 px-6 justify-between z-10 shadow-sm">
               <div className="flex items-center gap-3">
@@ -851,7 +845,9 @@ function App() {
                       type="button"
                       onClick={() => toggleStarBoard(activeBoard.id)}
                       className={`text-lg focus:outline-none hover:scale-110 transition-transform ${
-                        activeBoard.is_starred ? 'text-yellow-500' : 'text-base-content/30 hover:text-yellow-500'
+                        activeBoard.is_starred
+                          ? 'text-yellow-500'
+                          : 'text-base-content/30 hover:text-yellow-500'
                       }`}
                       title={activeBoard.is_starred ? 'Unstar Board' : 'Star Board'}
                     >
@@ -918,16 +914,16 @@ function App() {
                   </div>
                 )}
 
-                 {/* Clone Board Option */}
-                 {activeBoard && userRole !== 'observer' && (
-                   <button
-                     type="button"
-                     onClick={handleCloneBoard}
-                     className="btn btn-outline btn-xs gap-1 font-semibold uppercase tracking-wider text-base-content/85 hover:bg-base-200"
-                   >
-                     👥 Clone Board
-                   </button>
-                 )}
+                {/* Clone Board Option */}
+                {activeBoard && userRole !== 'observer' && (
+                  <button
+                    type="button"
+                    onClick={handleCloneBoard}
+                    className="btn btn-outline btn-xs gap-1 font-semibold uppercase tracking-wider text-base-content/85 hover:bg-base-200"
+                  >
+                    👥 Clone Board
+                  </button>
+                )}
 
                 {/* Board Sorting Options */}
                 {activeBoard && (
@@ -984,7 +980,10 @@ function App() {
                       ⚙️ Custom Fields
                     </button>
                     <div className="dropdown-content menu bg-base-200 rounded-box z-[1] w-80 p-3 shadow-lg gap-2 border border-base-300 mt-1 max-h-[400px] overflow-y-auto">
-                      <CustomFieldEditor boardId={activeBoard.id} disabled={userRole === 'observer'} />
+                      <CustomFieldEditor
+                        boardId={activeBoard.id}
+                        disabled={userRole === 'observer'}
+                      />
                     </div>
                   </div>
                 )}
@@ -1038,7 +1037,10 @@ function App() {
                       📋 Public Form
                     </button>
                     <div className="dropdown-content menu bg-base-200 rounded-box z-[1] w-80 p-3 shadow-lg gap-2 border border-base-300 mt-1">
-                      <PublicFormSettings boardId={activeBoard.id} disabled={userRole === 'observer'} />
+                      <PublicFormSettings
+                        boardId={activeBoard.id}
+                        disabled={userRole === 'observer'}
+                      />
                     </div>
                   </div>
                 )}
@@ -1100,9 +1102,9 @@ function App() {
                       <div className="flex flex-wrap gap-1.5 py-1">
                         {labels.map((l) => (
                           <span
-                              key={l.id}
-                              style={{ backgroundColor: l.color }}
-                              className="badge text-white border-none text-[9px] font-bold uppercase px-2 py-0.5 rounded"
+                            key={l.id}
+                            style={{ backgroundColor: l.color }}
+                            className="badge text-white border-none text-[9px] font-bold uppercase px-2 py-0.5 rounded"
                           >
                             {l.name}
                           </span>
@@ -1116,9 +1118,11 @@ function App() {
                           onSubmit={(e) => {
                             e.preventDefault()
                             const form = e.currentTarget
-                            const name = (form.elements.namedItem('labelName') as HTMLInputElement).value
-                            const color = (form.elements.namedItem('labelColor') as HTMLInputElement)
+                            const name = (form.elements.namedItem('labelName') as HTMLInputElement)
                               .value
+                            const color = (
+                              form.elements.namedItem('labelColor') as HTMLInputElement
+                            ).value
                             if (name && color) {
                               createLabel(activeBoard.id, name, color)
                               form.reset()
@@ -1140,7 +1144,10 @@ function App() {
                               defaultValue="#4f46e5"
                               className="w-8 h-6 rounded cursor-pointer border-none bg-transparent"
                             />
-                            <button type="submit" className="btn btn-primary btn-xs flex-1 text-white">
+                            <button
+                              type="submit"
+                              className="btn btn-primary btn-xs flex-1 text-white"
+                            >
                               Add Label
                             </button>
                           </div>
@@ -1169,7 +1176,9 @@ function App() {
                       {/* Lists */}
                       {archivedItems.lists.length > 0 && (
                         <div className="space-y-1">
-                          <span className="text-[9px] font-bold text-warning uppercase">Columns</span>
+                          <span className="text-[9px] font-bold text-warning uppercase">
+                            Columns
+                          </span>
                           {archivedItems.lists.map((l) => (
                             <div
                               key={l.id}
@@ -1352,9 +1361,16 @@ function App() {
                       </span>
                       <div className="space-y-1.5 py-1">
                         {boardMembers.map((member) => (
-                          <div key={member.user_id} className="flex items-center justify-between text-xs bg-base-100 p-1.5 rounded border border-base-300">
-                            <span className="truncate max-w-[150px]" title={member.email}>{member.email}</span>
-                            <span className="badge badge-xs uppercase font-bold">{member.role}</span>
+                          <div
+                            key={member.user_id}
+                            className="flex items-center justify-between text-xs bg-base-100 p-1.5 rounded border border-base-300"
+                          >
+                            <span className="truncate max-w-[150px]" title={member.email}>
+                              {member.email}
+                            </span>
+                            <span className="badge badge-xs uppercase font-bold">
+                              {member.role}
+                            </span>
                           </div>
                         ))}
                       </div>
@@ -1364,8 +1380,12 @@ function App() {
                           onSubmit={async (e) => {
                             e.preventDefault()
                             const form = e.currentTarget
-                            const email = (form.elements.namedItem('inviteEmail') as HTMLInputElement).value
-                            const role = (form.elements.namedItem('inviteRole') as HTMLSelectElement).value
+                            const email = (
+                              form.elements.namedItem('inviteEmail') as HTMLInputElement
+                            ).value
+                            const role = (
+                              form.elements.namedItem('inviteRole') as HTMLSelectElement
+                            ).value
                             if (email && role) {
                               try {
                                 await inviteBoardMember(activeBoard.id, email, role)
@@ -1419,7 +1439,7 @@ function App() {
             {/* Conditional Sprints or Columns Board view */}
             {sprintViewEnabled && activeBoard ? (
               <div className="flex-1 p-6 overflow-y-auto">
-                {sprintTab === 'board' && (
+                {sprintTab === 'board' &&
                   (() => {
                     const activeSprint = sprints.find((s) => s.status === 'active')
                     if (activeSprint) {
@@ -1427,7 +1447,9 @@ function App() {
                     }
                     return (
                       <div className="text-center py-12 bg-base-100 border border-base-200 rounded-2xl shadow-sm space-y-3">
-                        <span className="text-sm font-semibold text-base-content/65 block">No active sprint running</span>
+                        <span className="text-sm font-semibold text-base-content/65 block">
+                          No active sprint running
+                        </span>
                         <button
                           type="button"
                           onClick={() => setSprintTab('planning')}
@@ -1437,10 +1459,9 @@ function App() {
                         </button>
                       </div>
                     )
-                  })()
-                )}
+                  })()}
 
-                {sprintTab === 'planning' && (
+                {sprintTab === 'planning' &&
                   (() => {
                     // Collect all cards for the board (across all lists)
                     const allCards: Card[] = []
@@ -1461,22 +1482,24 @@ function App() {
                         disabled={userRole === 'observer'}
                       />
                     )
-                  })()
-                )}
+                  })()}
 
-                {sprintTab === 'burndown' && (
+                {sprintTab === 'burndown' &&
                   (() => {
-                    const activeSprint = sprints.find((s) => s.status === 'active') || sprints.find((s) => s.status === 'completed')
+                    const activeSprint =
+                      sprints.find((s) => s.status === 'active') ||
+                      sprints.find((s) => s.status === 'completed')
                     if (activeSprint) {
                       return <BurndownChart boardId={activeBoard.id} sprintId={activeSprint.id} />
                     }
                     return (
                       <div className="text-center py-12 bg-base-100 border border-base-200 rounded-2xl shadow-sm">
-                        <span className="text-xs text-base-content/40 italic">Create or activate a sprint to view burndown statistics.</span>
+                        <span className="text-xs text-base-content/40 italic">
+                          Create or activate a sprint to view burndown statistics.
+                        </span>
                       </div>
                     )
-                  })()
-                )}
+                  })()}
               </div>
             ) : (
               <DndContext onDragEnd={handleDragEnd}>
@@ -1533,7 +1556,7 @@ function App() {
           </>
         )}
       </main>
-      
+
       {activeBoard && (
         <ExportDialog
           boardId={activeBoard.id}

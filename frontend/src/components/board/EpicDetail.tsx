@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react'
+import type React from 'react'
+import { useEffect, useState } from 'react'
 import { api } from '../../lib/api'
 import type { EpicDetail, EpicDetailCard } from '../../lib/types'
 import { EpicProgress } from './EpicProgress'
@@ -54,14 +55,20 @@ export function EpicDetail({ workspaceId, epicId, onBack }: EpicDetailProps) {
   }
 
   if (isLoading) {
-    return <div className="flex justify-center p-12"><span className="loading loading-spinner text-primary"></span></div>
+    return (
+      <div className="flex justify-center p-12">
+        <span className="loading loading-spinner text-primary"></span>
+      </div>
+    )
   }
 
   if (!epic) {
     return (
       <div className="text-center py-12">
         <p className="text-error">Epic not found.</p>
-        <button onClick={onBack} className="btn btn-ghost btn-sm mt-4">Back to list</button>
+        <button onClick={onBack} className="btn btn-ghost btn-sm mt-4">
+          Back to list
+        </button>
       </div>
     )
   }
@@ -81,15 +88,22 @@ export function EpicDetail({ workspaceId, epicId, onBack }: EpicDetailProps) {
   return (
     <div className="space-y-6 text-left">
       <div className="flex items-center gap-2">
-        <button onClick={onBack} className="btn btn-sm btn-ghost">← Back to Epics</button>
+        <button onClick={onBack} className="btn btn-sm btn-ghost">
+          ← Back to Epics
+        </button>
       </div>
 
       {isEditing ? (
-        <form onSubmit={handleUpdate} className="card bg-base-100 border border-base-200 p-4 space-y-4 shadow-sm">
+        <form
+          onSubmit={handleUpdate}
+          className="card bg-base-100 border border-base-200 p-4 space-y-4 shadow-sm"
+        >
           <h3 className="font-bold text-lg">Edit Epic</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="label text-xs font-bold uppercase text-base-content/60">Title</label>
+              <label className="label text-xs font-bold uppercase text-base-content/60">
+                Title
+              </label>
               <input
                 type="text"
                 required
@@ -99,7 +113,9 @@ export function EpicDetail({ workspaceId, epicId, onBack }: EpicDetailProps) {
               />
             </div>
             <div>
-              <label className="label text-xs font-bold uppercase text-base-content/60">Color</label>
+              <label className="label text-xs font-bold uppercase text-base-content/60">
+                Color
+              </label>
               <div className="flex gap-2 items-center">
                 <input
                   type="color"
@@ -112,7 +128,9 @@ export function EpicDetail({ workspaceId, epicId, onBack }: EpicDetailProps) {
             </div>
           </div>
           <div>
-            <label className="label text-xs font-bold uppercase text-base-content/60">Description</label>
+            <label className="label text-xs font-bold uppercase text-base-content/60">
+              Description
+            </label>
             <textarea
               value={editDescription}
               onChange={(e) => setEditDescription(e.target.value)}
@@ -120,8 +138,16 @@ export function EpicDetail({ workspaceId, epicId, onBack }: EpicDetailProps) {
             />
           </div>
           <div className="flex gap-2">
-            <button type="submit" className="btn btn-primary btn-sm">Save Changes</button>
-            <button type="button" onClick={() => setIsEditing(false)} className="btn btn-ghost btn-sm">Cancel</button>
+            <button type="submit" className="btn btn-primary btn-sm">
+              Save Changes
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsEditing(false)}
+              className="btn btn-ghost btn-sm"
+            >
+              Cancel
+            </button>
           </div>
         </form>
       ) : (
@@ -129,20 +155,26 @@ export function EpicDetail({ workspaceId, epicId, onBack }: EpicDetailProps) {
           <div className="flex justify-between items-start">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <span
-                  className="w-4 h-4 rounded-full"
-                  style={{ backgroundColor: epic.color }}
-                />
+                <span className="w-4 h-4 rounded-full" style={{ backgroundColor: epic.color }} />
                 <h1 className="text-2xl font-black text-base-content">{epic.title}</h1>
-                <span className={`badge ${epic.status === 'done' ? 'badge-success text-white' : 'badge-warning'} badge-sm font-semibold capitalize ml-2`}>
+                <span
+                  className={`badge ${epic.status === 'done' ? 'badge-success text-white' : 'badge-warning'} badge-sm font-semibold capitalize ml-2`}
+                >
                   {epic.status}
                 </span>
               </div>
               {epic.description && (
-                <p className="text-sm text-base-content/70 whitespace-pre-line">{epic.description}</p>
+                <p className="text-sm text-base-content/70 whitespace-pre-line">
+                  {epic.description}
+                </p>
               )}
             </div>
-            <button onClick={() => setIsEditing(true)} className="btn btn-outline btn-sm btn-primary">✏️ Edit Epic</button>
+            <button
+              onClick={() => setIsEditing(true)}
+              className="btn btn-outline btn-sm btn-primary"
+            >
+              ✏️ Edit Epic
+            </button>
           </div>
 
           {epic.progress && (
@@ -162,14 +194,18 @@ export function EpicDetail({ workspaceId, epicId, onBack }: EpicDetailProps) {
         <h2 className="text-lg font-bold text-base-content">Linked Cards</h2>
         {Object.keys(cardsByBoard).length === 0 ? (
           <div className="text-center py-8 bg-base-100 rounded-lg border border-base-200">
-            <p className="text-base-content/50">No cards linked to this epic yet. You can assign cards from the board view.</p>
+            <p className="text-base-content/50">
+              No cards linked to this epic yet. You can assign cards from the board view.
+            </p>
           </div>
         ) : (
           <div className="space-y-6">
             {Object.entries(cardsByBoard).map(([boardId, { boardTitle, cards }]) => (
               <div key={boardId} className="space-y-2">
                 <div className="flex items-center gap-2 border-b border-base-200 pb-1">
-                  <span className="text-xs text-base-content/50 uppercase font-black tracking-wider">Board</span>
+                  <span className="text-xs text-base-content/50 uppercase font-black tracking-wider">
+                    Board
+                  </span>
                   <h3 className="font-bold text-sm text-primary">{boardTitle}</h3>
                   <span className="badge badge-ghost badge-sm">{cards.length}</span>
                 </div>
@@ -182,21 +218,37 @@ export function EpicDetail({ workspaceId, epicId, onBack }: EpicDetailProps) {
                     >
                       <div>
                         <div className="flex justify-between items-start gap-2 mb-1">
-                          <span className="text-[10px] text-base-content/50 uppercase font-semibold">{card.list_title}</span>
-                          <span className={`badge badge-xs ${card.is_completed ? 'badge-success text-white' : 'badge-ghost'}`}>
+                          <span className="text-[10px] text-base-content/50 uppercase font-semibold">
+                            {card.list_title}
+                          </span>
+                          <span
+                            className={`badge badge-xs ${card.is_completed ? 'badge-success text-white' : 'badge-ghost'}`}
+                          >
                             {card.is_completed ? 'Completed' : 'Active'}
                           </span>
                         </div>
-                        <h4 className={`font-semibold text-sm line-clamp-2 ${card.is_completed ? 'line-through text-base-content/40' : 'text-base-content'}`}>
+                        <h4
+                          className={`font-semibold text-sm line-clamp-2 ${card.is_completed ? 'line-through text-base-content/40' : 'text-base-content'}`}
+                        >
                           {card.title}
                         </h4>
                       </div>
 
                       <div className="flex justify-between items-center mt-3 pt-2 border-t border-base-100 text-[10px] text-base-content/50">
-                        <span>{card.due_date ? `📅 ${new Date(card.due_date).toLocaleDateString()}` : 'No due date'}</span>
+                        <span>
+                          {card.due_date
+                            ? `📅 ${new Date(card.due_date).toLocaleDateString()}`
+                            : 'No due date'}
+                        </span>
                         <div className="flex items-center gap-1">
                           {card.assignees.map((ass) => (
-                            <span key={ass.id} className="badge badge-sm badge-outline" title={ass.name}>{ass.name}</span>
+                            <span
+                              key={ass.id}
+                              className="badge badge-sm badge-outline"
+                              title={ass.name}
+                            >
+                              {ass.name}
+                            </span>
                           ))}
                         </div>
                       </div>

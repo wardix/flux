@@ -74,7 +74,6 @@ export async function update(
     deleted_at?: string | null
     is_recurring?: boolean
   },
-
 ) {
   const current = await db`SELECT * FROM cards WHERE id = ${id}`
   if (current.length === 0) return null
@@ -92,7 +91,6 @@ export async function update(
   const archived_at = data.archived_at !== undefined ? data.archived_at : row.archived_at
   const deleted_at = data.deleted_at !== undefined ? data.deleted_at : row.deleted_at
   const is_recurring = data.is_recurring !== undefined ? data.is_recurring : row.is_recurring
-
 
   const result = await db`
     UPDATE cards
@@ -112,6 +110,12 @@ export async function update(
     WHERE id = ${id}
     RETURNING *
   `
+
+  if (result.length > 0) {
+    const { onCardUpdated } = await import('./mirrorSyncService')
+    await onCardUpdated(id, data)
+  }
+
   return result[0] || null
 }
 

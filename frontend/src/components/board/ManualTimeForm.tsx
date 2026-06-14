@@ -30,7 +30,7 @@ export function ManualTimeForm({ cardId, onLogAdded }: ManualTimeFormProps) {
       }
 
       if (inputMethod === 'duration') {
-        const durationSeconds = (hours * 3600) + (minutes * 60)
+        const durationSeconds = hours * 3600 + minutes * 60
         if (durationSeconds <= 0) {
           alert('Duration must be greater than 0.')
           setIsSubmitting(false)
@@ -68,8 +68,13 @@ export function ManualTimeForm({ cardId, onLogAdded }: ManualTimeFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="card bg-base-200/50 p-4 border border-base-200 rounded-xl space-y-3">
-      <span className="text-xs font-bold uppercase tracking-wider text-base-content/50">Log Time Manually</span>
+    <form
+      onSubmit={handleSubmit}
+      className="card bg-base-200/50 p-4 border border-base-200 rounded-xl space-y-3"
+    >
+      <span className="text-xs font-bold uppercase tracking-wider text-base-content/50">
+        Log Time Manually
+      </span>
 
       <div className="space-y-1">
         <label className="text-[10px] font-bold text-base-content/60">Started At</label>

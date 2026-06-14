@@ -54,12 +54,16 @@ export async function stopTimer(cardId: number, userId: number) {
   }
 }
 
-export async function createManualLog(cardId: number, userId: number, data: {
-  started_at: string
-  ended_at?: string
-  duration_seconds?: number
-  description?: string
-}) {
+export async function createManualLog(
+  cardId: number,
+  userId: number,
+  data: {
+    started_at: string
+    ended_at?: string
+    duration_seconds?: number
+    description?: string
+  },
+) {
   let duration = data.duration_seconds
 
   if (data.ended_at) {

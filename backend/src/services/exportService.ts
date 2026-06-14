@@ -10,7 +10,15 @@ export async function exportBoardCSV(boardId: number, userId: number) {
   const board = await boardService.getById(boardId, userId)
   if (!board) return null
 
-  const headers = ['List Title', 'Card Title', 'Description', 'Story Points', 'Due Date', 'Assignee Email', 'Created At']
+  const headers = [
+    'List Title',
+    'Card Title',
+    'Description',
+    'Story Points',
+    'Due Date',
+    'Assignee Email',
+    'Created At',
+  ]
   const rows = [headers.join(',')]
 
   const escapeCSV = (val: any) => {

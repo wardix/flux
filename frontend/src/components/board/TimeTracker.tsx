@@ -56,9 +56,13 @@ export function TimeTracker({ cardId, onLogAdded }: TimeTrackerProps) {
   return (
     <div className="card bg-base-200/50 p-4 border border-base-200 rounded-xl space-y-4">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-bold uppercase tracking-wider text-base-content/50">Stopwatch Tracker</span>
+        <span className="text-xs font-bold uppercase tracking-wider text-base-content/50">
+          Stopwatch Tracker
+        </span>
         {isCurrentRunning && (
-          <span className="badge badge-success text-[10px] text-white font-extrabold uppercase tracking-wide animate-pulse">Running</span>
+          <span className="badge badge-success text-[10px] text-white font-extrabold uppercase tracking-wide animate-pulse">
+            Running
+          </span>
         )}
       </div>
 
@@ -70,7 +74,11 @@ export function TimeTracker({ cardId, onLogAdded }: TimeTrackerProps) {
 
       <div className="flex gap-2">
         {isCurrentRunning ? (
-          <button type="button" onClick={handleStop} className="btn btn-error btn-sm text-white flex-1 font-bold">
+          <button
+            type="button"
+            onClick={handleStop}
+            className="btn btn-error btn-sm text-white flex-1 font-bold"
+          >
             ⏹ Stop Timer
           </button>
         ) : (

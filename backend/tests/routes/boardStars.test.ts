@@ -35,7 +35,11 @@ describe('Board Stars & Favorites API', () => {
     boardId = board[0].id
 
     // Generate token
-    token = await sign({ sub: userId, email: 'star_test@example.com' }, 'your-jwt-secret-here-change-in-production', 'HS256')
+    token = await sign(
+      { sub: userId, email: 'star_test@example.com' },
+      'your-jwt-secret-here-change-in-production',
+      'HS256',
+    )
   })
 
   afterAll(async () => {
@@ -57,7 +61,8 @@ describe('Board Stars & Favorites API', () => {
     expect(json.success).toBe(true)
 
     // Check database
-    const stars = await db`SELECT * FROM board_stars WHERE board_id = ${boardId} AND user_id = ${userId}`
+    const stars =
+      await db`SELECT * FROM board_stars WHERE board_id = ${boardId} AND user_id = ${userId}`
     expect(stars.length).toBe(1)
   })
 
@@ -92,7 +97,8 @@ describe('Board Stars & Favorites API', () => {
     expect(json.success).toBe(true)
 
     // Check database
-    const stars = await db`SELECT * FROM board_stars WHERE board_id = ${boardId} AND user_id = ${userId}`
+    const stars =
+      await db`SELECT * FROM board_stars WHERE board_id = ${boardId} AND user_id = ${userId}`
     expect(stars.length).toBe(0)
   })
 })

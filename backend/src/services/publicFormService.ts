@@ -13,10 +13,10 @@ export async function createOrUpdateForm(
   boardId: number,
   title: string,
   description?: string | null,
-  isActive?: boolean
+  isActive?: boolean,
 ): Promise<PublicForm> {
   const existing = await db`SELECT id FROM public_forms WHERE board_id = ${boardId}`
-  
+
   if (existing.length > 0) {
     const updates: Record<string, any> = { title }
     if (description !== undefined) updates.description = description
@@ -49,14 +49,19 @@ export async function getFormById(id: number): Promise<PublicForm | null> {
   return form ? (form as unknown as PublicForm) : null
 }
 
-export async function submitFormCard(formId: number, title: string, description?: string): Promise<any> {
+export async function submitFormCard(
+  formId: number,
+  title: string,
+  description?: string,
+): Promise<any> {
   const form = await getFormById(formId)
   if (!form || !form.is_active) {
     throw new Error('Form not found or is inactive')
   }
 
   // Find the first list on this board
-  const lists = await db`SELECT id FROM lists WHERE board_id = ${form.board_id} AND deleted_at IS NULL ORDER BY position ASC LIMIT 1`
+  const lists =
+    await db`SELECT id FROM lists WHERE board_id = ${form.board_id} AND deleted_at IS NULL ORDER BY position ASC LIMIT 1`
   if (lists.length === 0) {
     throw new Error('Board has no columns to receive cards')
   }

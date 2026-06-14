@@ -1,9 +1,12 @@
-import { describe, test, expect, beforeAll, afterAll } from 'bun:test'
+import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import { sign } from 'hono/jwt'
 import { db } from '../../src/db/index'
 import app from '../../src/index'
 
-async function makeRequest(path: string, options: { method?: string; headers?: Record<string, string>; body?: string } = {}) {
+async function makeRequest(
+  path: string,
+  options: { method?: string; headers?: Record<string, string>; body?: string } = {},
+) {
   const method = options.method || 'GET'
   const headers = options.headers || {}
   return await app.fetch(
@@ -11,7 +14,7 @@ async function makeRequest(path: string, options: { method?: string; headers?: R
       method,
       headers,
       body: options.body,
-    })
+    }),
   )
 }
 
@@ -85,13 +88,13 @@ describe('Voting API', () => {
     testToken = await sign(
       { sub: userId, email: 'vote_test@example.com' },
       process.env.JWT_SECRET || 'your-jwt-secret-here-change-in-production',
-      'HS256'
+      'HS256',
     )
 
     testToken2 = await sign(
       { sub: userId2, email: 'vote_test2@example.com' },
       process.env.JWT_SECRET || 'your-jwt-secret-here-change-in-production',
-      'HS256'
+      'HS256',
     )
   })
 
@@ -106,7 +109,7 @@ describe('Voting API', () => {
         headers: { Authorization: `Bearer ${testToken}` },
       })
       expect(res.status).toBe(200)
-      const { data } = await res.json() as any
+      const { data } = (await res.json()) as any
       expect(data.voted).toBe(true)
       expect(data.vote_count).toBe(1)
       expect(data.user_voted).toBe(true)
@@ -118,7 +121,7 @@ describe('Voting API', () => {
         headers: { Authorization: `Bearer ${testToken}` },
       })
       expect(res.status).toBe(200)
-      const { data } = await res.json() as any
+      const { data } = (await res.json()) as any
       expect(data.voted).toBe(false)
       expect(data.vote_count).toBe(0)
       expect(data.user_voted).toBe(false)
@@ -136,7 +139,7 @@ describe('Voting API', () => {
         headers: { Authorization: `Bearer ${testToken2}` },
       })
       expect(res.status).toBe(200)
-      const { data } = await res.json() as any
+      const { data } = (await res.json()) as any
       expect(data.vote_count).toBe(2)
     })
 
@@ -162,7 +165,7 @@ describe('Voting API', () => {
         headers: { Authorization: `Bearer ${testToken}` },
       })
       expect(res.status).toBe(200)
-      const { data } = await res.json() as any
+      const { data } = (await res.json()) as any
       expect(data.vote_count).toBeGreaterThanOrEqual(0)
       expect(typeof data.user_voted).toBe('boolean')
       expect(Array.isArray(data.voters)).toBe(true)
@@ -172,7 +175,7 @@ describe('Voting API', () => {
       const res = await makeRequest(`/api/cards/${cardId}/votes`, {
         headers: { Authorization: `Bearer ${testToken}` },
       })
-      const { data } = await res.json() as any
+      const { data } = (await res.json()) as any
       if (data.voters.length > 0) {
         expect(data.voters[0]).toHaveProperty('id')
         expect(data.voters[0]).toHaveProperty('name')
@@ -184,7 +187,7 @@ describe('Voting API', () => {
       const res = await makeRequest(`/api/cards/${cardId}/votes`, {
         headers: { Authorization: `Bearer ${testToken}` },
       })
-      const { data } = await res.json() as any
+      const { data } = (await res.json()) as any
       expect(data.user_voted).toBe(true) // user 1 voted in previous test
     })
   })
@@ -194,12 +197,12 @@ describe('Voting API', () => {
       // Vote for different cards with different counts
       // Card 1: 2 votes (testToken and testToken2)
       // Card 2 (otherCardId): 0 votes
-      
+
       const res = await makeRequest(`/api/boards/${boardId}?sort=votes`, {
         headers: { Authorization: `Bearer ${testToken}` },
       })
       expect(res.status).toBe(200)
-      const { data } = await res.json() as any
+      const { data } = (await res.json()) as any
       const cards = data.lists[0].cards
       if (cards.length >= 2) {
         expect(cards[0].vote_count).toBeGreaterThanOrEqual(cards[1].vote_count)

@@ -1,7 +1,7 @@
-import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
-import * as oauthService from '../services/oauthService'
-import { ErrorSchema, UserSchema } from '../lib/schemas'
+import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi'
 import { sign } from 'hono/jwt'
+import { ErrorSchema, UserSchema } from '../lib/schemas'
+import * as oauthService from '../services/oauthService'
 
 const oauthRoutes = new OpenAPIHono()
 
@@ -23,7 +23,8 @@ const googleCallbackRoute = createRoute({
   path: '/google/callback',
   tags: ['Auth'],
   summary: 'Google OAuth callback',
-  description: 'Handles the Google OAuth code callback, logs the user in, and returns auth credentials.',
+  description:
+    'Handles the Google OAuth code callback, logs the user in, and returns auth credentials.',
   request: {
     query: z.object({
       code: z.string().openapi({ example: 'auth-code' }),
@@ -75,7 +76,8 @@ const githubCallbackRoute = createRoute({
   path: '/github/callback',
   tags: ['Auth'],
   summary: 'GitHub OAuth callback',
-  description: 'Handles the GitHub OAuth code callback, logs the user in, and returns auth credentials.',
+  description:
+    'Handles the GitHub OAuth code callback, logs the user in, and returns auth credentials.',
   request: {
     query: z.object({
       code: z.string().openapi({ example: 'auth-code' }),
@@ -127,7 +129,8 @@ const facebookCallbackRoute = createRoute({
   path: '/facebook/callback',
   tags: ['Auth'],
   summary: 'Facebook OAuth callback',
-  description: 'Handles the Facebook OAuth code callback, logs the user in, and returns auth credentials.',
+  description:
+    'Handles the Facebook OAuth code callback, logs the user in, and returns auth credentials.',
   request: {
     query: z.object({
       code: z.string().openapi({ example: 'auth-code' }),
@@ -166,7 +169,11 @@ oauthRoutes.openapi(googleAuthRoute, (c) => {
   return c.redirect(oauthService.getGoogleAuthURL())
 })
 
-async function handleCallback(c: any, provider: 'google' | 'github' | 'facebook', callbackFn: Function) {
+async function handleCallback(
+  c: any,
+  provider: 'google' | 'github' | 'facebook',
+  callbackFn: Function,
+) {
   try {
     const code = c.req.query('code')
     if (!code) {
@@ -186,25 +193,30 @@ async function handleCallback(c: any, provider: 'google' | 'github' | 'facebook'
 
     // Check if client requests JSON instead of redirect (like in test mock environment)
     if (c.req.header('Accept')?.includes('application/json')) {
-      return c.json({
-        data: {
-          token,
-          user: {
-            id: user.id,
-            email: user.email,
-            avatar_url: user.avatar_url,
+      return c.json(
+        {
+          data: {
+            token,
+            user: {
+              id: user.id,
+              email: user.email,
+              avatar_url: user.avatar_url,
+            },
           },
         },
-      }, 200)
+        200,
+      )
     }
 
     // Redirect to frontend
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173'
-    const redirectUrl = `${frontendUrl}/auth/callback?token=${token}&user=${encodeURIComponent(JSON.stringify({
-      id: user.id,
-      email: user.email,
-      avatar_url: user.avatar_url,
-    }))}`
+    const redirectUrl = `${frontendUrl}/auth/callback?token=${token}&user=${encodeURIComponent(
+      JSON.stringify({
+        id: user.id,
+        email: user.email,
+        avatar_url: user.avatar_url,
+      }),
+    )}`
     return c.redirect(redirectUrl)
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Internal Server Error'

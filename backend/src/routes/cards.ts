@@ -1,10 +1,10 @@
-import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
-import { authMiddleware } from '../middleware/auth'
+import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi'
 import { db } from '../db'
-import * as cardService from '../services/cardService'
-import * as automationService from '../services/automationService'
-import * as webhookService from '../services/webhookService'
+import { authMiddleware } from '../middleware/auth'
 import { logActivity } from '../services/activityService'
+import * as automationService from '../services/automationService'
+import * as cardService from '../services/cardService'
+import * as webhookService from '../services/webhookService'
 import { broadcastToBoard } from '../websocket/events'
 
 async function getUserName(userId: number): Promise<string> {
@@ -17,8 +17,7 @@ async function getBoardIdByListId(listId: number): Promise<number | null> {
   return result[0] ? Number(result[0].board_id) : null
 }
 
-import { ErrorSchema, CardSchema, CreateCardRequest } from '../lib/schemas'
-
+import { CardSchema, CreateCardRequest, ErrorSchema } from '../lib/schemas'
 
 const cardRoutes = new OpenAPIHono()
 
@@ -411,8 +410,9 @@ cardRoutes.openapi(updateCardPositionsRoute, async (c) => {
     if (firstCard) {
       boardId = await getBoardIdByListId(firstCard.list_id)
       const cardIds = body.cards.map((c: any) => c.id)
-      const existingCards = await db`SELECT id, list_id, position FROM cards WHERE id IN (${cardIds})`
-      
+      const existingCards =
+        await db`SELECT id, list_id, position FROM cards WHERE id IN (${cardIds})`
+
       for (const item of body.cards) {
         const existing = existingCards.find((c) => c.id === item.id)
         if (existing && existing.list_id !== item.list_id) {
@@ -519,7 +519,12 @@ cardRoutes.openapi(updateCardRoute, async (c) => {
       await logActivity(id, userId, 'moved_list', String(body.list_id))
     }
     if (body.assignee_id !== undefined && body.assignee_id !== oldCard.assignee_id) {
-      await logActivity(id, userId, 'updated_assignee', body.assignee_id ? String(body.assignee_id) : 'unassigned')
+      await logActivity(
+        id,
+        userId,
+        'updated_assignee',
+        body.assignee_id ? String(body.assignee_id) : 'unassigned',
+      )
     }
     if (body.archived_at !== undefined && body.archived_at !== oldCard.archived_at) {
       await logActivity(id, userId, body.archived_at ? 'archived' : 'restored')
@@ -541,7 +546,11 @@ cardRoutes.openapi(updateCardRoute, async (c) => {
           to_list_id: body.list_id,
         })
       }
-      if (body.assignee_id !== undefined && body.assignee_id !== oldCard.assignee_id && body.assignee_id !== null) {
+      if (
+        body.assignee_id !== undefined &&
+        body.assignee_id !== oldCard.assignee_id &&
+        body.assignee_id !== null
+      ) {
         await automationService.processAutomations({
           type: 'card_assigned',
           boardId,

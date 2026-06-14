@@ -1,6 +1,6 @@
-import { describe, test, expect, beforeAll, afterAll } from 'bun:test'
-import server from '../../src/index'
+import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import { db } from '../../src/db'
+import server from '../../src/index'
 
 describe('Public Forms API', () => {
   let userId: number
@@ -22,7 +22,11 @@ describe('Public Forms API', () => {
     // Generate JWT token
     const { sign } = await import('hono/jwt')
     const secretKey = process.env.JWT_SECRET || 'your-jwt-secret-here-change-in-production'
-    testToken = await sign({ sub: userId, exp: Math.floor(Date.now() / 1000) + 3600 }, secretKey, 'HS256')
+    testToken = await sign(
+      { sub: userId, exp: Math.floor(Date.now() / 1000) + 3600 },
+      secretKey,
+      'HS256',
+    )
 
     // Create workspace
     const [ws] = await db`
@@ -64,7 +68,7 @@ describe('Public Forms API', () => {
           description: 'Submit your bugs and feature requests here.',
           is_active: true,
         }),
-      })
+      }),
     )
     expect(res.status).toBe(200)
     const { data } = await res.json()
@@ -77,7 +81,7 @@ describe('Public Forms API', () => {
     const res = await server.fetch(
       new Request(`http://localhost/api/boards/${boardId}/form`, {
         headers: { Authorization: `Bearer ${testToken}` },
-      })
+      }),
     )
     expect(res.status).toBe(200)
     const { data } = await res.json()
@@ -85,9 +89,7 @@ describe('Public Forms API', () => {
   })
 
   test('should retrieve public form config publicly', async () => {
-    const res = await server.fetch(
-      new Request(`http://localhost/api/public-forms/${formId}`)
-    )
+    const res = await server.fetch(new Request(`http://localhost/api/public-forms/${formId}`))
     expect(res.status).toBe(200)
     const { data } = await res.json()
     expect(data.title).toBe('Customer Requests')
@@ -102,7 +104,7 @@ describe('Public Forms API', () => {
           title: 'My Public Card Submission',
           description: 'This is the body of the submitted card.',
         }),
-      })
+      }),
     )
     expect(res.status).toBe(201)
     const { data } = await res.json()

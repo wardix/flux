@@ -9,7 +9,11 @@ export interface Webhook {
   created_at: Date
 }
 
-export async function createWebhook(boardId: number, url: string, secret?: string): Promise<Webhook> {
+export async function createWebhook(
+  boardId: number,
+  url: string,
+  secret?: string,
+): Promise<Webhook> {
   const [webhook] = await db`
     INSERT INTO webhooks (board_id, url, secret)
     VALUES (${boardId}, ${url}, ${secret || null})

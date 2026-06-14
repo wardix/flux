@@ -314,9 +314,13 @@ describe('boardStore', () => {
 
   test('should handle activeTimer actions correctly', async () => {
     // biome-ignore lint/suspicious/noExplicitAny: Mocking API response for test spy
-    const getSpy = vi.spyOn(api, 'get').mockResolvedValue({ data: { card_id: 100, is_running: true, elapsed_seconds: 10 } } as any)
+    const getSpy = vi
+      .spyOn(api, 'get')
+      .mockResolvedValue({ data: { card_id: 100, is_running: true, elapsed_seconds: 10 } } as any)
     // biome-ignore lint/suspicious/noExplicitAny: Mocking API response for test spy
-    const postSpy = vi.spyOn(api, 'post').mockResolvedValue({ data: { card_id: 100, is_running: true, elapsed_seconds: 0 } } as any)
+    const postSpy = vi
+      .spyOn(api, 'post')
+      .mockResolvedValue({ data: { card_id: 100, is_running: true, elapsed_seconds: 0 } } as any)
 
     // 1. fetchActiveTimer
     await useBoardStore.getState().fetchActiveTimer()

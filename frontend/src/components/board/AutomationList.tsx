@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api } from '../../lib/api'
-import type { AutomationRule, List, Label } from '../../lib/types'
+import type { AutomationRule, Label, List } from '../../lib/types'
 import { AutomationBuilder } from './AutomationBuilder'
 
 interface AutomationListProps {
@@ -45,9 +45,7 @@ export function AutomationList({
     setError(null)
     try {
       await api.put(`/boards/${boardId}/automations/${ruleId}`, { is_enabled: enabled })
-      setRules((prev) =>
-        prev.map((r) => (r.id === ruleId ? { ...r, is_enabled: enabled } : r))
-      )
+      setRules((prev) => prev.map((r) => (r.id === ruleId ? { ...r, is_enabled: enabled } : r)))
     } catch (err: any) {
       setError(err.message || 'Failed to toggle rule state')
     }
@@ -178,8 +176,7 @@ export function AutomationList({
                         <span>Runs: {rule.execution_count}</span>
                         {rule.last_executed_at && (
                           <span>
-                            • Last Run:{' '}
-                            {new Date(rule.last_executed_at).toLocaleString()}
+                            • Last Run: {new Date(rule.last_executed_at).toLocaleString()}
                           </span>
                         )}
                       </div>

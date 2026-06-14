@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { List, Label } from '../../lib/types'
+import type { Label, List } from '../../lib/types'
 
 interface AutomationBuilderProps {
   lists: List[]
@@ -36,18 +36,18 @@ export function AutomationBuilder({
 
   // Trigger Config state
   const [toListId, setToListId] = useState(
-    initialRule?.trigger_config?.to_list_id || (lists[0]?.id ? String(lists[0].id) : '')
+    initialRule?.trigger_config?.to_list_id || (lists[0]?.id ? String(lists[0].id) : ''),
   )
 
   // Action Config state
   const [actionListId, setActionListId] = useState(
-    initialRule?.action_config?.list_id || (lists[0]?.id ? String(lists[0].id) : '')
+    initialRule?.action_config?.list_id || (lists[0]?.id ? String(lists[0].id) : ''),
   )
   const [actionUserId, setActionUserId] = useState(
-    initialRule?.action_config?.user_id || (members[0]?.user_id ? String(members[0].user_id) : '')
+    initialRule?.action_config?.user_id || (members[0]?.user_id ? String(members[0].user_id) : ''),
   )
   const [actionLabelId, setActionLabelId] = useState(
-    initialRule?.action_config?.label_id || (labels[0]?.id ? String(labels[0].id) : '')
+    initialRule?.action_config?.label_id || (labels[0]?.id ? String(labels[0].id) : ''),
   )
   const [actionMessage, setActionMessage] = useState(initialRule?.action_config?.message || '')
 
@@ -125,7 +125,10 @@ export function AutomationBuilder({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 bg-base-100 p-4 rounded-xl border border-base-200 shadow-lg">
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-4 bg-base-100 p-4 rounded-xl border border-base-200 shadow-lg"
+    >
       <div className="flex justify-between items-center pb-2 border-b border-base-200">
         <h4 className="font-bold text-sm text-primary uppercase">
           {initialRule ? 'Edit Automation Rule' : 'Create Automation Rule'}

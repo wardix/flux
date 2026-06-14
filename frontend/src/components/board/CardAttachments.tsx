@@ -129,7 +129,10 @@ export function CardAttachments({ cardId, onCoverChange, disabled = false }: Car
                 {/* File details */}
                 <div className="p-3 space-y-2 flex-1 flex flex-col justify-between">
                   <div>
-                    <div className="font-bold text-xs text-base-content/85 truncate" title={att.name}>
+                    <div
+                      className="font-bold text-xs text-base-content/85 truncate"
+                      title={att.name}
+                    >
                       {att.name}
                     </div>
                     <div className="text-[10px] text-base-content/45 font-medium">
@@ -171,4 +174,3 @@ export function CardAttachments({ cardId, onCoverChange, disabled = false }: Car
     </div>
   )
 }
-

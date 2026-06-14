@@ -24,6 +24,9 @@ export interface Card {
   sprint_id?: number | null
   epic_id?: number | null
   is_recurring?: boolean
+  is_mirror?: boolean
+  source_board_title?: string | null
+  source_board_id?: number | null
 }
 
 export interface RecurringRule {
@@ -228,4 +231,17 @@ export interface EpicDetailCard {
 
 export interface EpicDetail extends Epic {
   cards: EpicDetailCard[]
+}
+
+export interface CardMirror {
+  id: number
+  source_card_id: number
+  mirror_board_id: number
+  mirror_list_id: number
+  mirror_card_id: number
+  created_at: string
+  updated_at: string
+  mirror_board_title?: string
+  mirror_list_title?: string
+  source_board_title?: string
 }

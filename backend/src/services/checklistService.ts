@@ -6,7 +6,7 @@ export async function getChecklists(cardId: number) {
     WHERE card_id = ${cardId}
     ORDER BY position ASC, id ASC
   `
-  
+
   if (checklists.length === 0) return []
 
   const checklistIds = checklists.map((c) => c.id)

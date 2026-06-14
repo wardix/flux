@@ -1,7 +1,7 @@
-import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi'
+import { BoardSchema, ErrorSchema, WorkspaceMemberSchema, WorkspaceSchema } from '../lib/schemas'
 import { authMiddleware } from '../middleware/auth'
 import * as workspaceService from '../services/workspaceService'
-import { ErrorSchema, WorkspaceSchema, WorkspaceMemberSchema, BoardSchema } from '../lib/schemas'
 
 const workspaceRoutes = new OpenAPIHono()
 

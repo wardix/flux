@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { api } from '../../lib/api'
 import type { CustomField } from '../../lib/types'
 
@@ -14,7 +14,9 @@ export function CustomFieldEditor({ boardId, disabled = false }: CustomFieldEdit
 
   // New Field Form States
   const [name, setName] = useState('')
-  const [fieldType, setFieldType] = useState<'text' | 'number' | 'date' | 'dropdown' | 'checkbox'>('text')
+  const [fieldType, setFieldType] = useState<'text' | 'number' | 'date' | 'dropdown' | 'checkbox'>(
+    'text',
+  )
   const [choicesStr, setChoicesStr] = useState('')
   const [isRequired, setIsRequired] = useState(false)
 
@@ -71,7 +73,11 @@ export function CustomFieldEditor({ boardId, disabled = false }: CustomFieldEdit
   }
 
   const handleDelete = async (fieldId: number) => {
-    if (!confirm('Are you sure you want to delete this custom field? This will delete all associated values on cards!')) {
+    if (
+      !confirm(
+        'Are you sure you want to delete this custom field? This will delete all associated values on cards!',
+      )
+    ) {
       return
     }
     setError(null)
@@ -142,7 +148,10 @@ export function CustomFieldEditor({ boardId, disabled = false }: CustomFieldEdit
 
       {/* Add custom field form */}
       {!disabled && (
-        <form onSubmit={handleCreate} className="bg-base-200/50 p-4 rounded-xl space-y-3 border border-base-200">
+        <form
+          onSubmit={handleCreate}
+          className="bg-base-200/50 p-4 rounded-xl space-y-3 border border-base-200"
+        >
           <span className="text-xs font-bold text-base-content/60 uppercase block">
             Add New Custom Field
           </span>

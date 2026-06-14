@@ -1,7 +1,7 @@
-import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi'
+import { ErrorSchema } from '../lib/schemas'
 import { authMiddleware } from '../middleware/auth'
 import * as sprintService from '../services/sprintService'
-import { ErrorSchema } from '../lib/schemas'
 
 const sprintRoutes = new OpenAPIHono()
 sprintRoutes.use('*', authMiddleware)
@@ -178,9 +178,11 @@ const completeSprintRoute = createRoute({
     body: {
       content: {
         'application/json': {
-          schema: z.object({
-            move_incomplete_to_sprint_id: z.number().nullable().optional(),
-          }).optional(),
+          schema: z
+            .object({
+              move_incomplete_to_sprint_id: z.number().nullable().optional(),
+            })
+            .optional(),
         },
       },
     },

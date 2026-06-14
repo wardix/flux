@@ -1,4 +1,3 @@
-
 interface EpicBadgeProps {
   title: string
   color: string

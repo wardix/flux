@@ -1,7 +1,7 @@
-import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
-import { authMiddleware } from '../middleware/auth'
+import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi'
 import { db } from '../db'
 import { ErrorSchema } from '../lib/schemas'
+import { authMiddleware } from '../middleware/auth'
 
 const recurringRoutes = new OpenAPIHono()
 recurringRoutes.use('*', authMiddleware)
@@ -137,7 +137,7 @@ recurringRoutes.openapi(createRecurringRuleRoute, async (c) => {
     await db.begin(async (db) => {
       // Toggle card state is_recurring = true
       await db`UPDATE cards SET is_recurring = TRUE WHERE id = ${card_id}`
-      
+
       // Delete existing recurring rule for this card if any
       await db`DELETE FROM recurring_tasks WHERE card_id = ${card_id}`
     })

@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import type React from 'react'
+import { useState } from 'react'
 import { api } from '../../lib/api'
 import { useBoardStore } from '../../stores/boardStore'
 
@@ -44,7 +45,10 @@ export function ImportDialog({ workspaceId, onSuccess, onClose }: ImportDialogPr
           setBoardTitle(parsed.name)
         } else {
           // Parse Jira CSV helper
-          const lines = content.split('\n').map((line) => line.trim()).filter(Boolean)
+          const lines = content
+            .split('\n')
+            .map((line) => line.trim())
+            .filter(Boolean)
           if (lines.length < 2) {
             setError('Invalid Jira CSV: Must contain headers and at least one row.')
             setPreviewData(null)
@@ -63,8 +67,10 @@ export function ImportDialog({ workspaceId, onSuccess, onClose }: ImportDialogPr
               if (cleanedHeader === 'summary') row.summary = value
               else if (cleanedHeader === 'description') row.description = value
               else if (cleanedHeader === 'status') row.status = value
-              else if (cleanedHeader === 'storypoints' || cleanedHeader === 'story points') row.storyPoints = Number(value) || undefined
-              else if (cleanedHeader === 'duedate' || cleanedHeader === 'due date') row.dueDate = value
+              else if (cleanedHeader === 'storypoints' || cleanedHeader === 'story points')
+                row.storyPoints = Number(value) || undefined
+              else if (cleanedHeader === 'duedate' || cleanedHeader === 'due date')
+                row.dueDate = value
               else if (cleanedHeader === 'assignee') row.assignee = value
             })
             if (row.summary) {
@@ -215,14 +221,25 @@ export function ImportDialog({ workspaceId, onSuccess, onClose }: ImportDialogPr
               </span>
               {importType === 'trello' ? (
                 <>
-                  <p><strong>Board Name:</strong> {previewData.name}</p>
-                  <p><strong>Active Lists:</strong> {previewData.listsCount}</p>
-                  <p><strong>Active Cards:</strong> {previewData.cardsCount}</p>
+                  <p>
+                    <strong>Board Name:</strong> {previewData.name}
+                  </p>
+                  <p>
+                    <strong>Active Lists:</strong> {previewData.listsCount}
+                  </p>
+                  <p>
+                    <strong>Active Cards:</strong> {previewData.cardsCount}
+                  </p>
                 </>
               ) : (
                 <>
-                  <p><strong>Columns Detected:</strong> {previewData.listsCount} ({previewData.statuses?.join(', ')})</p>
-                  <p><strong>Total Cards Detected:</strong> {previewData.cardsCount}</p>
+                  <p>
+                    <strong>Columns Detected:</strong> {previewData.listsCount} (
+                    {previewData.statuses?.join(', ')})
+                  </p>
+                  <p>
+                    <strong>Total Cards Detected:</strong> {previewData.cardsCount}
+                  </p>
                 </>
               )}
             </div>

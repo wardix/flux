@@ -70,6 +70,7 @@ export async function login(email: string, password: string) {
 }
 
 export async function getMe(userId: number) {
-  const users = await db`SELECT id, email, avatar_url, is_super_admin, is_suspended, locale, created_at FROM users WHERE id = ${userId}`
+  const users =
+    await db`SELECT id, email, avatar_url, is_super_admin, is_suspended, locale, created_at FROM users WHERE id = ${userId}`
   return users[0] || null
 }
