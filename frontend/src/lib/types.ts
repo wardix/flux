@@ -156,5 +156,22 @@ export interface CustomFieldValueData {
   value: string | null
 }
 
+export interface AutomationRule {
+  id: number
+  board_id: number
+  name: string
+  description: string | null
+  trigger_event: 'card_created' | 'card_moved' | 'card_assigned' | 'due_date_reached'
+  trigger_config: Record<string, any>
+  action_type: 'move_card' | 'assign_user' | 'add_label' | 'send_notification'
+  action_config: Record<string, any>
+  is_enabled: boolean
+  created_by: number
+  execution_count: number
+  last_executed_at: string | null
+  created_at: string
+}
+
+
 
 

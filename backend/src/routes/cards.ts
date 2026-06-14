@@ -2,6 +2,7 @@ import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
 import { authMiddleware } from '../middleware/auth'
 import { db } from '../db'
 import * as cardService from '../services/cardService'
+import * as automationService from '../services/automationService'
 import { logActivity } from '../services/activityService'
 import { broadcastToBoard } from '../websocket/events'
 
@@ -364,6 +365,13 @@ cardRoutes.openapi(createCardRoute, async (c) => {
 
     const boardId = await getBoardIdByListId(card.list_id)
     if (boardId) {
+      // Trigger card_created automation
+      await automationService.processAutomations({
+        type: 'card_created',
+        boardId,
+        cardId: card.id,
+      })
+
       const userName = await getUserName(userId)
       broadcastToBoard(boardId, {
         type: 'card_created',
@@ -430,6 +438,16 @@ cardRoutes.openapi(updateCardPositionsRoute, async (c) => {
     await cardService.updatePositions(body.cards)
 
     if (boardId && movedCardPayload) {
+      if (movedCardPayload.from_list_id !== movedCardPayload.to_list_id) {
+        // Trigger card_moved automation
+        await automationService.processAutomations({
+          type: 'card_moved',
+          boardId,
+          cardId: movedCardPayload.id,
+          data: { to_list_id: movedCardPayload.to_list_id },
+        })
+      }
+
       const userName = await getUserName(userId)
       broadcastToBoard(boardId, {
         type: 'card_moved',
@@ -500,6 +518,23 @@ cardRoutes.openapi(updateCardRoute, async (c) => {
 
     const boardId = await getBoardIdByListId(card.list_id)
     if (boardId) {
+      if (body.list_id !== undefined && body.list_id !== oldCard.list_id) {
+        await automationService.processAutomations({
+          type: 'card_moved',
+          boardId,
+          cardId: card.id,
+          data: { to_list_id: body.list_id },
+        })
+      }
+      if (body.assignee_id !== undefined && body.assignee_id !== oldCard.assignee_id && body.assignee_id !== null) {
+        await automationService.processAutomations({
+          type: 'card_assigned',
+          boardId,
+          cardId: card.id,
+          data: { assignee_id: body.assignee_id },
+        })
+      }
+
       const userName = await getUserName(userId)
       broadcastToBoard(boardId, {
         type: 'card_updated',
