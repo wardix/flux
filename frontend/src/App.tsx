@@ -40,6 +40,7 @@ import { useBoardStore } from './stores/boardStore'
 import { SearchBar } from './components/shared/SearchBar'
 import { FilterPanel } from './components/board/FilterPanel'
 import { useSearchStore } from './stores/searchStore'
+import { NotificationBell } from './components/shared/NotificationBell'
 
 function decodeToken(token: string | null) {
   if (!token) return null
@@ -1673,6 +1674,7 @@ function App() {
               <div className="flex items-center gap-4">
                 {activeBoard && <SearchBar />}
                 <ActiveTimerIndicator />
+                <NotificationBell />
                 <PresenceIndicator users={onlineUsers} />
                 <span className="text-xs text-base-content/50">
                   Active Workspace: {activeWorkspace ? activeWorkspace.name : 'None'}

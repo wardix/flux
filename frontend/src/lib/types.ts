@@ -332,3 +332,15 @@ export interface ActiveFilters {
   labelIds: number[]
   dueStatus: 'all' | 'overdue' | 'due_today' | 'due_week' | 'no_date'
 }
+
+export interface Notification {
+  id: number
+  type: 'assigned' | 'mentioned' | 'due_soon' | 'comment'
+  title: string
+  message: string
+  is_read: boolean
+  card_id: number | null
+  board_id: number | null
+  actor: { id: number; name: string; avatar_url: string | null } | null
+  created_at: string
+}
