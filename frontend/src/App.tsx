@@ -9,6 +9,9 @@ import type { List, Card } from './lib/types'
 import { useWebSocket } from './hooks/useWebSocket'
 import { PresenceIndicator } from './components/shared/PresenceIndicator'
 import { ActiveTimerIndicator } from './components/shared/ActiveTimerIndicator'
+import { AdminDashboardPage } from './pages/AdminDashboardPage'
+import { ExportDialog } from './components/board/ExportDialog'
+import { api } from './lib/api'
 
 function decodeToken(token: string | null) {
   if (!token) return null
@@ -30,8 +33,10 @@ function decodeToken(token: string | null) {
 
 function App() {
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'))
-  const [_user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<any>(null)
   const [show2FASettings, setShow2FASettings] = useState(false)
+  const [showAdminPage, setShowAdminPage] = useState(false)
+  const [isExportOpen, setIsExportOpen] = useState(false)
 
   const { theme, setTheme, accentColor, setAccentColor } = useTheme()
   const {
@@ -76,6 +81,32 @@ function App() {
 
   const decoded = decodeToken(token)
   const currentUserId = decoded ? Number(decoded.sub) : null
+
+  useEffect(() => {
+    if (token) {
+      api.get<{ data: any }>('/auth/me')
+        .then((res) => {
+          if (res.data.is_suspended) {
+            alert('Your account has been suspended by an admin.')
+            localStorage.removeItem('token')
+            setToken(null)
+            setUser(null)
+            return
+          }
+          setUser(res.data)
+        })
+        .catch((err) => {
+          console.error('Failed to fetch user info:', err)
+          if (err.message?.includes('401') || err.message?.includes('403')) {
+            localStorage.removeItem('token')
+            setToken(null)
+            setUser(null)
+          }
+        })
+    } else {
+      setUser(null)
+    }
+  }, [token])
 
   const { isConnected: _isWSConnected, onlineUsers } = useWebSocket({
     boardId: activeBoard?.id || 0,
@@ -520,9 +551,26 @@ function App() {
 
           {/* Settings Section */}
           <div className="space-y-2 pb-2 border-b border-base-200/50">
+            {user?.is_super_admin && (
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAdminPage(!showAdminPage)
+                  setShow2FASettings(false)
+                }}
+                className={`btn btn-sm btn-block justify-start capitalize ${
+                  showAdminPage ? 'btn-primary text-white' : 'btn-outline border-base-300 hover:bg-base-200'
+                }`}
+              >
+                🛠️ Admin Panel
+              </button>
+            )}
             <button
               type="button"
-              onClick={() => setShow2FASettings(true)}
+              onClick={() => {
+                setShow2FASettings(true)
+                setShowAdminPage(false)
+              }}
               className={`btn btn-sm btn-block justify-start capitalize ${
                 show2FASettings ? 'btn-primary text-white' : 'btn-ghost'
               }`}
@@ -611,7 +659,11 @@ function App() {
       <main className="flex-1 flex flex-col overflow-hidden relative">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(15,23,42,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(15,23,42,0.02)_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:4rem_4rem] pointer-events-none" />
 
-        {show2FASettings ? (
+        {showAdminPage && user?.is_super_admin ? (
+          <div className="flex-1 overflow-y-auto z-10 bg-base-100">
+            <AdminDashboardPage onBack={() => setShowAdminPage(false)} />
+          </div>
+        ) : show2FASettings ? (
           <div className="flex-1 overflow-y-auto p-8 max-w-2xl mx-auto w-full z-10">
             <TwoFactorSetup />
           </div>
@@ -727,6 +779,17 @@ function App() {
                       </li>
                     </ul>
                   </div>
+                )}
+
+                {/* Board Export Options */}
+                {activeBoard && (
+                  <button
+                    type="button"
+                    onClick={() => setIsExportOpen(true)}
+                    className="btn btn-outline btn-xs gap-1 font-semibold uppercase tracking-wider text-base-content/85 hover:bg-base-200"
+                  >
+                    📤 Export
+                  </button>
                 )}
 
                 {/* Board Labels Manager */}
@@ -1116,6 +1179,15 @@ function App() {
           </>
         )}
       </main>
+      
+      {activeBoard && (
+        <ExportDialog
+          boardId={activeBoard.id}
+          boardTitle={activeBoard.title}
+          isOpen={isExportOpen}
+          onClose={() => setIsExportOpen(false)}
+        />
+      )}
     </div>
   )
 }
