@@ -45,6 +45,9 @@ const getBoardByIdRoute = createRoute({
     params: z.object({
       id: z.string().openapi({ example: '1' }),
     }),
+    query: z.object({
+      sort: z.string().optional(),
+    }),
   },
   responses: {
     200: {
@@ -353,7 +356,8 @@ boardRoutes.openapi(getBoardByIdRoute, async (c) => {
   if (Number.isNaN(id)) return c.json({ error: 'Invalid ID' }, 400)
 
   const userId = c.get('userId')
-  const board = await boardService.getById(id, userId)
+  const sort = c.req.query('sort')
+  const board = await boardService.getById(id, userId, sort)
   if (!board) return c.json({ error: 'Board not found' }, 404)
 
   return c.json({ data: board }, 200)

@@ -20,6 +20,7 @@ import { attachmentRoutes } from './routes/attachments'
 import { commentRoutes } from './routes/comments'
 import { activityRoutes } from './routes/activities'
 import { timeTrackingRoutes } from './routes/timeTracking'
+import { voteRoutes } from './routes/votes'
 
 
 
@@ -65,6 +66,7 @@ app.route('/api', attachmentRoutes)
 app.route('/api', commentRoutes)
 app.route('/api', activityRoutes)
 app.route('/api', timeTrackingRoutes)
+app.route('/api', voteRoutes)
 
 
 export default {

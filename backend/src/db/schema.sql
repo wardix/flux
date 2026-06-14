@@ -1,4 +1,5 @@
 -- Drop tables if they exist (for easy migration reset)
+DROP TABLE IF EXISTS card_votes CASCADE;
 DROP TABLE IF EXISTS time_logs CASCADE;
 DROP TABLE IF EXISTS board_stars CASCADE;
 DROP TABLE IF EXISTS board_members CASCADE;
@@ -279,6 +280,17 @@ CREATE TRIGGER update_time_logs_updated_at BEFORE UPDATE ON time_logs FOR EACH R
 
 CREATE INDEX idx_time_logs_card_id ON time_logs(card_id);
 CREATE INDEX idx_time_logs_user_id ON time_logs(user_id);
+
+-- Card Votes Table
+CREATE TABLE card_votes (
+    card_id INTEGER NOT NULL REFERENCES cards(id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (card_id, user_id)
+);
+
+CREATE INDEX idx_card_votes_user_id ON card_votes(user_id);
+
 
 
 
