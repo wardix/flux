@@ -20,6 +20,7 @@ import { ExportDialog } from './components/board/ExportDialog'
 import { ImportDialog } from './components/board/ImportDialog'
 import { PublicFormSettings } from './components/board/PublicFormSettings'
 import { EmailSettings } from './components/board/EmailSettings'
+import { ApprovalRuleManager } from './components/board/ApprovalRuleManager'
 import { SprintBoard } from './components/board/SprintBoard'
 import { SprintPlanning } from './components/board/SprintPlanning'
 import { WebhookList } from './components/board/WebhookList'
@@ -1324,6 +1325,22 @@ function App() {
                         Email to Board
                       </span>
                       <EmailSettings boardId={activeBoard.id} lists={activeBoard.lists || []} />
+                    </div>
+                  </div>
+                )}
+
+                {/* Approval Rules Manager */}
+                {activeBoard && userRole === 'admin' && (
+                  <div className="dropdown dropdown-bottom">
+                    <button
+                      type="button"
+                      tabIndex={0}
+                      className="btn btn-outline btn-xs gap-1 font-semibold uppercase tracking-wider"
+                    >
+                      ✅ Approvals
+                    </button>
+                    <div className="dropdown-content menu bg-base-200 rounded-box z-[1] w-[600px] p-3 shadow-lg gap-2 border border-base-300 mt-1 max-h-[500px] overflow-y-auto">
+                      <ApprovalRuleManager boardId={activeBoard.id} lists={activeBoard.lists || []} />
                     </div>
                   </div>
                 )}

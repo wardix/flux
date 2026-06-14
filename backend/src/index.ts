@@ -48,12 +48,13 @@ import { boardEmailsRoutes } from './routes/boardEmails'
 import { chatRoutes } from './routes/chat'
 import { workspaceRoutes } from './routes/workspaces'
 import { websocket } from './websocket'
+import { approvalsRoutes } from './routes/approvals'
 
 // Trigger database old trash clean up on server startup
 cleanOldTrash().catch((err) => console.error('Trash cleanup failed:', err))
 startRecurringTasksScheduler()
 
-const app = new OpenAPIHono()
+export const app = new OpenAPIHono()
 
 app.use('*', corsMiddleware)
 app.use('*', rateLimitMiddleware())
@@ -106,6 +107,7 @@ app.route('/api', commentRoutes)
 app.route('/api', activityRoutes)
 app.route('/api', timeTrackingRoutes)
 app.route('/api', voteRoutes)
+app.route('/api', approvalsRoutes)
 app.route('/api', adminRoutes)
 app.route('/api', exportRoutes)
 app.route('/api', userRoutes)

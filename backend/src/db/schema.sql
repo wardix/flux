@@ -1,4 +1,6 @@
 -- Drop tables if they exist (for easy migration reset)
+DROP TABLE IF EXISTS approval_votes CASCADE;
+DROP TABLE IF EXISTS approval_rules CASCADE;
 DROP TABLE IF EXISTS goal_card_links CASCADE;
 DROP TABLE IF EXISTS goals CASCADE;
 DROP TABLE IF EXISTS card_mirrors CASCADE;
@@ -143,6 +145,34 @@ CREATE INDEX idx_lists_board_id ON lists(board_id);
 CREATE INDEX idx_cards_list_id ON cards(list_id);
 CREATE INDEX idx_cards_assignee_id ON cards(assignee_id);
 CREATE INDEX idx_cards_parent_card_id ON cards(parent_card_id);
+CREATE INDEX IF NOT EXISTS idx_card_dependencies_blocking ON card_dependencies(blocking_card_id);
+CREATE INDEX IF NOT EXISTS idx_card_dependencies_blocked ON card_dependencies(blocked_card_id);
+
+-- Create approval_rules table
+CREATE TABLE approval_rules (
+    id SERIAL PRIMARY KEY,
+    board_id INTEGER REFERENCES boards(id) ON DELETE CASCADE,
+    from_list_id INTEGER REFERENCES lists(id) ON DELETE CASCADE,
+    to_list_id INTEGER REFERENCES lists(id) ON DELETE CASCADE,
+    min_approvals INTEGER NOT NULL DEFAULT 1,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE (from_list_id, to_list_id)
+);
+
+-- Create approval_votes table
+CREATE TABLE approval_votes (
+    id SERIAL PRIMARY KEY,
+    card_id INTEGER REFERENCES cards(id) ON DELETE CASCADE,
+    rule_id INTEGER REFERENCES approval_rules(id) ON DELETE CASCADE,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    status VARCHAR(50) NOT NULL CHECK (status IN ('approved', 'rejected')),
+    comment TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE (card_id, rule_id, user_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_approval_rules_board_id ON approval_rules(board_id);
+CREATE INDEX IF NOT EXISTS idx_approval_votes_card_rule ON approval_votes(card_id, rule_id);
 CREATE INDEX idx_cards_description_json ON cards USING GIN (description_json);
 CREATE INDEX idx_labels_board_id ON labels(board_id);
 CREATE INDEX idx_card_labels_label_id ON card_labels(label_id);
