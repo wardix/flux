@@ -5,6 +5,7 @@ import { logActivity } from '../services/activityService'
 import * as automationService from '../services/automationService'
 import * as cardService from '../services/cardService'
 import * as webhookService from '../services/webhookService'
+import * as notificationService from '../services/notificationService'
 import { broadcastToBoard } from '../websocket/events'
 
 async function getUserName(userId: number): Promise<string> {
@@ -374,6 +375,18 @@ cardRoutes.openapi(createCardRoute, async (c) => {
     await logActivity(card.id, userId, 'created', card.title)
 
     const boardId = await getBoardIdByListId(card.list_id)
+    if (boardId && body.assignee_id) {
+      await notificationService.createNotification({
+        user_id: body.assignee_id,
+        actor_id: userId,
+        type: 'assigned',
+        title: 'You were assigned to a card',
+        message: `You were assigned to the card "${card.title}"`,
+        card_id: card.id,
+        board_id: boardId
+      })
+    }
+
     if (boardId) {
       // Trigger card_created automation
       await automationService.processAutomations({
@@ -536,6 +549,20 @@ cardRoutes.openapi(updateCardRoute, async (c) => {
         'updated_assignee',
         body.assignee_id ? String(body.assignee_id) : 'unassigned',
       )
+      if (body.assignee_id) {
+        const boardId = await getBoardIdByListId(card.list_id)
+        if (boardId) {
+          await notificationService.createNotification({
+            user_id: body.assignee_id,
+            actor_id: userId,
+            type: 'assigned',
+            title: 'You were assigned to a card',
+            message: `You were assigned to the card "${card.title}"`,
+            card_id: card.id,
+            board_id: boardId
+          })
+        }
+      }
     }
     if (body.archived_at !== undefined && body.archived_at !== oldCard.archived_at) {
       await logActivity(id, userId, body.archived_at ? 'archived' : 'restored')

@@ -542,3 +542,21 @@ CREATE TABLE workspace_branding (
 CREATE TRIGGER update_workspace_branding_updated_at BEFORE UPDATE ON workspace_branding FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE INDEX idx_workspace_branding_workspace_id ON workspace_branding(workspace_id);
 CREATE INDEX idx_workspace_branding_custom_domain ON workspace_branding(custom_domain);
+
+-- Notifications Table
+CREATE TABLE notifications (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    actor_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    type VARCHAR(50) NOT NULL, -- 'assigned', 'mentioned', 'due_soon', 'comment'
+    title VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    is_read BOOLEAN NOT NULL DEFAULT FALSE,
+    card_id INTEGER REFERENCES cards(id) ON DELETE CASCADE,
+    board_id INTEGER REFERENCES boards(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TRIGGER update_notifications_updated_at BEFORE UPDATE ON notifications FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE INDEX idx_notifications_user_id_is_read ON notifications(user_id, is_read);
