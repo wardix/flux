@@ -22,6 +22,7 @@ import { exportRoutes } from './routes/export'
 import { goalRoutes } from './routes/goals'
 import { unsplashRoutes } from './routes/unsplash'
 
+import { batchRoutes } from './routes/batch'
 import { importRoutes } from './routes/import'
 import { labelRoutes } from './routes/labels'
 import { listRoutes } from './routes/lists'
@@ -77,6 +78,7 @@ app.route('/api/boards', boardTemplateRoutes)
 app.route('/api/boards', boardRoutes)
 app.route('/api/lists', listRoutes)
 
+app.route('/api/cards/batch', batchRoutes)
 app.route('/api/cards', cardRoutes)
 app.route('/api/cards', mirrorRoutes)
 app.route('/api/goals', goalRoutes)

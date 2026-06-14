@@ -79,6 +79,15 @@ interface BoardState {
   fetchActiveTimer: () => Promise<void>
   startTimer: (cardId: number, description?: string) => Promise<void>
   stopTimer: (cardId: number) => Promise<void>
+  isMultiSelectMode: boolean
+  selectedCardIds: number[]
+  toggleMultiSelectMode: () => void
+  selectCard: (cardId: number) => void
+  deselectCard: (cardId: number) => void
+  selectRange: (fromCardId: number, toCardId: number) => void
+  selectAll: () => void
+  clearSelection: () => void
+  executeBatchAction: (action: string, params?: Record<string, unknown>) => Promise<void>
 }
 
 export const useBoardStore = create<BoardState>((set, get) => ({
@@ -90,6 +99,8 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   isLoading: false,
   error: null,
   currentSort: null,
+  isMultiSelectMode: false,
+  selectedCardIds: [],
   setSort: (sort: string | null) => {
     set({ currentSort: sort })
     const activeBoard = get().activeBoard
@@ -1218,5 +1229,80 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       // Rollback to original state
       updateCardState(originalUserVoted, originalVoteCount)
     }
+  },
+  toggleMultiSelectMode: () => {
+    const isMode = get().isMultiSelectMode
+    if (isMode) {
+      set({ isMultiSelectMode: false, selectedCardIds: [] })
+    } else {
+      set({ isMultiSelectMode: true })
+    }
+  },
+  selectCard: (cardId) => {
+    const current = get().selectedCardIds
+    if (!current.includes(cardId)) {
+      set({ selectedCardIds: [...current, cardId], isMultiSelectMode: true })
+    }
+  },
+  deselectCard: (cardId) => {
+    const current = get().selectedCardIds
+    const next = current.filter((id) => id !== cardId)
+    set({
+      selectedCardIds: next,
+      isMultiSelectMode: next.length > 0,
+    })
+  },
+  selectRange: (fromCardId, toCardId) => {
+    const activeBoard = get().activeBoard
+    if (!activeBoard || !activeBoard.lists) return
+
+    // Get all cards in layout order
+    const allCards: Card[] = []
+    activeBoard.lists.forEach((list) => {
+      if (list.cards) {
+        allCards.push(...list.cards)
+      }
+    })
+
+    const fromIndex = allCards.findIndex((c) => c.id === fromCardId)
+    const toIndex = allCards.findIndex((c) => c.id === toCardId)
+    if (fromIndex === -1 || toIndex === -1) return
+
+    const start = Math.min(fromIndex, toIndex)
+    const end = Math.max(fromIndex, toIndex)
+    const rangeCardIds = allCards.slice(start, end + 1).map((c) => c.id)
+
+    const currentSelected = get().selectedCardIds
+    const newSelected = Array.from(new Set([...currentSelected, ...rangeCardIds]))
+
+    set({ selectedCardIds: newSelected, isMultiSelectMode: true })
+  },
+  selectAll: () => {
+    const activeBoard = get().activeBoard
+    if (!activeBoard || !activeBoard.lists) return
+    const allCardIds: number[] = []
+    activeBoard.lists.forEach((list) => {
+      if (list.cards) {
+        allCardIds.push(...list.cards.map((c) => c.id))
+      }
+    })
+    set({ selectedCardIds: allCardIds, isMultiSelectMode: true })
+  },
+  clearSelection: () => {
+    set({ selectedCardIds: [], isMultiSelectMode: false })
+  },
+  executeBatchAction: async (action, params) => {
+    const { selectedCardIds } = get()
+    if (selectedCardIds.length === 0) return
+
+    await api.post('/cards/batch', {
+      card_ids: selectedCardIds,
+      action,
+      params,
+    })
+
+    // Refresh board data setelah batch action
+    await get().fetchBoard(get().activeBoard!.id, get().currentSort || undefined)
+    set({ selectedCardIds: [], isMultiSelectMode: false })
   },
 }))

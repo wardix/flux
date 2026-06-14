@@ -74,6 +74,14 @@ export async function checkObserverPermission(c: Context, next: Next) {
           const lists = await db`SELECT board_id FROM lists WHERE id = ${firstCardListId}`
           if (lists.length > 0) boardId = lists[0].board_id
         }
+      } else if (body.card_ids && Array.isArray(body.card_ids) && body.card_ids.length > 0) {
+        const firstCardId = body.card_ids[0]
+        const cards = await db`
+          SELECT l.board_id FROM cards c
+          JOIN lists l ON c.list_id = l.id
+          WHERE c.id = ${firstCardId}
+        `
+        if (cards.length > 0) boardId = cards[0].board_id
       }
     } catch (_) {}
   }
