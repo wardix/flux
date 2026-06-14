@@ -229,4 +229,86 @@ describe('boardStore', () => {
     postSpy.mockRestore()
     deleteSpy.mockRestore()
   })
+
+  test('should modify lists and cards locally without API requests', () => {
+    useBoardStore.setState({
+      activeBoard: {
+        id: 1,
+        workspace_id: 1,
+        title: 'Board',
+        created_at: '',
+        updated_at: '',
+        lists: [
+          {
+            id: 10,
+            board_id: 1,
+            title: 'List 10',
+            position: 0,
+            created_at: '',
+            updated_at: '',
+            cards: [],
+          },
+        ],
+      },
+    })
+
+    // Test addListLocally
+    const newList = {
+      id: 11,
+      board_id: 1,
+      title: 'List 11',
+      position: 1,
+      created_at: '',
+      updated_at: '',
+      cards: [],
+    }
+    useBoardStore.getState().addListLocally(newList)
+    let state = useBoardStore.getState()
+    expect(state.activeBoard?.lists?.length).toBe(2)
+    expect(state.activeBoard?.lists?.[1].id).toBe(11)
+
+    // Test addCardLocally
+    const newCard = {
+      id: 100,
+      list_id: 10,
+      title: 'New Card',
+      position: 0,
+      created_at: '',
+      updated_at: '',
+    }
+    useBoardStore.getState().addCardLocally(newCard)
+    state = useBoardStore.getState()
+    expect(state.activeBoard?.lists?.[0].cards.length).toBe(1)
+    expect(state.activeBoard?.lists?.[0].cards[0].id).toBe(100)
+
+    // Test updateCardLocally
+    const updatedCard = {
+      id: 100,
+      list_id: 10,
+      title: 'Updated Card Title',
+      position: 0,
+      created_at: '',
+      updated_at: '',
+    }
+    useBoardStore.getState().updateCardLocally(updatedCard)
+    state = useBoardStore.getState()
+    expect(state.activeBoard?.lists?.[0].cards[0].title).toBe('Updated Card Title')
+
+    // Test moveCardLocally
+    useBoardStore.getState().moveCardLocally({
+      id: 100,
+      from_list_id: 10,
+      to_list_id: 11,
+      position: 0,
+    })
+    state = useBoardStore.getState()
+    expect(state.activeBoard?.lists?.[0].cards.length).toBe(0)
+    expect(state.activeBoard?.lists?.[1].cards.length).toBe(1)
+    expect(state.activeBoard?.lists?.[1].cards[0].id).toBe(100)
+
+    // Test removeCardLocally
+    useBoardStore.getState().removeCardLocally(100)
+    state = useBoardStore.getState()
+    expect(state.activeBoard?.lists?.[1].cards.length).toBe(0)
+  })
 })

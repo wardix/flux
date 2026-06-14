@@ -10,6 +10,7 @@ export interface Card {
   is_completed?: boolean
   story_points?: number | null
   archived_at?: string | null
+  deleted_at?: string | null
   created_at: string
   updated_at: string
   labels?: Label[]
@@ -77,3 +78,19 @@ export interface Label {
   created_at?: string
   updated_at?: string
 }
+
+export interface WSEvent {
+  type: string
+  payload: any
+  boardId: number
+  userId: number
+  userName: string
+  timestamp: string
+}
+
+export interface PresenceUser {
+  id: number
+  name: string
+  avatar_url: string | null
+}
+

@@ -6,6 +6,26 @@ import { useBoardStore } from './stores/boardStore'
 import { LoginPage } from './pages/LoginPage'
 import { TwoFactorSetup } from './components/settings/TwoFactorSetup'
 import type { List, Card } from './lib/types'
+import { useWebSocket } from './hooks/useWebSocket'
+import { PresenceIndicator } from './components/shared/PresenceIndicator'
+
+function decodeToken(token: string | null) {
+  if (!token) return null
+  try {
+    const base64Url = token.split('.')[1]
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+    const jsonPayload = decodeURIComponent(
+      window
+        .atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    )
+    return JSON.parse(jsonPayload)
+  } catch (e) {
+    return null
+  }
+}
 
 function App() {
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'))
@@ -41,7 +61,51 @@ function App() {
     userRole,
     inviteBoardMember,
     toggleStarBoard,
+    addListLocally,
+    updateListLocally,
+    removeListLocally,
+    addCardLocally,
+    updateCardLocally,
+    removeCardLocally,
+    moveCardLocally,
   } = useBoardStore()
+
+  const decoded = decodeToken(token)
+  const currentUserId = decoded ? Number(decoded.sub) : null
+
+  const { isConnected: _isWSConnected, onlineUsers } = useWebSocket({
+    boardId: activeBoard?.id || 0,
+    enabled: !!token && !!activeBoard?.id,
+    onEvent: (event) => {
+      if (event.userId === currentUserId) return
+
+      switch (event.type) {
+        case 'card_created':
+          addCardLocally(event.payload)
+          break
+        case 'card_updated':
+          updateCardLocally(event.payload)
+          break
+        case 'card_deleted':
+          removeCardLocally(event.payload.id)
+          break
+        case 'card_moved':
+          moveCardLocally(event.payload)
+          break
+        case 'list_created':
+          addListLocally(event.payload)
+          break
+        case 'list_updated':
+          updateListLocally(event.payload)
+          break
+        case 'list_deleted':
+          removeListLocally(event.payload.id)
+          break
+        default:
+          break
+      }
+    },
+  })
 
   const [newBoardTitle, setNewBoardTitle] = useState('')
   const [newColumnTitle, setNewColumnTitle] = useState('')
@@ -951,7 +1015,8 @@ function App() {
                   </div>
                 )}
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-4">
+                <PresenceIndicator users={onlineUsers} />
                 <span className="text-xs text-base-content/50">
                   Active Workspace: {activeWorkspace ? activeWorkspace.name : 'None'}
                 </span>

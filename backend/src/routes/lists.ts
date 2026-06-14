@@ -2,6 +2,13 @@ import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
 import { authMiddleware } from '../middleware/auth'
 import * as listService from '../services/listService'
 import { ErrorSchema, ListSchema } from '../lib/schemas'
+import { db } from '../db'
+import { broadcastToBoard } from '../websocket/events'
+
+async function getUserName(userId: number): Promise<string> {
+  const result = await db`SELECT email FROM users WHERE id = ${userId}`
+  return result[0]?.email.split('@')[0] || 'User'
+}
 
 const listRoutes = new OpenAPIHono()
 
@@ -183,11 +190,27 @@ listRoutes.use('*', authMiddleware)
 
 listRoutes.openapi(createListRoute, async (c) => {
   try {
+    const userId = c.get('userId')
     const body = await c.req.json()
     if (!body.board_id) return c.json({ error: 'board_id is required' }, 400)
     if (!body.title) return c.json({ error: 'Title is required' }, 400)
 
     const list = await listService.create(body)
+    
+    // Broadcast list creation
+    const boardId = Number(list.board_id)
+    if (boardId) {
+      const userName = await getUserName(userId)
+      broadcastToBoard(boardId, {
+        type: 'list_created',
+        payload: list,
+        boardId,
+        userId,
+        userName,
+        timestamp: new Date().toISOString(),
+      })
+    }
+
     return c.json({ data: list }, 201)
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Internal Server Error'
@@ -197,12 +220,27 @@ listRoutes.openapi(createListRoute, async (c) => {
 
 listRoutes.openapi(updateListRoute, async (c) => {
   try {
+    const userId = c.get('userId')
     const id = Number(c.req.param('id'))
     if (Number.isNaN(id)) return c.json({ error: 'Invalid ID' }, 400)
 
     const body = await c.req.json()
     const list = await listService.update(id, body)
     if (!list) return c.json({ error: 'List not found' }, 404)
+
+    // Broadcast list update
+    const boardId = Number(list.board_id)
+    if (boardId) {
+      const userName = await getUserName(userId)
+      broadcastToBoard(boardId, {
+        type: 'list_updated',
+        payload: list,
+        boardId,
+        userId,
+        userName,
+        timestamp: new Date().toISOString(),
+      })
+    }
 
     return c.json({ data: list }, 200)
   } catch (error) {
@@ -212,6 +250,7 @@ listRoutes.openapi(updateListRoute, async (c) => {
 })
 
 listRoutes.openapi(deleteListRoute, async (c) => {
+  const userId = c.get('userId')
   const id = Number(c.req.param('id'))
   if (Number.isNaN(id)) return c.json({ error: 'Invalid ID' }, 400)
 
@@ -220,6 +259,20 @@ listRoutes.openapi(deleteListRoute, async (c) => {
     ? await listService.remove(id)
     : await listService.update(id, { deleted_at: new Date().toISOString() })
   if (!list) return c.json({ error: 'List not found' }, 404)
+
+  // Broadcast list deletion or archiving
+  const boardId = Number(list.board_id)
+  if (boardId) {
+    const userName = await getUserName(userId)
+    broadcastToBoard(boardId, {
+      type: 'list_deleted',
+      payload: { id: list.id },
+      boardId,
+      userId,
+      userName,
+      timestamp: new Date().toISOString(),
+    })
+  }
 
   return c.body(null, 204)
 })

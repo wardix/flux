@@ -1,6 +1,8 @@
 import { OpenAPIHono } from '@hono/zod-openapi'
 import { cors } from 'hono/cors'
-import { cleanOldTrash } from './db'
+import { cleanOldTrash, db } from './db'
+import { verify } from 'hono/jwt'
+import { websocket } from './websocket'
 import { authRoutes } from './routes/auth'
 import { boardRoutes } from './routes/boards'
 import { cardRoutes } from './routes/cards'
@@ -65,5 +67,43 @@ app.route('/api', activityRoutes)
 
 export default {
   port: process.env.PORT || 3000,
-  fetch: app.fetch,
+  async fetch(req: Request, server: any) {
+    const url = new URL(req.url)
+    if (url.pathname === '/ws') {
+      const token = url.searchParams.get('token')
+      if (!token) {
+        return new Response('Unauthorized', { status: 401 })
+      }
+      try {
+        const secretKey = process.env.JWT_SECRET || 'your-jwt-secret-here-change-in-production'
+        const payload = await verify(token, secretKey, 'HS256')
+        const userId = Number(payload.sub)
+        
+        const users = await db`SELECT id, email, avatar_url FROM users WHERE id = ${userId}`
+        if (users.length === 0) {
+          return new Response('Unauthorized', { status: 401 })
+        }
+        const user = users[0]
+        const userName = user.email.split('@')[0]
+        
+        const upgraded = server.upgrade(req, {
+          data: {
+            userId,
+            userName,
+            avatarUrl: user.avatar_url,
+            boardId: null,
+          },
+        })
+        if (upgraded) {
+          return
+        }
+        return new Response('WebSocket upgrade failed', { status: 400 })
+      } catch (err) {
+        console.error('WS upgrade auth error:', err)
+        return new Response('Unauthorized', { status: 401 })
+      }
+    }
+    return app.fetch(req)
+  },
+  websocket,
 }
