@@ -245,7 +245,7 @@ const deleteSubtaskRoute = createRoute({
   },
 })
 
-subtaskRoutes.use('*', authMiddleware)
+subtaskRoutes.use('/cards/*', authMiddleware)
 
 subtaskRoutes.openapi(getSubtasksRoute, async (c) => {
   try {

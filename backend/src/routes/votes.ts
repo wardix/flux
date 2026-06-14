@@ -100,7 +100,7 @@ const getCardVotesRoute = createRoute({
   },
 })
 
-voteRoutes.use('*', authMiddleware)
+voteRoutes.use('/cards/*', authMiddleware)
 
 voteRoutes.openapi(toggleVoteRoute, async (c) => {
   try {

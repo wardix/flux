@@ -284,7 +284,9 @@ const deleteTimeLogRoute = createRoute({
   },
 })
 
-timeTrackingRoutes.use('*', authMiddleware)
+timeTrackingRoutes.use('/cards/*', authMiddleware)
+timeTrackingRoutes.use('/users/*', authMiddleware)
+timeTrackingRoutes.use('/time-logs/*', authMiddleware)
 
 timeTrackingRoutes.openapi(startTimerRoute, async (c) => {
   try {

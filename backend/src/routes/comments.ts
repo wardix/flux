@@ -232,7 +232,7 @@ const deleteCommentRoute = createRoute({
   },
 })
 
-commentRoutes.use('*', authMiddleware)
+commentRoutes.use('/cards/*', authMiddleware)
 
 commentRoutes.openapi(getCommentsRoute, async (c) => {
   try {

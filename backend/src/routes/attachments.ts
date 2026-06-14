@@ -225,7 +225,7 @@ const setCoverRoute = createRoute({
   },
 })
 
-attachmentRoutes.use('*', authMiddleware)
+attachmentRoutes.use('/cards/*', authMiddleware)
 
 attachmentRoutes.openapi(getAttachmentsRoute, async (c) => {
   try {

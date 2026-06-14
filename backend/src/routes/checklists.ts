@@ -421,7 +421,7 @@ const deleteChecklistItemRoute = createRoute({
   },
 })
 
-checklistRoutes.use('*', authMiddleware)
+checklistRoutes.use('/cards/*', authMiddleware)
 
 checklistRoutes.openapi(getChecklistsRoute, async (c) => {
   try {
