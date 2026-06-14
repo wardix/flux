@@ -6,6 +6,21 @@ const cardRoutes = new Hono()
 
 cardRoutes.use('*', authMiddleware)
 
+cardRoutes.get('/:id', async (c) => {
+  try {
+    const id = Number(c.req.param('id'))
+    if (Number.isNaN(id)) return c.json({ error: 'Invalid ID' }, 400)
+
+    const card = await cardService.getById(id)
+    if (!card) return c.json({ error: 'Card not found' }, 404)
+
+    return c.json({ data: card })
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Internal Server Error'
+    return c.json({ error: message }, 500)
+  }
+})
+
 cardRoutes.post('/', async (c) => {
   try {
     const body = await c.req.json()

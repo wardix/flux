@@ -24,6 +24,23 @@ export async function create(data: {
   return result[0]
 }
 
+export async function getById(id: number) {
+  const result = await db`
+    SELECT c.*,
+      COALESCE((
+        SELECT json_build_object(
+          'total', COUNT(*)::integer,
+          'completed', COUNT(CASE WHEN is_completed = TRUE THEN 1 END)::integer
+        )
+        FROM cards sub
+        WHERE sub.parent_card_id = c.id AND sub.deleted_at IS NULL
+      ), json_build_object('total', 0, 'completed', 0)) as subtask_count
+    FROM cards c
+    WHERE c.id = ${id} AND c.deleted_at IS NULL
+  `
+  return result[0] || null
+}
+
 export async function update(
   id: number,
   data: {

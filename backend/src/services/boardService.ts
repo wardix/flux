@@ -22,12 +22,22 @@ export async function getById(id: number) {
   `
 
   const listIds = lists.map((l) => l.id)
-  let cards: unknown[] = []
+  // biome-ignore lint/suspicious/noExplicitAny: cards variable type is dynamic from DB query
+  let cards: any[] = []
   if (listIds.length > 0) {
     cards = await db`
-      SELECT * FROM cards 
-      WHERE list_id IN (${listIds}) AND archived_at IS NULL AND deleted_at IS NULL 
-      ORDER BY position ASC, id ASC
+      SELECT c.*,
+        COALESCE((
+          SELECT json_build_object(
+            'total', COUNT(*)::integer,
+            'completed', COUNT(CASE WHEN is_completed = TRUE THEN 1 END)::integer
+          )
+          FROM cards sub
+          WHERE sub.parent_card_id = c.id AND sub.deleted_at IS NULL
+        ), json_build_object('total', 0, 'completed', 0)) as subtask_count
+      FROM cards c
+      WHERE c.list_id IN (${listIds}) AND c.parent_card_id IS NULL AND c.archived_at IS NULL AND c.deleted_at IS NULL 
+      ORDER BY c.position ASC, c.id ASC
     `
   }
 
