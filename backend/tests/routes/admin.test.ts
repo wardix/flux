@@ -1,10 +1,13 @@
-import { describe, test, expect, beforeAll, afterAll, beforeEach } from 'bun:test'
+import { afterAll, beforeAll, beforeEach, describe, expect, test } from 'bun:test'
 import { sign } from 'hono/jwt'
 import { db } from '../../src/db/index'
 import app from '../../src/index'
 import { limitMap } from '../../src/middleware/rateLimit'
 
-async function makeRequest(path: string, options: { method?: string; headers?: Record<string, string>; body?: string } = {}) {
+async function makeRequest(
+  path: string,
+  options: { method?: string; headers?: Record<string, string>; body?: string } = {},
+) {
   const method = options.method || 'GET'
   const headers = options.headers || {}
   return await app.fetch(
@@ -12,7 +15,7 @@ async function makeRequest(path: string, options: { method?: string; headers?: R
       method,
       headers,
       body: options.body,
-    })
+    }),
   )
 }
 
@@ -80,13 +83,13 @@ describe('Admin & Export API', () => {
     superAdminToken = await sign(
       { sub: superAdminId, email: 'superadmin_test@example.com' },
       process.env.JWT_SECRET || 'your-jwt-secret-here-change-in-production',
-      'HS256'
+      'HS256',
     )
 
     regularUserToken = await sign(
       { sub: regularUserId, email: 'regular_test@example.com' },
       process.env.JWT_SECRET || 'your-jwt-secret-here-change-in-production',
-      'HS256'
+      'HS256',
     )
 
     testToken = regularUserToken

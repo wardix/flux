@@ -31,7 +31,7 @@ export interface JiraCSVRow {
 export async function importTrello(
   workspaceId: number,
   userId: number,
-  trelloData: TrelloBoard
+  trelloData: TrelloBoard,
 ): Promise<any> {
   const board = await db.begin(async (db) => {
     // 1. Create Board
@@ -81,7 +81,7 @@ export async function importJira(
   workspaceId: number,
   userId: number,
   boardTitle: string,
-  jiraRows: JiraCSVRow[]
+  jiraRows: JiraCSVRow[],
 ): Promise<any> {
   const board = await db.begin(async (db) => {
     // 1. Create Board

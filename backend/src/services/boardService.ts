@@ -68,7 +68,27 @@ export async function getById(id: number, userId?: number, sort?: string) {
             LIMIT 1
           ) as cover_file_path,
           COALESCE((SELECT COUNT(*)::integer FROM card_votes WHERE card_id = c.id), 0) as vote_count,
-          CASE WHEN EXISTS(SELECT 1 FROM card_votes WHERE card_id = c.id AND user_id = ${userId || 0}) THEN TRUE ELSE FALSE END as user_voted
+          CASE WHEN EXISTS(SELECT 1 FROM card_votes WHERE card_id = c.id AND user_id = ${userId || 0}) THEN TRUE ELSE FALSE END as user_voted,
+          CASE WHEN EXISTS(SELECT 1 FROM card_mirrors WHERE mirror_card_id = c.id) THEN TRUE ELSE FALSE END as is_mirror,
+          (
+            SELECT b_src.title
+            FROM card_mirrors cm
+            JOIN cards c_src ON cm.source_card_id = c_src.id
+            JOIN lists l_src ON c_src.list_id = l_src.id
+            JOIN boards b_src ON l_src.board_id = b_src.id
+            WHERE cm.mirror_card_id = c.id
+            LIMIT 1
+          ) as source_board_title,
+          (
+            SELECT b_src.id
+            FROM card_mirrors cm
+            JOIN cards c_src ON cm.source_card_id = c_src.id
+            JOIN lists l_src ON c_src.list_id = l_src.id
+            JOIN boards b_src ON l_src.board_id = b_src.id
+            WHERE cm.mirror_card_id = c.id
+            LIMIT 1
+          ) as source_board_id
+
         FROM cards c
         LEFT JOIN users u ON c.assignee_id = u.id
         WHERE c.list_id IN (${listIds}) AND c.parent_card_id IS NULL AND c.archived_at IS NULL AND c.deleted_at IS NULL 
@@ -102,7 +122,27 @@ export async function getById(id: number, userId?: number, sort?: string) {
             LIMIT 1
           ) as cover_file_path,
           COALESCE((SELECT COUNT(*)::integer FROM card_votes WHERE card_id = c.id), 0) as vote_count,
-          CASE WHEN EXISTS(SELECT 1 FROM card_votes WHERE card_id = c.id AND user_id = ${userId || 0}) THEN TRUE ELSE FALSE END as user_voted
+          CASE WHEN EXISTS(SELECT 1 FROM card_votes WHERE card_id = c.id AND user_id = ${userId || 0}) THEN TRUE ELSE FALSE END as user_voted,
+          CASE WHEN EXISTS(SELECT 1 FROM card_mirrors WHERE mirror_card_id = c.id) THEN TRUE ELSE FALSE END as is_mirror,
+          (
+            SELECT b_src.title
+            FROM card_mirrors cm
+            JOIN cards c_src ON cm.source_card_id = c_src.id
+            JOIN lists l_src ON c_src.list_id = l_src.id
+            JOIN boards b_src ON l_src.board_id = b_src.id
+            WHERE cm.mirror_card_id = c.id
+            LIMIT 1
+          ) as source_board_title,
+          (
+            SELECT b_src.id
+            FROM card_mirrors cm
+            JOIN cards c_src ON cm.source_card_id = c_src.id
+            JOIN lists l_src ON c_src.list_id = l_src.id
+            JOIN boards b_src ON l_src.board_id = b_src.id
+            WHERE cm.mirror_card_id = c.id
+            LIMIT 1
+          ) as source_board_id
+
         FROM cards c
         LEFT JOIN users u ON c.assignee_id = u.id
         WHERE c.list_id IN (${listIds}) AND c.parent_card_id IS NULL AND c.archived_at IS NULL AND c.deleted_at IS NULL 
@@ -160,9 +200,9 @@ export async function create(
     VALUES (${workspaceId}, ${data.title}, ${data.visibility || 'private'}, ${data.background || null}, ${userId})
     RETURNING *
   `
-  
+
   const board = result[0]
-  
+
   // Add creator to board_members as 'admin'
   await db`
     INSERT INTO board_members (board_id, user_id, role)
@@ -227,7 +267,7 @@ export async function addBoardMember(boardId: number, email: string, role: strin
   const existing = await db`
     SELECT * FROM board_members WHERE board_id = ${boardId} AND user_id = ${userId}
   `
-  
+
   if (existing.length > 0) {
     const result = await db`
       UPDATE board_members
@@ -277,5 +317,3 @@ export async function unstarBoard(boardId: number, userId: number) {
     WHERE board_id = ${boardId} AND user_id = ${userId}
   `
 }
-
-

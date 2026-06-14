@@ -21,8 +21,12 @@ describe('Two-Factor Authentication (2FA)', () => {
     `
     userId = userResult[0].id
     testToken = await sign(
-      { sub: userId, email: '2fa_test_normal@example.com', exp: Math.floor(Date.now() / 1000) + 3600 },
-      process.env.JWT_SECRET || 'your-jwt-secret-here-change-in-production'
+      {
+        sub: userId,
+        email: '2fa_test_normal@example.com',
+        exp: Math.floor(Date.now() / 1000) + 3600,
+      },
+      process.env.JWT_SECRET || 'your-jwt-secret-here-change-in-production',
     )
 
     // Create second test user (2FA enabled)
@@ -33,8 +37,12 @@ describe('Two-Factor Authentication (2FA)', () => {
     `
     user2faEnabledId = userResult2[0].id
     user2faEnabledToken = await sign(
-      { sub: user2faEnabledId, email: '2fa_test_enabled@example.com', exp: Math.floor(Date.now() / 1000) + 3600 },
-      process.env.JWT_SECRET || 'your-jwt-secret-here-change-in-production'
+      {
+        sub: user2faEnabledId,
+        email: '2fa_test_enabled@example.com',
+        exp: Math.floor(Date.now() / 1000) + 3600,
+      },
+      process.env.JWT_SECRET || 'your-jwt-secret-here-change-in-production',
     )
 
     // Insert 2FA config for second user
@@ -47,8 +55,13 @@ describe('Two-Factor Authentication (2FA)', () => {
 
     // Generate temp token for testing 2FA Login Flow
     tempToken = await sign(
-      { sub: user2faEnabledId, email: '2fa_test_enabled@example.com', temp: true, exp: Math.floor(Date.now() / 1000) + 300 },
-      process.env.JWT_SECRET || 'your-jwt-secret-here-change-in-production'
+      {
+        sub: user2faEnabledId,
+        email: '2fa_test_enabled@example.com',
+        temp: true,
+        exp: Math.floor(Date.now() / 1000) + 300,
+      },
+      process.env.JWT_SECRET || 'your-jwt-secret-here-change-in-production',
     )
   })
 
@@ -62,7 +75,7 @@ describe('Two-Factor Authentication (2FA)', () => {
         new Request('http://localhost/api/auth/2fa/setup', {
           method: 'POST',
           headers: { Authorization: `Bearer ${testToken}` },
-        })
+        }),
       )
       expect(res.status).toBe(201)
       const { data } = await res.json()
@@ -76,7 +89,7 @@ describe('Two-Factor Authentication (2FA)', () => {
         new Request('http://localhost/api/auth/2fa/setup', {
           method: 'POST',
           headers: { Authorization: `Bearer ${user2faEnabledToken}` },
-        })
+        }),
       )
       expect(res.status).toBe(409)
     })
@@ -85,7 +98,7 @@ describe('Two-Factor Authentication (2FA)', () => {
       const res = await app.fetch(
         new Request('http://localhost/api/auth/2fa/setup', {
           method: 'POST',
-        })
+        }),
       )
       expect(res.status).toBe(401)
     })
@@ -110,7 +123,7 @@ describe('Two-Factor Authentication (2FA)', () => {
             Authorization: `Bearer ${testToken}`,
           },
           body: JSON.stringify({ code: validTOTPCode }),
-        })
+        }),
       )
       expect(res.status).toBe(200)
       const { data } = await res.json()
@@ -127,7 +140,7 @@ describe('Two-Factor Authentication (2FA)', () => {
             Authorization: `Bearer ${testToken}`,
           },
           body: JSON.stringify({ code: '000000' }),
-        })
+        }),
       )
       expect(res.status).toBe(400)
     })
@@ -147,7 +160,7 @@ describe('Two-Factor Authentication (2FA)', () => {
             Authorization: `Bearer ${user2faEnabledToken}`,
           },
           body: JSON.stringify({ code: validTOTPCode }),
-        })
+        }),
       )
       expect(res.status).toBe(200)
       const { data } = await res.json()
@@ -169,7 +182,7 @@ describe('Two-Factor Authentication (2FA)', () => {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: '2fa_test_enabled@example.com', password: 'pass123' }),
-        })
+        }),
       )
       expect(res.status).toBe(200)
       const body = await res.json()
@@ -188,7 +201,7 @@ describe('Two-Factor Authentication (2FA)', () => {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ temp_token: tempToken, code: validCode }),
-        })
+        }),
       )
       expect(res.status).toBe(200)
       const { data } = await res.json()

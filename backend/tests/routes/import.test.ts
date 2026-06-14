@@ -1,6 +1,6 @@
-import { describe, test, expect, beforeAll, afterAll } from 'bun:test'
-import server from '../../src/index'
+import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import { db } from '../../src/db'
+import server from '../../src/index'
 
 describe('Import Projects API', () => {
   let userId: number
@@ -19,7 +19,11 @@ describe('Import Projects API', () => {
     // Generate JWT token
     const { sign } = await import('hono/jwt')
     const secretKey = process.env.JWT_SECRET || 'your-jwt-secret-here-change-in-production'
-    testToken = await sign({ sub: userId, exp: Math.floor(Date.now() / 1000) + 3600 }, secretKey, 'HS256')
+    testToken = await sign(
+      { sub: userId, exp: Math.floor(Date.now() / 1000) + 3600 },
+      secretKey,
+      'HS256',
+    )
 
     // Create workspace
     const [ws] = await db`
@@ -58,14 +62,15 @@ describe('Import Projects API', () => {
           workspace_id: workspaceId,
           trello_data: trelloJSON,
         }),
-      })
+      }),
     )
     expect(res.status).toBe(201)
     const { data } = await res.json()
     expect(data.title).toBe('Trello Project')
 
     // Check columns and cards inserted
-    const lists = await db`SELECT id, title FROM lists WHERE board_id = ${data.id} ORDER BY position ASC`
+    const lists =
+      await db`SELECT id, title FROM lists WHERE board_id = ${data.id} ORDER BY position ASC`
     expect(lists.length).toBe(2)
     expect(lists[0].title).toBe('Backlog')
     expect(lists[1].title).toBe('Done')
@@ -92,19 +97,21 @@ describe('Import Projects API', () => {
           board_title: 'Jira Import Board',
           jira_rows: jiraCSVRows,
         }),
-      })
+      }),
     )
     expect(res.status).toBe(201)
     const { data } = await res.json()
     expect(data.title).toBe('Jira Import Board')
 
     // Check columns and cards
-    const lists = await db`SELECT id, title FROM lists WHERE board_id = ${data.id} ORDER BY position ASC`
+    const lists =
+      await db`SELECT id, title FROM lists WHERE board_id = ${data.id} ORDER BY position ASC`
     expect(lists.length).toBe(2)
     expect(lists[0].title).toBe('To Do')
     expect(lists[1].title).toBe('In Progress')
 
-    const cards = await db`SELECT id, title, story_points FROM cards WHERE list_id = ${lists[0].id} ORDER BY position ASC`
+    const cards =
+      await db`SELECT id, title, story_points FROM cards WHERE list_id = ${lists[0].id} ORDER BY position ASC`
     expect(cards.length).toBe(2)
     expect(cards[0].title).toBe('Jira Task 1')
     expect(cards[0].story_points).toBe(5)

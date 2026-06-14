@@ -1,7 +1,7 @@
-import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi'
+import { BoardSchema, ErrorSchema } from '../lib/schemas'
 import { authMiddleware } from '../middleware/auth'
 import * as importService from '../services/importService'
-import { ErrorSchema, BoardSchema } from '../lib/schemas'
 
 const importRoutes = new OpenAPIHono()
 importRoutes.use('*', authMiddleware)
@@ -20,25 +20,29 @@ const importTrelloRoute = createRoute({
             workspace_id: z.number().openapi({ example: 1 }),
             trello_data: z.object({
               name: z.string().openapi({ example: 'My Trello Board' }),
-              lists: z.array(
-                z.object({
-                  id: z.string(),
-                  name: z.string(),
-                  closed: z.boolean(),
-                  pos: z.number(),
-                })
-              ).optional(),
-              cards: z.array(
-                z.object({
-                  id: z.string(),
-                  idList: z.string(),
-                  name: z.string(),
-                  desc: z.string(),
-                  closed: z.boolean(),
-                  pos: z.number(),
-                  due: z.string().nullable().optional(),
-                })
-              ).optional(),
+              lists: z
+                .array(
+                  z.object({
+                    id: z.string(),
+                    name: z.string(),
+                    closed: z.boolean(),
+                    pos: z.number(),
+                  }),
+                )
+                .optional(),
+              cards: z
+                .array(
+                  z.object({
+                    id: z.string(),
+                    idList: z.string(),
+                    name: z.string(),
+                    desc: z.string(),
+                    closed: z.boolean(),
+                    pos: z.number(),
+                    due: z.string().nullable().optional(),
+                  }),
+                )
+                .optional(),
             }),
           }),
         },
@@ -88,7 +92,7 @@ const importJiraRoute = createRoute({
                 storyPoints: z.number().optional(),
                 dueDate: z.string().optional(),
                 assignee: z.string().optional(),
-              })
+              }),
             ),
           }),
         },

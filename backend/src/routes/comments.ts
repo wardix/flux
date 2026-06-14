@@ -1,7 +1,7 @@
-import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi'
+import { ErrorSchema } from '../lib/schemas'
 import { authMiddleware } from '../middleware/auth'
 import * as commentService from '../services/commentService'
-import { ErrorSchema } from '../lib/schemas'
 
 const commentRoutes = new OpenAPIHono()
 
@@ -250,11 +250,11 @@ commentRoutes.openapi(createCommentRoute, async (c) => {
   try {
     const cardId = Number(c.req.param('id'))
     if (Number.isNaN(cardId)) return c.json({ error: 'Invalid card ID' }, 400)
-    
+
     const userId = c.get('userId')
     const body = await c.req.json()
     if (!body.content) return c.json({ error: 'Content is required' }, 400)
-    
+
     const result = await commentService.createComment(cardId, userId, body.content)
     return c.json({ data: result }, 201)
   } catch (error) {
@@ -270,11 +270,11 @@ commentRoutes.openapi(updateCommentRoute, async (c) => {
     if (Number.isNaN(cardId) || Number.isNaN(commentId)) {
       return c.json({ error: 'Invalid parameters' }, 400)
     }
-    
+
     const userId = c.get('userId')
     const body = await c.req.json()
     if (!body.content) return c.json({ error: 'Content is required' }, 400)
-    
+
     const result = await commentService.updateComment(cardId, commentId, userId, body.content)
     if (!result) return c.json({ error: 'Comment not found or unauthorized' }, 404)
     return c.json({ data: result }, 200)
@@ -291,7 +291,7 @@ commentRoutes.openapi(deleteCommentRoute, async (c) => {
     if (Number.isNaN(cardId) || Number.isNaN(commentId)) {
       return c.json({ error: 'Invalid parameters' }, 400)
     }
-    
+
     const userId = c.get('userId')
     const result = await commentService.deleteComment(cardId, commentId, userId)
     if (!result) return c.json({ error: 'Comment not found or unauthorized' }, 404)

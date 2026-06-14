@@ -1,7 +1,7 @@
-import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi'
+import { ErrorSchema } from '../lib/schemas'
 import { authMiddleware } from '../middleware/auth'
 import * as customFieldService from '../services/customFieldService'
-import { ErrorSchema } from '../lib/schemas'
 
 const boardCustomFieldRoutes = new OpenAPIHono()
 boardCustomFieldRoutes.use('*', authMiddleware)
@@ -134,7 +134,6 @@ boardCustomFieldRoutes.openapi(deleteFieldRoute, async (c) => {
   return c.body(null, 204)
 })
 
-
 const cardCustomFieldRoutes = new OpenAPIHono()
 cardCustomFieldRoutes.use('*', authMiddleware)
 
@@ -181,7 +180,7 @@ const setCardValuesRoute = createRoute({
               z.object({
                 field_id: z.number(),
                 value: z.string().nullable(),
-              })
+              }),
             ),
           }),
         },

@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { api } from '../lib/api'
-import type { Board, Card, Label, List, Workspace, ActiveTimer } from '../lib/types'
+import type { ActiveTimer, Board, Card, Label, List, Workspace } from '../lib/types'
 
 interface BoardState {
   boards: Board[]
@@ -20,7 +20,11 @@ interface BoardState {
   fetchBoard: (id: number, sort?: string) => Promise<void>
   toggleVote: (cardId: number) => Promise<void>
   createBoard: (title: string, workspaceId?: number, visibility?: string) => Promise<void>
-  createBoardFromTemplate: (templateKey: string, title: string, workspaceId: number) => Promise<void>
+  createBoardFromTemplate: (
+    templateKey: string,
+    title: string,
+    workspaceId: number,
+  ) => Promise<void>
   cloneBoard: (boardId: number, targetWorkspaceId: number, title?: string) => Promise<void>
   updateBoardVisibility: (boardId: number, visibility: string) => Promise<void>
   createList: (boardId: number, title: string) => Promise<void>
@@ -64,7 +68,12 @@ interface BoardState {
   addCardLocally: (card: Card) => void
   updateCardLocally: (card: Card) => void
   removeCardLocally: (cardId: number) => void
-  moveCardLocally: (payload: { id: number; from_list_id: number; to_list_id: number; position: number }) => void
+  moveCardLocally: (payload: {
+    id: number
+    from_list_id: number
+    to_list_id: number
+    position: number
+  }) => void
   activeTimer: ActiveTimer | null
   fetchActiveTimer: () => Promise<void>
   startTimer: (cardId: number, description?: string) => Promise<void>
@@ -866,7 +875,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     // Optimistic update
     set((state) => {
       const updatedBoards = state.boards.map((b) =>
-        b.id === boardId ? { ...b, is_starred: isStarredNow } : b
+        b.id === boardId ? { ...b, is_starred: isStarredNow } : b,
       )
       const updatedActive =
         state.activeBoard?.id === boardId
@@ -886,7 +895,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       // Rollback on failure
       set((state) => {
         const updatedBoards = state.boards.map((b) =>
-          b.id === boardId ? { ...b, is_starred: !isStarredNow } : b
+          b.id === boardId ? { ...b, is_starred: !isStarredNow } : b,
         )
         const updatedActive =
           state.activeBoard?.id === boardId
@@ -900,155 +909,171 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   activeCardId: null,
   setActiveCardId: (id: number | null) => set({ activeCardId: id }),
 
-  addListLocally: (list: List) => set((state) => {
-    if (!state.activeBoard || state.activeBoard.id !== list.board_id) return {}
-    const lists = state.activeBoard.lists || []
-    if (lists.some((l) => l.id === list.id)) return {}
-    return {
-      activeBoard: {
-        ...state.activeBoard,
-        lists: [...lists, { ...list, cards: [] }].sort((a, b) => a.position - b.position),
-      }
-    }
-  }),
-
-  updateListLocally: (list: List) => set((state) => {
-    if (!state.activeBoard) return {}
-    const lists = state.activeBoard.lists || []
-    return {
-      activeBoard: {
-        ...state.activeBoard,
-        lists: lists.map((l) => l.id === list.id ? { ...l, ...list } : l).sort((a, b) => a.position - b.position),
-      }
-    }
-  }),
-
-  removeListLocally: (listId: number) => set((state) => {
-    if (!state.activeBoard) return {}
-    const lists = state.activeBoard.lists || []
-    return {
-      activeBoard: {
-        ...state.activeBoard,
-        lists: lists.filter((l) => l.id !== listId),
-      }
-    }
-  }),
-
-  addCardLocally: (card: Card) => set((state) => {
-    if (!state.activeBoard) return {}
-    const lists = state.activeBoard.lists || []
-    const updatedLists = lists.map((list) => {
-      if (list.id !== card.list_id) return list
-      const cards = list.cards || []
-      if (cards.some((c) => c.id === card.id)) return list
+  addListLocally: (list: List) =>
+    set((state) => {
+      if (!state.activeBoard || state.activeBoard.id !== list.board_id) return {}
+      const lists = state.activeBoard.lists || []
+      if (lists.some((l) => l.id === list.id)) return {}
       return {
-        ...list,
-        cards: [...cards, card].sort((a, b) => a.position - b.position),
+        activeBoard: {
+          ...state.activeBoard,
+          lists: [...lists, { ...list, cards: [] }].sort((a, b) => a.position - b.position),
+        },
       }
-    })
-    return {
-      activeBoard: {
-        ...state.activeBoard,
-        lists: updatedLists,
+    }),
+
+  updateListLocally: (list: List) =>
+    set((state) => {
+      if (!state.activeBoard) return {}
+      const lists = state.activeBoard.lists || []
+      return {
+        activeBoard: {
+          ...state.activeBoard,
+          lists: lists
+            .map((l) => (l.id === list.id ? { ...l, ...list } : l))
+            .sort((a, b) => a.position - b.position),
+        },
       }
-    }
-  }),
+    }),
 
-  updateCardLocally: (card: Card) => set((state) => {
-    if (!state.activeBoard) return {}
-    const lists = state.activeBoard.lists || []
-    const isRemoved = !!card.deleted_at || !!card.archived_at
+  removeListLocally: (listId: number) =>
+    set((state) => {
+      if (!state.activeBoard) return {}
+      const lists = state.activeBoard.lists || []
+      return {
+        activeBoard: {
+          ...state.activeBoard,
+          lists: lists.filter((l) => l.id !== listId),
+        },
+      }
+    }),
 
-    const updatedLists = lists.map((list) => {
-      const cards = list.cards || []
-      if (isRemoved) {
+  addCardLocally: (card: Card) =>
+    set((state) => {
+      if (!state.activeBoard) return {}
+      const lists = state.activeBoard.lists || []
+      const updatedLists = lists.map((list) => {
+        if (list.id !== card.list_id) return list
+        const cards = list.cards || []
+        if (cards.some((c) => c.id === card.id)) return list
         return {
           ...list,
-          cards: cards.filter((c) => c.id !== card.id),
+          cards: [...cards, card].sort((a, b) => a.position - b.position),
         }
+      })
+      return {
+        activeBoard: {
+          ...state.activeBoard,
+          lists: updatedLists,
+        },
       }
-      const hasCard = cards.some((c) => c.id === card.id)
-      if (hasCard) {
-        if (list.id !== card.list_id) {
+    }),
+
+  updateCardLocally: (card: Card) =>
+    set((state) => {
+      if (!state.activeBoard) return {}
+      const lists = state.activeBoard.lists || []
+      const isRemoved = !!card.deleted_at || !!card.archived_at
+
+      const updatedLists = lists.map((list) => {
+        const cards = list.cards || []
+        if (isRemoved) {
           return {
             ...list,
             cards: cards.filter((c) => c.id !== card.id),
           }
         }
-        return {
-          ...list,
-          cards: cards.map((c) => c.id === card.id ? { ...c, ...card } : c).sort((a, b) => a.position - b.position),
+        const hasCard = cards.some((c) => c.id === card.id)
+        if (hasCard) {
+          if (list.id !== card.list_id) {
+            return {
+              ...list,
+              cards: cards.filter((c) => c.id !== card.id),
+            }
+          }
+          return {
+            ...list,
+            cards: cards
+              .map((c) => (c.id === card.id ? { ...c, ...card } : c))
+              .sort((a, b) => a.position - b.position),
+          }
+        }
+        if (list.id === card.list_id) {
+          return {
+            ...list,
+            cards: [...cards, card].sort((a, b) => a.position - b.position),
+          }
+        }
+        return list
+      })
+      return {
+        activeBoard: {
+          ...state.activeBoard,
+          lists: updatedLists,
+        },
+      }
+    }),
+
+  removeCardLocally: (cardId: number) =>
+    set((state) => {
+      if (!state.activeBoard) return {}
+      const lists = state.activeBoard.lists || []
+      const updatedLists = lists.map((list) => ({
+        ...list,
+        cards: (list.cards || []).filter((c) => c.id !== cardId),
+      }))
+      return {
+        activeBoard: {
+          ...state.activeBoard,
+          lists: updatedLists,
+        },
+      }
+    }),
+
+  moveCardLocally: (payload: {
+    id: number
+    from_list_id: number
+    to_list_id: number
+    position: number
+  }) =>
+    set((state) => {
+      if (!state.activeBoard?.lists) return {}
+      const { id, from_list_id, to_list_id, position } = payload
+
+      let movedCard: Card | null = null
+      for (const list of state.activeBoard.lists) {
+        const card = list.cards?.find((c) => c.id === id)
+        if (card) {
+          movedCard = { ...card, list_id: to_list_id }
+          break
         }
       }
-      if (list.id === card.list_id) {
-        return {
-          ...list,
-          cards: [...cards, card].sort((a, b) => a.position - b.position),
-        }
-      }
-      return list
-    })
-    return {
-      activeBoard: {
-        ...state.activeBoard,
-        lists: updatedLists,
-      }
-    }
-  }),
+      if (!movedCard) return {}
 
-  removeCardLocally: (cardId: number) => set((state) => {
-    if (!state.activeBoard) return {}
-    const lists = state.activeBoard.lists || []
-    const updatedLists = lists.map((list) => ({
-      ...list,
-      cards: (list.cards || []).filter((c) => c.id !== cardId),
-    }))
-    return {
-      activeBoard: {
-        ...state.activeBoard,
-        lists: updatedLists,
-      }
-    }
-  }),
-
-  moveCardLocally: (payload: { id: number; from_list_id: number; to_list_id: number; position: number }) => set((state) => {
-    if (!state.activeBoard?.lists) return {}
-    const { id, from_list_id, to_list_id, position } = payload
-
-    let movedCard: Card | null = null
-    for (const list of state.activeBoard.lists) {
-      const card = list.cards?.find((c) => c.id === id)
-      if (card) {
-        movedCard = { ...card, list_id: to_list_id }
-        break
-      }
-    }
-    if (!movedCard) return {}
-
-    const updatedLists = state.activeBoard.lists.map((list) => {
-      let cards = [...(list.cards || [])]
-      if (list.id === from_list_id) {
-        cards = cards.filter((c) => c.id !== id)
-      }
-      if (list.id === to_list_id) {
-        if (from_list_id === to_list_id) {
+      const updatedLists = state.activeBoard.lists.map((list) => {
+        let cards = [...(list.cards || [])]
+        if (list.id === from_list_id) {
           cards = cards.filter((c) => c.id !== id)
         }
-        cards.splice(position, 0, movedCard!)
-      }
-      return {
-        ...list,
-        cards: cards.map((c, idx) => ({ ...c, position: idx })),
-      }
-    })
+        if (list.id === to_list_id) {
+          if (from_list_id === to_list_id) {
+            cards = cards.filter((c) => c.id !== id)
+          }
+          cards.splice(position, 0, movedCard!)
+        }
+        return {
+          ...list,
+          cards: cards.map((c, idx) => ({ ...c, position: idx })),
+        }
+      })
 
-    return {
-      activeBoard: {
-        ...state.activeBoard,
-        lists: updatedLists,
+      return {
+        activeBoard: {
+          ...state.activeBoard,
+          lists: updatedLists,
+        },
       }
-    }
-  }),
+    }),
 
   activeTimer: null,
 
@@ -1062,7 +1087,9 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   },
 
   startTimer: async (cardId: number, description?: string) => {
-    const res = await api.post<{ data: ActiveTimer }>('/cards/' + cardId + '/timer/start', { description })
+    const res = await api.post<{ data: ActiveTimer }>('/cards/' + cardId + '/timer/start', {
+      description,
+    })
     set({ activeTimer: res.data })
   },
 
@@ -1124,10 +1151,9 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     updateCardState(newUserVoted, newVoteCount)
 
     try {
-      const res = await api.post<{ data: { voted: boolean; vote_count: number; user_voted: boolean } }>(
-        `/cards/${cardId}/vote`,
-        {}
-      )
+      const res = await api.post<{
+        data: { voted: boolean; vote_count: number; user_voted: boolean }
+      }>(`/cards/${cardId}/vote`, {})
       // Update with the final server state
       updateCardState(res.data.user_voted, res.data.vote_count)
 
@@ -1165,4 +1191,3 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     }
   },
 }))
-

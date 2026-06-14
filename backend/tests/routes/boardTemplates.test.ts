@@ -1,6 +1,6 @@
-import { describe, test, expect, beforeAll, afterAll } from 'bun:test'
-import server from '../../src/index'
+import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import { db } from '../../src/db'
+import server from '../../src/index'
 
 describe('Board Templates & Cloning API', () => {
   let userId: number
@@ -20,7 +20,11 @@ describe('Board Templates & Cloning API', () => {
     // Generate token
     const { sign } = await import('hono/jwt')
     const secretKey = process.env.JWT_SECRET || 'your-jwt-secret-here-change-in-production'
-    testToken = await sign({ sub: userId, exp: Math.floor(Date.now() / 1000) + 3600 }, secretKey, 'HS256')
+    testToken = await sign(
+      { sub: userId, exp: Math.floor(Date.now() / 1000) + 3600 },
+      secretKey,
+      'HS256',
+    )
 
     // Create workspace
     const [ws] = await db`
@@ -62,7 +66,7 @@ describe('Board Templates & Cloning API', () => {
       const res = await server.fetch(
         new Request('http://localhost/api/boards/templates', {
           headers: { Authorization: `Bearer ${testToken}` },
-        })
+        }),
       )
       expect(res.status).toBe(200)
       const { data } = await res.json()
@@ -82,15 +86,22 @@ describe('Board Templates & Cloning API', () => {
             workspace_id: workspaceId,
             title: 'Agile Plan',
           }),
-        })
+        }),
       )
       expect(res.status).toBe(201)
       const { data } = await res.json()
       expect(data.title).toBe('Agile Plan')
 
       // Check lists created
-      const lists = await db`SELECT title FROM lists WHERE board_id = ${data.id} ORDER BY position ASC`
-      expect(lists.map(l => l.title)).toEqual(['Backlog', 'To Do', 'In Progress', 'In Review', 'Done'])
+      const lists =
+        await db`SELECT title FROM lists WHERE board_id = ${data.id} ORDER BY position ASC`
+      expect(lists.map((l) => l.title)).toEqual([
+        'Backlog',
+        'To Do',
+        'In Progress',
+        'In Review',
+        'Done',
+      ])
     })
   })
 
@@ -104,7 +115,7 @@ describe('Board Templates & Cloning API', () => {
             workspace_id: workspaceId,
             title: 'My Cloned Board',
           }),
-        })
+        }),
       )
       expect(res.status).toBe(201)
       const { data } = await res.json()
@@ -116,7 +127,8 @@ describe('Board Templates & Cloning API', () => {
       expect(lists[0].title).toBe('Todo')
 
       // Verify cards cloned
-      const cards = await db`SELECT title, description, story_points FROM cards WHERE list_id = ${lists[0].id}`
+      const cards =
+        await db`SELECT title, description, story_points FROM cards WHERE list_id = ${lists[0].id}`
       expect(cards.length).toBe(1)
       expect(cards[0].title).toBe('Source Card')
       expect(cards[0].story_points).toBe(5)

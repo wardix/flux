@@ -20,7 +20,7 @@ export function ExportDialog({ boardId, boardTitle, isOpen, onClose }: ExportDia
     try {
       const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
       const token = localStorage.getItem('token')
-      
+
       const res = await fetch(`${apiBaseUrl}/export/${boardId}?format=${format}`, {
         headers: {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -35,7 +35,8 @@ export function ExportDialog({ boardId, boardTitle, isOpen, onClose }: ExportDia
 
       if (format === 'json') {
         const json = await res.json()
-        const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(json, null, 2))
+        const dataStr =
+          'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(json, null, 2))
         const downloadAnchor = document.createElement('a')
         downloadAnchor.setAttribute('href', dataStr)
         downloadAnchor.setAttribute('download', filename)

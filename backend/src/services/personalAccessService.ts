@@ -1,5 +1,5 @@
-import { db } from '../db'
 import { randomBytes } from 'node:crypto'
+import { db } from '../db'
 
 export interface PAT {
   id: number

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api } from '../../lib/api'
-import type { Voter, Card } from '../../lib/types'
+import type { Card, Voter } from '../../lib/types'
 
 interface VoterListProps {
   card: Card
@@ -61,9 +61,7 @@ export function VoterList({ card }: VoterListProps) {
                 {getInitials(voter.name)}
               </div>
             )}
-            <span className="font-medium truncate max-w-[120px]">
-              {voter.name}
-            </span>
+            <span className="font-medium truncate max-w-[120px]">{voter.name}</span>
           </div>
         ))}
       </div>

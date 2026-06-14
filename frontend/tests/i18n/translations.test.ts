@@ -1,4 +1,4 @@
-import { describe, test, expect } from 'vitest'
+import { describe, expect, test } from 'vitest'
 import en from '../../src/i18n/locales/en.json'
 import id from '../../src/i18n/locales/id.json'
 

@@ -29,7 +29,7 @@ export async function createRule(
     action_type: 'move_card' | 'assign_user' | 'add_label' | 'send_notification'
     action_config: Record<string, any>
     is_enabled?: boolean
-  }
+  },
 ) {
   // Validate trigger_config & action_config
   validateRuleConfig(data.trigger_event, data.trigger_config, data.action_type, data.action_config)
@@ -60,7 +60,7 @@ export async function updateRule(
     action_type?: 'move_card' | 'assign_user' | 'add_label' | 'send_notification'
     action_config?: Record<string, any>
     is_enabled?: boolean
-  }
+  },
 ) {
   const existing = await getRuleById(ruleId)
   if (!existing) {
@@ -80,7 +80,8 @@ export async function updateRule(
   if (data.name !== undefined) updates.name = data.name
   if (data.description !== undefined) updates.description = data.description
   if (data.trigger_event !== undefined) updates.trigger_event = data.trigger_event
-  if (data.trigger_config !== undefined) updates.trigger_config = JSON.stringify(data.trigger_config)
+  if (data.trigger_config !== undefined)
+    updates.trigger_config = JSON.stringify(data.trigger_config)
   if (data.action_type !== undefined) updates.action_type = data.action_type
   if (data.action_config !== undefined) updates.action_config = JSON.stringify(data.action_config)
   if (data.is_enabled !== undefined) updates.is_enabled = data.is_enabled
@@ -108,7 +109,7 @@ function validateRuleConfig(
   triggerEvent: string,
   triggerConfig: any,
   actionType: string,
-  actionConfig: any
+  actionConfig: any,
 ) {
   const tConfig = typeof triggerConfig === 'string' ? JSON.parse(triggerConfig) : triggerConfig
   const aConfig = typeof actionConfig === 'string' ? JSON.parse(actionConfig) : actionConfig
@@ -141,7 +142,6 @@ function validateRuleConfig(
   }
 }
 
-
 export async function processAutomations(event: {
   type: 'card_created' | 'card_moved' | 'card_assigned' | 'due_date_reached'
   boardId: number
@@ -161,10 +161,17 @@ export async function processAutomations(event: {
   for (const rule of rules) {
     let matches = false
 
-    if (event.type === 'card_created' || event.type === 'card_assigned' || event.type === 'due_date_reached') {
+    if (
+      event.type === 'card_created' ||
+      event.type === 'card_assigned' ||
+      event.type === 'due_date_reached'
+    ) {
       matches = true
     } else if (event.type === 'card_moved') {
-      const tConfig = typeof rule.trigger_config === 'string' ? JSON.parse(rule.trigger_config) : rule.trigger_config
+      const tConfig =
+        typeof rule.trigger_config === 'string'
+          ? JSON.parse(rule.trigger_config)
+          : rule.trigger_config
       const ruleToListId = Number(tConfig?.to_list_id)
       const eventToListId = Number(event.data?.to_list_id)
       if (ruleToListId === eventToListId) {
@@ -175,7 +182,10 @@ export async function processAutomations(event: {
     if (matches) {
       automationContext.isAutomationAction = true
       try {
-        const aConfig = typeof rule.action_config === 'string' ? JSON.parse(rule.action_config) : rule.action_config
+        const aConfig =
+          typeof rule.action_config === 'string'
+            ? JSON.parse(rule.action_config)
+            : rule.action_config
         await executeAction(rule.action_type, aConfig, event.cardId)
         // Update execution count and last executed stats
         await db`

@@ -1,6 +1,6 @@
-import { describe, test, expect, beforeAll, afterAll } from 'bun:test'
-import server from '../../src/index'
+import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import { db } from '../../src/db'
+import server from '../../src/index'
 
 describe('Epics API', () => {
   let userId: number
@@ -26,7 +26,11 @@ describe('Epics API', () => {
     // Generate token
     const { sign } = await import('hono/jwt')
     const secretKey = process.env.JWT_SECRET || 'your-jwt-secret-here-change-in-production'
-    testToken = await sign({ sub: userId, exp: Math.floor(Date.now() / 1000) + 3600 }, secretKey, 'HS256')
+    testToken = await sign(
+      { sub: userId, exp: Math.floor(Date.now() / 1000) + 3600 },
+      secretKey,
+      'HS256',
+    )
 
     // Create workspace
     const [ws] = await db`
@@ -98,7 +102,7 @@ describe('Epics API', () => {
             description: 'Redesign login flow',
             color: '#6366f1',
           }),
-        })
+        }),
       )
       expect(res.status).toBe(201)
       const { data } = await res.json()
@@ -114,7 +118,7 @@ describe('Epics API', () => {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${testToken}` },
           body: JSON.stringify({ title: 'Test', color: 'not-a-color' }),
-        })
+        }),
       )
       expect(res.status).toBe(400)
     })
@@ -125,7 +129,7 @@ describe('Epics API', () => {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ title: 'Test' }),
-        })
+        }),
       )
       expect(res.status).toBe(401)
     })
@@ -136,7 +140,7 @@ describe('Epics API', () => {
       const res = await server.fetch(
         new Request(`http://localhost/api/workspaces/${workspaceId}/epics`, {
           headers: { Authorization: `Bearer ${testToken}` },
-        })
+        }),
       )
       expect(res.status).toBe(200)
       const { data } = await res.json()
@@ -149,7 +153,7 @@ describe('Epics API', () => {
       const res = await server.fetch(
         new Request(`http://localhost/api/workspaces/${workspaceId}/epics?status=open`, {
           headers: { Authorization: `Bearer ${testToken}` },
-        })
+        }),
       )
       expect(res.status).toBe(200)
       const { data } = await res.json()
@@ -162,7 +166,7 @@ describe('Epics API', () => {
       const res = await server.fetch(
         new Request(`http://localhost/api/workspaces/${workspaceId}/epics/${epicId}`, {
           headers: { Authorization: `Bearer ${testToken}` },
-        })
+        }),
       )
       expect(res.status).toBe(200)
       const { data } = await res.json()
@@ -175,7 +179,7 @@ describe('Epics API', () => {
       const res = await server.fetch(
         new Request(`http://localhost/api/workspaces/${workspaceId}/epics/99999`, {
           headers: { Authorization: `Bearer ${testToken}` },
-        })
+        }),
       )
       expect(res.status).toBe(404)
     })
@@ -188,7 +192,7 @@ describe('Epics API', () => {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${testToken}` },
           body: JSON.stringify({ epic_id: epicId }),
-        })
+        }),
       )
       expect(res.status).toBe(200)
       const { data } = await res.json()
@@ -201,7 +205,7 @@ describe('Epics API', () => {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${testToken}` },
           body: JSON.stringify({ epic_id: null }),
-        })
+        }),
       )
       expect(res.status).toBe(200)
       const { data } = await res.json()
@@ -214,7 +218,7 @@ describe('Epics API', () => {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${testToken}` },
           body: JSON.stringify({ epic_id: otherWorkspaceEpicId }),
-        })
+        }),
       )
       expect(res.status).toBe(400)
     })
@@ -237,7 +241,7 @@ describe('Epics API', () => {
         new Request(`http://localhost/api/workspaces/${workspaceId}/epics/${epicToDeleteId}`, {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${testToken}` },
-        })
+        }),
       )
       expect(res.status).toBe(204)
 
@@ -245,7 +249,7 @@ describe('Epics API', () => {
       const cardRes = await server.fetch(
         new Request(`http://localhost/api/cards/${linkedCardId}`, {
           headers: { Authorization: `Bearer ${testToken}` },
-        })
+        }),
       )
       const { data: card } = await cardRes.json()
       expect(card.epic_id).toBeNull()

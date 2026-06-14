@@ -44,7 +44,10 @@ export async function getUsers(page: number = 1, perPage: number = 10, search?: 
   }
 }
 
-export async function updateUser(id: number, data: { is_suspended?: boolean; is_super_admin?: boolean }) {
+export async function updateUser(
+  id: number,
+  data: { is_suspended?: boolean; is_super_admin?: boolean },
+) {
   const [existing] = await db`SELECT id FROM users WHERE id = ${id}`
   if (!existing) return null
 

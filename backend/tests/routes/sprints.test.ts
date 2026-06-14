@@ -1,6 +1,6 @@
-import { describe, test, expect, beforeAll, afterAll } from 'bun:test'
-import server from '../../src/index'
+import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import { db } from '../../src/db'
+import server from '../../src/index'
 
 describe('Sprints API', () => {
   let userId: number
@@ -24,7 +24,11 @@ describe('Sprints API', () => {
     // Generate token
     const { sign } = await import('hono/jwt')
     const secretKey = process.env.JWT_SECRET || 'your-jwt-secret-here-change-in-production'
-    testToken = await sign({ sub: userId, exp: Math.floor(Date.now() / 1000) + 3600 }, secretKey, 'HS256')
+    testToken = await sign(
+      { sub: userId, exp: Math.floor(Date.now() / 1000) + 3600 },
+      secretKey,
+      'HS256',
+    )
 
     const [ws] = await db`
       INSERT INTO workspaces (name, owner_id)
@@ -72,7 +76,7 @@ describe('Sprints API', () => {
             start_date: '2026-01-06T00:00:00Z',
             end_date: '2026-01-20T00:00:00Z',
           }),
-        })
+        }),
       )
       expect(res.status).toBe(201)
       const { data } = await res.json()
@@ -91,7 +95,7 @@ describe('Sprints API', () => {
             start_date: '2026-01-20T00:00:00Z',
             end_date: '2026-01-06T00:00:00Z',
           }),
-        })
+        }),
       )
       expect(res.status).toBe(400)
     })
@@ -102,7 +106,7 @@ describe('Sprints API', () => {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ title: 'Test' }),
-        })
+        }),
       )
       expect(res.status).toBe(401)
     })
@@ -114,7 +118,7 @@ describe('Sprints API', () => {
         new Request(`http://localhost/api/boards/${boardId}/sprints/${sprintId}/start`, {
           method: 'PUT',
           headers: { Authorization: `Bearer ${testToken}` },
-        })
+        }),
       )
       expect(res.status).toBe(200)
       const { data } = await res.json()
@@ -133,7 +137,7 @@ describe('Sprints API', () => {
             start_date: '2026-01-20T00:00:00Z',
             end_date: '2026-02-03T00:00:00Z',
           }),
-        })
+        }),
       )
       const { data: sprint2 } = await sprint2Res.json()
 
@@ -141,7 +145,7 @@ describe('Sprints API', () => {
         new Request(`http://localhost/api/boards/${boardId}/sprints/${sprint2.id}/start`, {
           method: 'PUT',
           headers: { Authorization: `Bearer ${testToken}` },
-        })
+        }),
       )
       expect(res.status).toBe(409)
     })
@@ -153,7 +157,7 @@ describe('Sprints API', () => {
         new Request(`http://localhost/api/boards/${boardId}/sprints/${sprintId}/complete`, {
           method: 'PUT',
           headers: { Authorization: `Bearer ${testToken}` },
-        })
+        }),
       )
       expect(res.status).toBe(200)
       const { data } = await res.json()
@@ -169,7 +173,7 @@ describe('Sprints API', () => {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${testToken}` },
           body: JSON.stringify({ sprint_id: sprintId }),
-        })
+        }),
       )
       expect(res.status).toBe(200)
       const { data } = await res.json()
@@ -182,7 +186,7 @@ describe('Sprints API', () => {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${testToken}` },
           body: JSON.stringify({ sprint_id: null }),
-        })
+        }),
       )
       expect(res.status).toBe(200)
       const { data } = await res.json()
@@ -195,7 +199,7 @@ describe('Sprints API', () => {
       const res = await server.fetch(
         new Request(`http://localhost/api/boards/${boardId}/sprints/${sprintId}/burndown`, {
           headers: { Authorization: `Bearer ${testToken}` },
-        })
+        }),
       )
       expect(res.status).toBe(200)
       const { data } = await res.json()
@@ -217,7 +221,7 @@ describe('Sprints API', () => {
             start_date: '2026-03-01T00:00:00Z',
             end_date: '2026-03-15T00:00:00Z',
           }),
-        })
+        }),
       )
       const { data: newSprint } = await createRes.json()
 
@@ -225,7 +229,7 @@ describe('Sprints API', () => {
         new Request(`http://localhost/api/boards/${boardId}/sprints/${newSprint.id}`, {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${testToken}` },
-        })
+        }),
       )
       expect(res.status).toBe(204)
     })
@@ -243,10 +247,9 @@ describe('Sprints API', () => {
         new Request(`http://localhost/api/boards/${boardId}/sprints/${tempActiveId}`, {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${testToken}` },
-        })
+        }),
       )
       expect(res.status).toBe(400)
     })
   })
 })
-

@@ -1,6 +1,6 @@
-import { describe, test, expect, afterAll } from 'bun:test'
-import app from '../../src/index'
+import { afterAll, describe, expect, test } from 'bun:test'
 import { db } from '../../src/db/index'
+import app from '../../src/index'
 
 describe('OAuth Routes', () => {
   afterAll(async () => {
@@ -41,7 +41,7 @@ describe('OAuth Routes', () => {
           headers: {
             Accept: 'application/json',
           },
-        })
+        }),
       )
       expect(res.status).toBe(200)
       const { data } = await res.json()
@@ -74,7 +74,7 @@ describe('OAuth Routes', () => {
           headers: {
             Accept: 'application/json',
           },
-        })
+        }),
       )
       expect(res.status).toBe(200)
       const { data } = await res.json()

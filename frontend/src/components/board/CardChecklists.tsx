@@ -23,7 +23,11 @@ interface CardChecklistsProps {
   disabled?: boolean
 }
 
-export function CardChecklists({ cardId, onProgressChange, disabled = false }: CardChecklistsProps) {
+export function CardChecklists({
+  cardId,
+  onProgressChange,
+  disabled = false,
+}: CardChecklistsProps) {
   const [checklists, setChecklists] = useState<Checklist[]>([])
   const [newChecklistTitle, setNewChecklistTitle] = useState('')
   const [newItemTitles, setNewItemTitles] = useState<{ [key: number]: string }>({})
@@ -126,7 +130,10 @@ export function CardChecklists({ cardId, onProgressChange, disabled = false }: C
         const percentage = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0
 
         return (
-          <div key={checklist.id} className="border border-base-200 bg-base-50 rounded-xl p-4 space-y-3 shadow-sm transition-all hover:shadow-md">
+          <div
+            key={checklist.id}
+            className="border border-base-200 bg-base-50 rounded-xl p-4 space-y-3 shadow-sm transition-all hover:shadow-md"
+          >
             <div className="flex justify-between items-center">
               {editingChecklistId === checklist.id ? (
                 <div className="flex gap-2 w-full max-w-sm">
@@ -261,7 +268,10 @@ export function CardChecklists({ cardId, onProgressChange, disabled = false }: C
 
       {/* Add New Checklist Form */}
       {!disabled && (
-        <form onSubmit={handleAddChecklist} className="flex gap-2 bg-base-100 p-2 border border-dashed border-base-300 rounded-xl">
+        <form
+          onSubmit={handleAddChecklist}
+          className="flex gap-2 bg-base-100 p-2 border border-dashed border-base-300 rounded-xl"
+        >
           <input
             type="text"
             placeholder="New Checklist title..."
@@ -277,4 +287,3 @@ export function CardChecklists({ cardId, onProgressChange, disabled = false }: C
     </div>
   )
 }
-

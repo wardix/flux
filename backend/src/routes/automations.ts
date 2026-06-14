@@ -1,7 +1,7 @@
-import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi'
+import { ErrorSchema } from '../lib/schemas'
 import { authMiddleware } from '../middleware/auth'
 import * as automationService from '../services/automationService'
-import { ErrorSchema } from '../lib/schemas'
 
 const automationRoutes = new OpenAPIHono()
 automationRoutes.use('*', authMiddleware)
@@ -47,7 +47,12 @@ const createRuleRoute = createRoute({
           schema: z.object({
             name: z.string(),
             description: z.string().nullable().optional(),
-            trigger_event: z.enum(['card_created', 'card_moved', 'card_assigned', 'due_date_reached']),
+            trigger_event: z.enum([
+              'card_created',
+              'card_moved',
+              'card_assigned',
+              'due_date_reached',
+            ]),
             trigger_config: z.any(),
             action_type: z.enum(['move_card', 'assign_user', 'add_label', 'send_notification']),
             action_config: z.any(),
@@ -96,9 +101,13 @@ const updateRuleRoute = createRoute({
           schema: z.object({
             name: z.string().optional(),
             description: z.string().nullable().optional(),
-            trigger_event: z.enum(['card_created', 'card_moved', 'card_assigned', 'due_date_reached']).optional(),
+            trigger_event: z
+              .enum(['card_created', 'card_moved', 'card_assigned', 'due_date_reached'])
+              .optional(),
             trigger_config: z.any().optional(),
-            action_type: z.enum(['move_card', 'assign_user', 'add_label', 'send_notification']).optional(),
+            action_type: z
+              .enum(['move_card', 'assign_user', 'add_label', 'send_notification'])
+              .optional(),
             action_config: z.any().optional(),
             is_enabled: z.boolean().optional(),
           }),

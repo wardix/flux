@@ -14,7 +14,9 @@ export function QRCodeDisplay({ qrCodeUrl, secret }: QRCodeDisplayProps) {
         </div>
       )}
       <div className="w-full text-center">
-        <span className="text-[10px] uppercase font-bold text-base-content/50 block">Secret Key</span>
+        <span className="text-[10px] uppercase font-bold text-base-content/50 block">
+          Secret Key
+        </span>
         <code className="text-xs font-mono bg-base-100 px-2 py-1 rounded select-all break-all border border-base-300">
           {secret}
         </code>

@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeAll, afterAll } from 'bun:test'
+import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import { db } from '../../src/db'
 import { processRecurringTasks } from '../../src/services/recurringTaskService'
 
@@ -76,11 +76,12 @@ describe('Recurring Tasks Cron / Background Job', () => {
     await processRecurringTasks()
 
     // Verify card was duplicated
-    const finalCards = await db`SELECT id, title, description, is_recurring FROM cards WHERE list_id = ${listId}`
+    const finalCards =
+      await db`SELECT id, title, description, is_recurring FROM cards WHERE list_id = ${listId}`
     expect(finalCards.length).toBe(2)
 
     // New card should NOT be marked as is_recurring itself
-    const duplicatedCard = finalCards.find(c => c.id !== cardId)
+    const duplicatedCard = finalCards.find((c) => c.id !== cardId)
     expect(duplicatedCard).toBeDefined()
     expect(duplicatedCard!.title).toBe('Routinal Task')
     expect(duplicatedCard!.description).toBe('Details of recurring action')

@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react'
+import type React from 'react'
+import { useEffect, useState } from 'react'
 import { api } from '../../lib/api'
 
 interface PublicFormSettingsProps {
@@ -88,7 +89,11 @@ export function PublicFormSettings({ boardId, disabled }: PublicFormSettingsProp
   }
 
   if (loading) {
-    return <div className="text-center p-4"><span className="loading loading-spinner loading-sm text-primary"></span> Loading...</div>
+    return (
+      <div className="text-center p-4">
+        <span className="loading loading-spinner loading-sm text-primary"></span> Loading...
+      </div>
+    )
   }
 
   return (
@@ -156,7 +161,9 @@ export function PublicFormSettings({ boardId, disabled }: PublicFormSettingsProp
       {isActive && formId && (
         <div className="pt-3 border-t border-base-250 space-y-2">
           <label className="label py-0">
-            <span className="label-text text-[10px] font-bold text-base-content/50 uppercase">Shareable Link</span>
+            <span className="label-text text-[10px] font-bold text-base-content/50 uppercase">
+              Shareable Link
+            </span>
           </label>
           <div className="flex gap-2">
             <input

@@ -15,13 +15,19 @@ export async function cleanOldTrash() {
 
 export function startRecurringTasksScheduler() {
   const { processRecurringTasks } = require('../services/recurringTaskService')
-  
+
   // Run once immediately at startup
-  processRecurringTasks().catch((err: any) => console.error('Recurring task processing failed:', err))
+  processRecurringTasks().catch((err: any) =>
+    console.error('Recurring task processing failed:', err),
+  )
 
   // Run every 10 minutes
-  setInterval(() => {
-    processRecurringTasks().catch((err: any) => console.error('Recurring task processing failed:', err))
-  }, 10 * 60 * 1000)
+  setInterval(
+    () => {
+      processRecurringTasks().catch((err: any) =>
+        console.error('Recurring task processing failed:', err),
+      )
+    },
+    10 * 60 * 1000,
+  )
 }
-

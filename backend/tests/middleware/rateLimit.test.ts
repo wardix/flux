@@ -1,10 +1,13 @@
-import { describe, test, expect, beforeAll, afterAll, beforeEach } from 'bun:test'
+import { afterAll, beforeAll, beforeEach, describe, expect, test } from 'bun:test'
 import { sign } from 'hono/jwt'
 import { db } from '../../src/db/index'
 import app from '../../src/index'
 import { limitMap } from '../../src/middleware/rateLimit'
 
-async function makeRequest(path: string, options: { method?: string; headers?: Record<string, string>; body?: string } = {}) {
+async function makeRequest(
+  path: string,
+  options: { method?: string; headers?: Record<string, string>; body?: string } = {},
+) {
   const method = options.method || 'GET'
   const headers = options.headers || {}
   return await app.fetch(
@@ -12,7 +15,7 @@ async function makeRequest(path: string, options: { method?: string; headers?: R
       method,
       headers,
       body: options.body,
-    })
+    }),
   )
 }
 
@@ -34,7 +37,7 @@ describe('Rate Limiting Middleware', () => {
     testToken = await sign(
       { sub: userId, email: 'ratelimit_test@example.com' },
       process.env.JWT_SECRET || 'your-jwt-secret-here-change-in-production',
-      'HS256'
+      'HS256',
     )
   })
 
@@ -61,10 +64,10 @@ describe('Rate Limiting Middleware', () => {
     for (let i = 0; i < 101; i++) {
       lastRes = await makeRequest('/api/boards')
     }
-    
+
     expect(lastRes).not.toBeNull()
     expect(lastRes!.status).toBe(429)
-    
+
     const body = await lastRes!.json()
     expect(body.error).toContain('Too many requests')
   })

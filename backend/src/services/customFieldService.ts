@@ -16,7 +16,16 @@ export async function getFieldsByBoard(boardId: number) {
   })
 }
 
-export async function createField(boardId: number, data: { name: string; field_type: string; options?: any; is_required?: boolean; position?: number }) {
+export async function createField(
+  boardId: number,
+  data: {
+    name: string
+    field_type: string
+    options?: any
+    is_required?: boolean
+    position?: number
+  },
+) {
   const existing = await db`
     SELECT id FROM custom_fields
     WHERE board_id = ${boardId} AND name = ${data.name}
@@ -28,7 +37,12 @@ export async function createField(boardId: number, data: { name: string; field_t
   }
 
   if (data.field_type === 'dropdown') {
-    if (!data.options || !data.options.choices || !Array.isArray(data.options.choices) || data.options.choices.length === 0) {
+    if (
+      !data.options ||
+      !data.options.choices ||
+      !Array.isArray(data.options.choices) ||
+      data.options.choices.length === 0
+    ) {
       const error = new Error('Dropdown field requires options with choices')
       ;(error as any).status = 400
       throw error
@@ -52,7 +66,10 @@ export async function createField(boardId: number, data: { name: string; field_t
   return field
 }
 
-export async function updateField(fieldId: number, data: { name?: string; options?: any; is_required?: boolean; position?: number }) {
+export async function updateField(
+  fieldId: number,
+  data: { name?: string; options?: any; is_required?: boolean; position?: number },
+) {
   const [existing] = await db`SELECT * FROM custom_fields WHERE id = ${fieldId}`
   if (!existing) return null
 
@@ -70,7 +87,8 @@ export async function updateField(fieldId: number, data: { name?: string; option
 
   const updates: Record<string, any> = {}
   if (data.name !== undefined) updates.name = data.name
-  if (data.options !== undefined) updates.options = data.options ? JSON.stringify(data.options) : null
+  if (data.options !== undefined)
+    updates.options = data.options ? JSON.stringify(data.options) : null
   if (data.is_required !== undefined) updates.is_required = data.is_required
   if (data.position !== undefined) updates.position = data.position
 
@@ -108,7 +126,10 @@ export async function getCardValues(cardId: number) {
   `
 }
 
-export async function setCardValues(cardId: number, values: { field_id: number; value: string | null }[]) {
+export async function setCardValues(
+  cardId: number,
+  values: { field_id: number; value: string | null }[],
+) {
   for (const item of values) {
     const [field] = await db`SELECT * FROM custom_fields WHERE id = ${item.field_id}`
     if (!field) {
@@ -135,7 +156,9 @@ export async function setCardValues(cardId: number, values: { field_id: number; 
         const choices = options?.choices || []
         const exists = choices.some((c: any) => c.value === item.value)
         if (!exists) {
-          const error = new Error(`Value "${item.value}" is not a valid choice for field "${field.name}"`)
+          const error = new Error(
+            `Value "${item.value}" is not a valid choice for field "${field.name}"`,
+          )
           ;(error as any).status = 400
           throw error
         }

@@ -1,6 +1,6 @@
-import { describe, test, expect, beforeAll, afterAll, mock } from 'bun:test'
-import server from '../../src/index'
+import { afterAll, beforeAll, describe, expect, mock, test } from 'bun:test'
 import { db } from '../../src/db'
+import server from '../../src/index'
 
 describe('Personal Access Tokens & Webhooks API', () => {
   let userId: number
@@ -24,7 +24,11 @@ describe('Personal Access Tokens & Webhooks API', () => {
     // Generate JWT token
     const { sign } = await import('hono/jwt')
     const secretKey = process.env.JWT_SECRET || 'your-jwt-secret-here-change-in-production'
-    testToken = await sign({ sub: userId, exp: Math.floor(Date.now() / 1000) + 3600 }, secretKey, 'HS256')
+    testToken = await sign(
+      { sub: userId, exp: Math.floor(Date.now() / 1000) + 3600 },
+      secretKey,
+      'HS256',
+    )
 
     // Create workspace
     const [ws] = await db`
@@ -63,7 +67,7 @@ describe('Personal Access Tokens & Webhooks API', () => {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${testToken}` },
           body: JSON.stringify({ name: 'Development Token' }),
-        })
+        }),
       )
       expect(res.status).toBe(201)
       const { data } = await res.json()
@@ -77,7 +81,7 @@ describe('Personal Access Tokens & Webhooks API', () => {
       const res = await server.fetch(
         new Request('http://localhost/api/personal-access-tokens', {
           headers: { Authorization: `Bearer ${testToken}` },
-        })
+        }),
       )
       expect(res.status).toBe(200)
       const { data } = await res.json()
@@ -89,7 +93,7 @@ describe('Personal Access Tokens & Webhooks API', () => {
       const res = await server.fetch(
         new Request('http://localhost/api/boards', {
           headers: { Authorization: `Bearer ${patToken}` },
-        })
+        }),
       )
       expect(res.status).toBe(200)
       const { data } = await res.json()
@@ -101,7 +105,7 @@ describe('Personal Access Tokens & Webhooks API', () => {
         new Request(`http://localhost/api/personal-access-tokens/${patId}`, {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${testToken}` },
-        })
+        }),
       )
       expect(res.status).toBe(204)
 
@@ -109,7 +113,7 @@ describe('Personal Access Tokens & Webhooks API', () => {
       const resVal = await server.fetch(
         new Request('http://localhost/api/boards', {
           headers: { Authorization: `Bearer ${patToken}` },
-        })
+        }),
       )
       expect(resVal.status).toBe(401)
     })
@@ -125,7 +129,7 @@ describe('Personal Access Tokens & Webhooks API', () => {
             url: 'https://webhook.site/test-flux',
             secret: 'sec',
           }),
-        })
+        }),
       )
       expect(res.status).toBe(201)
       const { data } = await res.json()
@@ -137,7 +141,7 @@ describe('Personal Access Tokens & Webhooks API', () => {
       const res = await server.fetch(
         new Request(`http://localhost/api/boards/${boardId}/webhooks`, {
           headers: { Authorization: `Bearer ${testToken}` },
-        })
+        }),
       )
       expect(res.status).toBe(200)
       const { data } = await res.json()
@@ -150,7 +154,7 @@ describe('Personal Access Tokens & Webhooks API', () => {
         new Request(`http://localhost/api/boards/${boardId}/webhooks/${webhookId}`, {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${testToken}` },
-        })
+        }),
       )
       expect(res.status).toBe(204)
     })

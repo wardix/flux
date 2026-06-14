@@ -1,9 +1,12 @@
-import { describe, test, expect, beforeAll, afterAll } from 'bun:test'
+import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import { sign } from 'hono/jwt'
 import { db } from '../../src/db/index'
 import app from '../../src/index'
 
-async function makeRequest(path: string, options: { method?: string; headers?: Record<string, string>; body?: string } = {}) {
+async function makeRequest(
+  path: string,
+  options: { method?: string; headers?: Record<string, string>; body?: string } = {},
+) {
   const method = options.method || 'GET'
   const headers = options.headers || {}
   return await app.fetch(
@@ -11,7 +14,7 @@ async function makeRequest(path: string, options: { method?: string; headers?: R
       method,
       headers,
       body: options.body,
-    })
+    }),
   )
 }
 
@@ -87,13 +90,13 @@ describe('Time Tracking API', () => {
     testToken = await sign(
       { sub: userId, email: 'time_test@example.com' },
       process.env.JWT_SECRET || 'your-jwt-secret-here-change-in-production',
-      'HS256'
+      'HS256',
     )
 
     otherToken = await sign(
       { sub: otherUserId, email: 'time_other@example.com' },
       process.env.JWT_SECRET || 'your-jwt-secret-here-change-in-production',
-      'HS256'
+      'HS256',
     )
 
     // 7. Insert manual logs for delete tests
@@ -124,7 +127,7 @@ describe('Time Tracking API', () => {
         body: JSON.stringify({ description: 'Working on feature' }),
       })
       expect(res.status).toBe(201)
-      const { data } = await res.json() as any
+      const { data } = (await res.json()) as any
       expect(data.is_running).toBe(true)
       expect(data.card_id).toBe(cardId)
       expect(data.ended_at).toBeNull()
@@ -137,7 +140,7 @@ describe('Time Tracking API', () => {
         body: JSON.stringify({}),
       })
       expect(res.status).toBe(409)
-      const body = await res.json() as any
+      const body = (await res.json()) as any
       expect(body.error).toContain('running timer')
     })
 
@@ -158,7 +161,7 @@ describe('Time Tracking API', () => {
         headers: { Authorization: `Bearer ${testToken}` },
       })
       expect(res.status).toBe(200)
-      const { data } = await res.json() as any
+      const { data } = (await res.json()) as any
       expect(data.is_running).toBe(false)
       expect(data.ended_at).not.toBeNull()
       expect(data.duration_seconds).toBeGreaterThanOrEqual(0)
@@ -185,7 +188,7 @@ describe('Time Tracking API', () => {
         }),
       })
       expect(res.status).toBe(201)
-      const { data } = await res.json() as any
+      const { data } = (await res.json()) as any
       expect(data.duration_seconds).toBe(3600)
       expect(data.is_running).toBe(false)
     })
@@ -201,7 +204,7 @@ describe('Time Tracking API', () => {
         }),
       })
       expect(res.status).toBe(201)
-      const { data } = await res.json() as any
+      const { data } = (await res.json()) as any
       expect(data.duration_seconds).toBe(5400) // 1.5 hours
     })
 
@@ -224,7 +227,7 @@ describe('Time Tracking API', () => {
         headers: { Authorization: `Bearer ${testToken}` },
       })
       expect(res.status).toBe(200)
-      const { data, meta } = await res.json() as any
+      const { data, meta } = (await res.json()) as any
       expect(Array.isArray(data)).toBe(true)
       expect(meta.total_duration_seconds).toBeGreaterThan(0)
       expect(meta.total_logs).toBeGreaterThan(0)
@@ -238,7 +241,7 @@ describe('Time Tracking API', () => {
         headers: { Authorization: `Bearer ${testToken}` },
       })
       expect(res.status).toBe(200)
-      const { data } = await res.json() as any
+      const { data } = (await res.json()) as any
       expect(data).toBeNull()
     })
 
@@ -254,7 +257,7 @@ describe('Time Tracking API', () => {
         headers: { Authorization: `Bearer ${testToken}` },
       })
       expect(res.status).toBe(200)
-      const { data } = await res.json() as any
+      const { data } = (await res.json()) as any
       expect(data).not.toBeNull()
       expect(data.card_id).toBe(cardId)
       expect(data.elapsed_seconds).toBeGreaterThanOrEqual(0)

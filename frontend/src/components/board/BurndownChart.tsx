@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react'
-import { api } from '../../lib/api'
 import {
-  ResponsiveContainer,
-  LineChart,
+  CartesianGrid,
+  Legend,
   Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
 } from 'recharts'
+import { api } from '../../lib/api'
 
 interface BurndownChartProps {
   boardId: number
@@ -38,7 +38,12 @@ export function BurndownChart({ boardId, sprintId }: BurndownChartProps) {
   }, [boardId, sprintId])
 
   if (loading) return <div className="text-xs text-base-content/50">Loading burndown data...</div>
-  if (error) return <div className="alert alert-error text-xs p-2 rounded"><span>{error}</span></div>
+  if (error)
+    return (
+      <div className="alert alert-error text-xs p-2 rounded">
+        <span>{error}</span>
+      </div>
+    )
   if (!data) return null
 
   // Format data for Recharts by joining ideal_line and actual_line based on day/date
@@ -63,9 +68,28 @@ export function BurndownChart({ boardId, sprintId }: BurndownChartProps) {
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" className="stroke-base-300" />
-            <XAxis dataKey="day" stroke="currentColor" className="text-[10px] text-base-content/50" />
-            <YAxis stroke="currentColor" className="text-[10px] text-base-content/50" label={{ value: 'Story Points', angle: -90, position: 'insideLeft', style: { fill: 'currentColor', opacity: 0.5 } }} />
-            <Tooltip contentStyle={{ backgroundColor: 'var(--fallback-b2, hsl(var(--b2)))', borderColor: 'var(--fallback-b3, hsl(var(--b3)))', borderRadius: '8px' }} />
+            <XAxis
+              dataKey="day"
+              stroke="currentColor"
+              className="text-[10px] text-base-content/50"
+            />
+            <YAxis
+              stroke="currentColor"
+              className="text-[10px] text-base-content/50"
+              label={{
+                value: 'Story Points',
+                angle: -90,
+                position: 'insideLeft',
+                style: { fill: 'currentColor', opacity: 0.5 },
+              }}
+            />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: 'var(--fallback-b2, hsl(var(--b2)))',
+                borderColor: 'var(--fallback-b3, hsl(var(--b3)))',
+                borderRadius: '8px',
+              }}
+            />
             <Legend wrapperStyle={{ fontSize: '11px' }} />
             <Line
               type="monotone"

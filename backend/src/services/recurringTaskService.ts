@@ -13,7 +13,8 @@ export async function processRecurringTasks() {
     try {
       await db.begin(async (db) => {
         // Calculate max position in that list
-        const maxPos = await db`SELECT MAX(position) as max FROM cards WHERE list_id = ${rule.list_id}`
+        const maxPos =
+          await db`SELECT MAX(position) as max FROM cards WHERE list_id = ${rule.list_id}`
         const position = maxPos[0].max !== null ? Number(maxPos[0].max) + 1 : 0
 
         // Duplicate the card

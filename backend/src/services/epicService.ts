@@ -87,7 +87,7 @@ export async function getEpicDetail(epicId: number) {
 export async function createEpic(
   workspaceId: number,
   userId: number,
-  data: { title: string; description?: string | null; color?: string; status?: string }
+  data: { title: string; description?: string | null; color?: string; status?: string },
 ) {
   const color = data.color ?? '#6366f1'
   if (color && !color.startsWith('#')) {
@@ -106,7 +106,7 @@ export async function createEpic(
 
 export async function updateEpic(
   epicId: number,
-  data: { title?: string; description?: string | null; color?: string; status?: string }
+  data: { title?: string; description?: string | null; color?: string; status?: string },
 ) {
   const [existing] = await db`SELECT * FROM epics WHERE id = ${epicId}`
   if (!existing) {
@@ -159,7 +159,11 @@ export async function assignCardToEpic(cardId: number, epicId: number | null) {
       SELECT workspace_id FROM epics
       WHERE id = ${epicId}
     `
-    if (!cardWorkspace || !epicWorkspace || cardWorkspace.workspace_id !== epicWorkspace.workspace_id) {
+    if (
+      !cardWorkspace ||
+      !epicWorkspace ||
+      cardWorkspace.workspace_id !== epicWorkspace.workspace_id
+    ) {
       const error = new Error('Card and Epic must belong to the same workspace')
       ;(error as any).status = 400
       throw error

@@ -1,8 +1,8 @@
-import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi'
+import { db } from '../db'
+import { ErrorSchema, ListSchema } from '../lib/schemas'
 import { authMiddleware } from '../middleware/auth'
 import * as listService from '../services/listService'
-import { ErrorSchema, ListSchema } from '../lib/schemas'
-import { db } from '../db'
 import { broadcastToBoard } from '../websocket/events'
 
 async function getUserName(userId: number): Promise<string> {
@@ -196,7 +196,7 @@ listRoutes.openapi(createListRoute, async (c) => {
     if (!body.title) return c.json({ error: 'Title is required' }, 400)
 
     const list = await listService.create(body)
-    
+
     // Broadcast list creation
     const boardId = Number(list.board_id)
     if (boardId) {

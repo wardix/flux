@@ -30,13 +30,17 @@ export function RecoveryCodesModal({ codes, isOpen, onClose }: RecoveryCodesModa
             ⚠️ Store Recovery Codes Safely
           </h3>
           <p className="text-xs text-base-content/70">
-            These recovery codes can be used to access your account if you lose your mobile device. They will not be displayed again, so copy or download them now.
+            These recovery codes can be used to access your account if you lose your mobile device.
+            They will not be displayed again, so copy or download them now.
           </p>
         </div>
 
         <div className="grid grid-cols-2 gap-2 bg-base-200/50 p-4 rounded-xl border border-base-200 font-mono text-sm text-center">
           {codes.map((code) => (
-            <div key={code} className="bg-base-100 py-1.5 px-2 rounded border border-base-300 shadow-sm select-all">
+            <div
+              key={code}
+              className="bg-base-100 py-1.5 px-2 rounded border border-base-300 shadow-sm select-all"
+            >
               {code}
             </div>
           ))}
@@ -44,14 +48,26 @@ export function RecoveryCodesModal({ codes, isOpen, onClose }: RecoveryCodesModa
 
         <div className="flex flex-col gap-2">
           <div className="flex gap-2">
-            <button type="button" onClick={handleCopyCodes} className="btn btn-outline btn-sm flex-1">
+            <button
+              type="button"
+              onClick={handleCopyCodes}
+              className="btn btn-outline btn-sm flex-1"
+            >
               📋 Copy Codes
             </button>
-            <button type="button" onClick={handleDownloadCodes} className="btn btn-outline btn-sm flex-1">
+            <button
+              type="button"
+              onClick={handleDownloadCodes}
+              className="btn btn-outline btn-sm flex-1"
+            >
               💾 Download
             </button>
           </div>
-          <button type="button" onClick={onClose} className="btn btn-primary text-white btn-sm w-full mt-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="btn btn-primary text-white btn-sm w-full mt-2"
+          >
             I have stored my recovery codes
           </button>
         </div>

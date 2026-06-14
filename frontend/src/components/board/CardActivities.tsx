@@ -89,7 +89,9 @@ export function CardActivities({ cardId, refreshTrigger }: CardActivitiesProps) 
                 <div className="flex-1 min-w-0">
                   <div className="text-xs text-base-content/85">
                     <span className="font-bold mr-1">{userDisplay}</span>
-                    <span className="text-base-content/65">{translateAction(act.action, act.details)}</span>
+                    <span className="text-base-content/65">
+                      {translateAction(act.action, act.details)}
+                    </span>
                   </div>
                   <div className="text-[9px] text-base-content/40 font-medium">
                     {new Date(act.created_at).toLocaleString()}
@@ -100,7 +102,9 @@ export function CardActivities({ cardId, refreshTrigger }: CardActivitiesProps) 
           })}
         </div>
       ) : (
-        <div className="text-center text-xs text-base-content/40 py-2">Belum ada riwayat aktivitas.</div>
+        <div className="text-center text-xs text-base-content/40 py-2">
+          Belum ada riwayat aktivitas.
+        </div>
       )}
     </div>
   )

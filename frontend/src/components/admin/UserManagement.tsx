@@ -54,7 +54,9 @@ export function UserManagement() {
         is_suspended: !currentStatus,
       })
       setUsers((prev) =>
-        prev.map((u) => (u.id === userId ? { ...u, is_suspended: updatedUser.data.is_suspended } : u))
+        prev.map((u) =>
+          u.id === userId ? { ...u, is_suspended: updatedUser.data.is_suspended } : u,
+        ),
       )
     } catch (err) {
       console.error('Failed to update suspension status:', err)
@@ -68,7 +70,9 @@ export function UserManagement() {
         is_super_admin: !currentStatus,
       })
       setUsers((prev) =>
-        prev.map((u) => (u.id === userId ? { ...u, is_super_admin: updatedUser.data.is_super_admin } : u))
+        prev.map((u) =>
+          u.id === userId ? { ...u, is_super_admin: updatedUser.data.is_super_admin } : u,
+        ),
       )
     } catch (err) {
       console.error('Failed to update super admin status:', err)
@@ -96,7 +100,7 @@ export function UserManagement() {
           />
           <span className="absolute left-2.5 top-2.5 text-xs text-base-content/40">🔍</span>
         </div>
-        
+
         {meta && (
           <span className="text-xs text-base-content/65 font-medium">
             Total Users: <strong>{meta.total}</strong>
@@ -141,7 +145,11 @@ export function UserManagement() {
                   <td className="font-medium">
                     <div className="flex items-center gap-2">
                       {user.avatar_url ? (
-                        <img src={user.avatar_url} alt={user.email} className="w-6 h-6 rounded-full object-cover" />
+                        <img
+                          src={user.avatar_url}
+                          alt={user.email}
+                          className="w-6 h-6 rounded-full object-cover"
+                        />
                       ) : (
                         <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
                           {getInitials(user.email)}
@@ -159,7 +167,9 @@ export function UserManagement() {
                   </td>
                   <td>
                     {user.is_super_admin ? (
-                      <span className="badge badge-sm badge-primary font-medium py-1">Super Admin</span>
+                      <span className="badge badge-sm badge-primary font-medium py-1">
+                        Super Admin
+                      </span>
                     ) : (
                       <span className="badge badge-sm badge-ghost font-medium py-1">User</span>
                     )}

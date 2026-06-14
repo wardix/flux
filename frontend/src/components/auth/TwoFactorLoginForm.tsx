@@ -47,7 +47,9 @@ export function TwoFactorLoginForm({ tempToken, onSuccess, onCancel }: TwoFactor
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="form-control">
           <label className="label">
-            <span className="label-text font-semibold">{isRecovery ? 'Recovery Code' : 'Verification Code'}</span>
+            <span className="label-text font-semibold">
+              {isRecovery ? 'Recovery Code' : 'Verification Code'}
+            </span>
           </label>
           <input
             type="text"

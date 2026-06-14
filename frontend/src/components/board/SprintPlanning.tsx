@@ -5,7 +5,12 @@ interface SprintPlanningProps {
   sprints: Sprint[]
   backlogCards: Card[]
   onAssignSprint: (cardId: number, sprintId: number | null) => Promise<void>
-  onCreateSprint: (data: { title: string; goal?: string; start_date: string; end_date: string }) => Promise<void>
+  onCreateSprint: (data: {
+    title: string
+    goal?: string
+    start_date: string
+    end_date: string
+  }) => Promise<void>
   onDeleteSprint: (sprintId: number) => Promise<void>
   onStartSprint: (sprintId: number) => Promise<void>
   onCompleteSprint: (sprintId: number, moveToSprintId?: number | null) => Promise<void>
@@ -61,7 +66,6 @@ export function SprintPlanning({
   const activeSprint = sprints.find((s) => s.status === 'active')
   const planningSprints = sprints.filter((s) => s.status === 'planning')
 
-
   return (
     <div className="space-y-6 max-h-[85vh] overflow-y-auto px-1">
       {error && (
@@ -86,13 +90,18 @@ export function SprintPlanning({
 
       {/* Create Sprint Form */}
       {showCreateForm && (
-        <form onSubmit={handleCreate} className="bg-base-200/50 p-4 border border-base-200 rounded-xl space-y-3">
+        <form
+          onSubmit={handleCreate}
+          className="bg-base-200/50 p-4 border border-base-200 rounded-xl space-y-3"
+        >
           <span className="text-xs font-bold text-base-content/60 uppercase block">
             Create Sprint
           </span>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="form-control">
-              <label className="label py-0.5"><span className="label-text text-xs">Sprint Name</span></label>
+              <label className="label py-0.5">
+                <span className="label-text text-xs">Sprint Name</span>
+              </label>
               <input
                 type="text"
                 value={title}
@@ -103,7 +112,9 @@ export function SprintPlanning({
               />
             </div>
             <div className="form-control">
-              <label className="label py-0.5"><span className="label-text text-xs">Sprint Goal</span></label>
+              <label className="label py-0.5">
+                <span className="label-text text-xs">Sprint Goal</span>
+              </label>
               <input
                 type="text"
                 value={goal}
@@ -113,7 +124,9 @@ export function SprintPlanning({
               />
             </div>
             <div className="form-control">
-              <label className="label py-0.5"><span className="label-text text-xs">Start Date</span></label>
+              <label className="label py-0.5">
+                <span className="label-text text-xs">Start Date</span>
+              </label>
               <input
                 type="date"
                 value={startDate}
@@ -123,7 +136,9 @@ export function SprintPlanning({
               />
             </div>
             <div className="form-control">
-              <label className="label py-0.5"><span className="label-text text-xs">End Date</span></label>
+              <label className="label py-0.5">
+                <span className="label-text text-xs">End Date</span>
+              </label>
               <input
                 type="date"
                 value={endDate}
@@ -148,10 +163,14 @@ export function SprintPlanning({
               You are about to complete this sprint. Choose what to do with incomplete cards:
             </p>
             <div className="form-control mt-4">
-              <label className="label py-0.5"><span className="label-text text-xs">Move incomplete cards to</span></label>
+              <label className="label py-0.5">
+                <span className="label-text text-xs">Move incomplete cards to</span>
+              </label>
               <select
                 value={moveIncompleteToSprintId ?? ''}
-                onChange={(e) => setMoveIncompleteToSprintId(e.target.value ? Number(e.target.value) : null)}
+                onChange={(e) =>
+                  setMoveIncompleteToSprintId(e.target.value ? Number(e.target.value) : null)
+                }
                 className="select select-bordered select-sm w-full focus:outline-none"
               >
                 <option value="">Backlog (No Sprint)</option>
@@ -195,7 +214,7 @@ export function SprintPlanning({
         <div className="card bg-base-200/50 p-4 border border-base-200 rounded-2xl h-[70vh] flex flex-col">
           <div className="flex justify-between items-center mb-3">
             <span className="font-bold text-sm text-base-content/70 uppercase tracking-wide">
-              Product Backlog ({backlogCards.filter(c => !c.sprint_id).length})
+              Product Backlog ({backlogCards.filter((c) => !c.sprint_id).length})
             </span>
           </div>
           <div className="flex-1 overflow-y-auto space-y-2 pr-1">
@@ -213,7 +232,9 @@ export function SprintPlanning({
                     </span>
                     {!disabled && sprints.length > 0 && (
                       <select
-                        onChange={(e) => onAssignSprint(card.id, e.target.value ? Number(e.target.value) : null)}
+                        onChange={(e) =>
+                          onAssignSprint(card.id, e.target.value ? Number(e.target.value) : null)
+                        }
                         value=""
                         className="select select-xs select-bordered w-28 focus:outline-none"
                       >

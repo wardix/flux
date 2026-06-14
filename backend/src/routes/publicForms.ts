@@ -1,7 +1,7 @@
-import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi'
+import { ErrorSchema } from '../lib/schemas'
 import { authMiddleware } from '../middleware/auth'
 import * as formService from '../services/publicFormService'
-import { ErrorSchema } from '../lib/schemas'
 
 const formRoutes = new OpenAPIHono()
 
@@ -151,7 +151,12 @@ boardFormRoutes.openapi(upsertFormRoute, async (c) => {
   if (Number.isNaN(boardId)) return c.json({ error: 'Invalid board ID' }, 400)
 
   const body = await c.req.json()
-  const form = await formService.createOrUpdateForm(boardId, body.title, body.description, body.is_active)
+  const form = await formService.createOrUpdateForm(
+    boardId,
+    body.title,
+    body.description,
+    body.is_active,
+  )
   return c.json({ data: form }, 200)
 })
 

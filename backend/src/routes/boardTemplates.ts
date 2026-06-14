@@ -1,6 +1,6 @@
-import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi'
+import { BoardSchema, ErrorSchema } from '../lib/schemas'
 import { authMiddleware } from '../middleware/auth'
-import { ErrorSchema, BoardSchema } from '../lib/schemas'
 import * as templateService from '../services/boardTemplateService'
 
 const boardTemplateRoutes = new OpenAPIHono()
@@ -18,12 +18,14 @@ const getTemplatesRoute = createRoute({
       content: {
         'application/json': {
           schema: z.object({
-            data: z.array(z.object({
-              key: z.string(),
-              title: z.string(),
-              description: z.string(),
-              lists: z.array(z.string()),
-            })),
+            data: z.array(
+              z.object({
+                key: z.string(),
+                title: z.string(),
+                description: z.string(),
+                lists: z.array(z.string()),
+              }),
+            ),
           }),
         },
       },
@@ -121,7 +123,12 @@ boardTemplateRoutes.openapi(createFromTemplateRoute, async (c) => {
   }
 
   try {
-    const board = await templateService.createBoardFromTemplate(template_key, workspace_id, title, userId)
+    const board = await templateService.createBoardFromTemplate(
+      template_key,
+      workspace_id,
+      title,
+      userId,
+    )
     return c.json({ data: board }, 201)
   } catch (err: any) {
     const status = err.status || 500

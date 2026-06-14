@@ -1,4 +1,5 @@
 -- Drop tables if they exist (for easy migration reset)
+DROP TABLE IF EXISTS card_mirrors CASCADE;
 DROP TABLE IF EXISTS public_forms CASCADE;
 DROP TABLE IF EXISTS personal_access_tokens CASCADE;
 DROP TABLE IF EXISTS webhooks CASCADE;
@@ -455,6 +456,25 @@ CREATE TABLE public_forms (
 
 CREATE TRIGGER update_public_forms_updated_at BEFORE UPDATE ON public_forms FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE INDEX idx_public_forms_board_id ON public_forms(board_id);
+
+-- Card Mirrors Table
+CREATE TABLE card_mirrors (
+    id SERIAL PRIMARY KEY,
+    source_card_id INTEGER NOT NULL REFERENCES cards(id) ON DELETE CASCADE,
+    mirror_board_id INTEGER NOT NULL REFERENCES boards(id) ON DELETE CASCADE,
+    mirror_list_id INTEGER NOT NULL REFERENCES lists(id) ON DELETE CASCADE,
+    mirror_card_id INTEGER NOT NULL REFERENCES cards(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE (source_card_id, mirror_list_id)
+);
+
+CREATE TRIGGER update_card_mirrors_updated_at BEFORE UPDATE ON card_mirrors FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE INDEX idx_card_mirrors_source_card_id ON card_mirrors(source_card_id);
+CREATE INDEX idx_card_mirrors_mirror_board_id ON card_mirrors(mirror_board_id);
+CREATE INDEX idx_card_mirrors_mirror_list_id ON card_mirrors(mirror_list_id);
+CREATE INDEX idx_card_mirrors_mirror_card_id ON card_mirrors(mirror_card_id);
+
 
 
 

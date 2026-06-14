@@ -15,7 +15,10 @@ export function TwoFactorSetup() {
   const handleStartSetup = async () => {
     setError('')
     try {
-      const res = await api.post<{ data: { secret: string; qr_code_url: string } }>('/auth/2fa/setup', {})
+      const res = await api.post<{ data: { secret: string; qr_code_url: string } }>(
+        '/auth/2fa/setup',
+        {},
+      )
       setSecret(res.data.secret)
       setQrCodeUrl(res.data.qr_code_url)
       setSetupStep('qr')
@@ -28,9 +31,12 @@ export function TwoFactorSetup() {
     e.preventDefault()
     setError('')
     try {
-      const res = await api.post<{ data: { enabled: boolean; recovery_codes: string[] } }>('/auth/2fa/verify', {
-        code: totpCode,
-      })
+      const res = await api.post<{ data: { enabled: boolean; recovery_codes: string[] } }>(
+        '/auth/2fa/verify',
+        {
+          code: totpCode,
+        },
+      )
       if (res.data.enabled) {
         setIsEnabled(true)
         setRecoveryCodes(res.data.recovery_codes)
@@ -62,9 +68,13 @@ export function TwoFactorSetup() {
       <div className="flex items-center justify-between border-b border-base-200 pb-4">
         <div>
           <h3 className="text-lg font-bold">Two-Factor Authentication (2FA)</h3>
-          <p className="text-xs text-base-content/60">Secure your account with TOTP codes from Authenticator apps.</p>
+          <p className="text-xs text-base-content/60">
+            Secure your account with TOTP codes from Authenticator apps.
+          </p>
         </div>
-        <span className={`badge ${isEnabled ? 'badge-success' : 'badge-ghost'} font-semibold px-3 py-2`}>
+        <span
+          className={`badge ${isEnabled ? 'badge-success' : 'badge-ghost'} font-semibold px-3 py-2`}
+        >
           {isEnabled ? 'Enabled' : 'Disabled'}
         </span>
       </div>
@@ -79,14 +89,23 @@ export function TwoFactorSetup() {
       {setupStep === 'idle' && (
         <div className="space-y-4">
           <p className="text-sm">
-            Two-factor authentication adds an extra layer of security to your account. To log in, you will need to provide both your password and a code from your authenticator app.
+            Two-factor authentication adds an extra layer of security to your account. To log in,
+            you will need to provide both your password and a code from your authenticator app.
           </p>
           {!isEnabled ? (
-            <button type="button" onClick={handleStartSetup} className="btn btn-primary text-white btn-sm">
+            <button
+              type="button"
+              onClick={handleStartSetup}
+              className="btn btn-primary text-white btn-sm"
+            >
               Enable 2FA
             </button>
           ) : (
-            <button type="button" onClick={handleDisable2FA} className="btn btn-error text-white btn-sm">
+            <button
+              type="button"
+              onClick={handleDisable2FA}
+              className="btn btn-error text-white btn-sm"
+            >
               Disable 2FA
             </button>
           )}
@@ -100,8 +119,10 @@ export function TwoFactorSetup() {
             <div className="flex-1 space-y-4">
               <h4 className="font-bold text-sm">Scan QR Code</h4>
               <p className="text-xs text-base-content/70">
-                1. Open your authenticator app (e.g. Google Authenticator, Authy, or Duo).<br />
-                2. Choose to scan a QR code, or manually input the secret shown.<br />
+                1. Open your authenticator app (e.g. Google Authenticator, Authy, or Duo).
+                <br />
+                2. Choose to scan a QR code, or manually input the secret shown.
+                <br />
                 3. Enter the 6-digit verification code below to enable.
               </p>
               <form onSubmit={handleVerifySetup} className="space-y-2">

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { api } from '../lib/api'
 import { UserManagement } from '../components/admin/UserManagement'
+import { api } from '../lib/api'
 
 interface User {
   id: number
@@ -33,7 +33,7 @@ export function AdminDashboardPage({ onBack }: AdminDashboardPageProps) {
       const res = await api.get<{ data: User[]; meta: Meta }>('/admin/users?per_page=100')
       const allUsers = res.data
       const total = res.meta.total
-      
+
       const suspended = allUsers.filter((u) => u.is_suspended).length
       const admins = allUsers.filter((u) => u.is_super_admin).length
       const active = total - suspended
@@ -78,7 +78,9 @@ export function AdminDashboardPage({ onBack }: AdminDashboardPageProps) {
       {/* Statistics Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="card bg-base-100 border border-base-200/50 p-4 shadow-sm space-y-1">
-          <span className="text-xs text-base-content/50 font-bold uppercase tracking-wider">Total Users</span>
+          <span className="text-xs text-base-content/50 font-bold uppercase tracking-wider">
+            Total Users
+          </span>
           {isLoading ? (
             <span className="loading loading-dots loading-sm text-primary"></span>
           ) : (
@@ -87,7 +89,9 @@ export function AdminDashboardPage({ onBack }: AdminDashboardPageProps) {
         </div>
 
         <div className="card bg-base-100 border border-base-200/50 p-4 shadow-sm space-y-1">
-          <span className="text-xs text-base-content/50 font-bold uppercase tracking-wider">Active Users</span>
+          <span className="text-xs text-base-content/50 font-bold uppercase tracking-wider">
+            Active Users
+          </span>
           {isLoading ? (
             <span className="loading loading-dots loading-sm text-success"></span>
           ) : (
@@ -96,7 +100,9 @@ export function AdminDashboardPage({ onBack }: AdminDashboardPageProps) {
         </div>
 
         <div className="card bg-base-100 border border-base-200/50 p-4 shadow-sm space-y-1">
-          <span className="text-xs text-base-content/50 font-bold uppercase tracking-wider">Suspended</span>
+          <span className="text-xs text-base-content/50 font-bold uppercase tracking-wider">
+            Suspended
+          </span>
           {isLoading ? (
             <span className="loading loading-dots loading-sm text-error"></span>
           ) : (
@@ -105,7 +111,9 @@ export function AdminDashboardPage({ onBack }: AdminDashboardPageProps) {
         </div>
 
         <div className="card bg-base-100 border border-base-200/50 p-4 shadow-sm space-y-1">
-          <span className="text-xs text-base-content/50 font-bold uppercase tracking-wider">Admins</span>
+          <span className="text-xs text-base-content/50 font-bold uppercase tracking-wider">
+            Admins
+          </span>
           {isLoading ? (
             <span className="loading loading-dots loading-sm text-primary"></span>
           ) : (
@@ -122,7 +130,7 @@ export function AdminDashboardPage({ onBack }: AdminDashboardPageProps) {
             Search, paginate, suspend users, or promote users to Super Admin.
           </p>
         </div>
-        
+
         {/* Render the UserManagement table */}
         <UserManagement />
       </div>

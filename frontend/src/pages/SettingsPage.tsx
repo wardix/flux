@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { LanguageSwitcher } from '../components/settings/LanguageSwitcher'
-import { TwoFactorSetup } from '../components/settings/TwoFactorSetup'
 import { PersonalAccessTokens } from '../components/settings/PersonalAccessTokens'
+import { TwoFactorSetup } from '../components/settings/TwoFactorSetup'
 
 interface SettingsPageProps {
   onBack: () => void
@@ -33,9 +33,7 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
       <div className="space-y-6">
         {/* Language Section */}
         <div className="card bg-base-100 border border-base-200/50 p-6 shadow-sm space-y-3">
-          <h2 className="text-lg font-bold text-base-content/95">
-            🌐 {t('settings.language')}
-          </h2>
+          <h2 className="text-lg font-bold text-base-content/95">🌐 {t('settings.language')}</h2>
           <p className="text-xs text-base-content/60">
             Choose your preferred language for the user interface.
           </p>
@@ -44,9 +42,7 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
 
         {/* Security Section */}
         <div className="card bg-base-100 border border-base-200/50 p-6 shadow-sm space-y-3">
-          <h2 className="text-lg font-bold text-base-content/95">
-            🛡️ {t('settings.security')}
-          </h2>
+          <h2 className="text-lg font-bold text-base-content/95">🛡️ {t('settings.security')}</h2>
           <p className="text-xs text-base-content/60">
             Configure two-factor authentication to secure your account.
           </p>
@@ -57,9 +53,7 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
 
         {/* Personal Access Tokens Section */}
         <div className="card bg-base-100 border border-base-200/50 p-6 shadow-sm space-y-3">
-          <h2 className="text-lg font-bold text-base-content/95">
-            🔑 Personal Access Tokens
-          </h2>
+          <h2 className="text-lg font-bold text-base-content/95">🔑 Personal Access Tokens</h2>
           <p className="text-xs text-base-content/60">
             Generate access tokens for API integrations and external scripts.
           </p>

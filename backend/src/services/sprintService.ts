@@ -15,7 +15,7 @@ export async function getSprintById(sprintId: number) {
 
 export async function createSprint(
   boardId: number,
-  data: { title: string; goal?: string | null; start_date: string; end_date: string }
+  data: { title: string; goal?: string | null; start_date: string; end_date: string },
 ) {
   if (new Date(data.end_date) <= new Date(data.start_date)) {
     const error = new Error('End date must be after start date')
@@ -33,7 +33,7 @@ export async function createSprint(
 
 export async function updateSprint(
   sprintId: number,
-  data: { title?: string; goal?: string | null; start_date?: string; end_date?: string }
+  data: { title?: string; goal?: string | null; start_date?: string; end_date?: string },
 ) {
   const existing = await getSprintById(sprintId)
   if (!existing) {
@@ -212,7 +212,10 @@ export async function getBurndownData(sprintId: number) {
   const actualLine = []
   // Let's populate actual remaining points for each day of the sprint up to today or end_date
   const today = new Date()
-  const lastDayIndex = today < end ? Math.ceil((today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) : durationDays
+  const lastDayIndex =
+    today < end
+      ? Math.ceil((today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
+      : durationDays
 
   // Let's check completed dates for cards
   const completedCards = await db`

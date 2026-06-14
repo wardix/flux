@@ -17,7 +17,7 @@ export async function createComment(cardId: number, userId: number, content: str
     VALUES (${cardId}, ${userId}, ${content})
     RETURNING *
   `
-  
+
   const comment = result[0]
 
   // Add details about the comment in the activity log

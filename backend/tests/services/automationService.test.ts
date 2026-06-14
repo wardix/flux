@@ -1,6 +1,6 @@
-import { describe, test, expect, beforeAll, afterAll, beforeEach } from 'bun:test'
-import * as automationService from '../../src/services/automationService'
+import { afterAll, beforeAll, beforeEach, describe, expect, test } from 'bun:test'
 import { db } from '../../src/db'
+import * as automationService from '../../src/services/automationService'
 
 describe('AutomationService', () => {
   let userId: number
@@ -103,7 +103,7 @@ describe('AutomationService', () => {
           trigger_config: {}, // missing to_list_id
           action_type: 'add_label',
           action_config: { label_id: completedLabelId },
-        })
+        }),
       ).rejects.toThrow()
     })
   })

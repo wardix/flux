@@ -1,9 +1,9 @@
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
-import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi'
+import { ErrorSchema } from '../lib/schemas'
 import { authMiddleware } from '../middleware/auth'
 import * as attachmentService from '../services/attachmentService'
-import { ErrorSchema } from '../lib/schemas'
 
 const attachmentRoutes = new OpenAPIHono()
 
@@ -256,10 +256,10 @@ attachmentRoutes.openapi(createAttachmentRoute, async (c) => {
 
     const fileBuffer = await file.arrayBuffer()
     const filename = `${Date.now()}-${file.name}`
-    
+
     // We upload to frontend/public/uploads in dev, let's construct the absolute path.
     const uploadsDir = path.resolve(__dirname, '../../../frontend/public/uploads')
-    
+
     await fs.mkdir(uploadsDir, { recursive: true })
     const filePath = path.join(uploadsDir, filename)
     await Bun.write(filePath, fileBuffer)
@@ -295,7 +295,11 @@ attachmentRoutes.openapi(deleteAttachmentRoute, async (c) => {
     // Optional: Delete physical file if possible.
     try {
       if (result.file_path.startsWith('/uploads/')) {
-        const physicalPath = path.resolve(__dirname, '../../../frontend/public', result.file_path.replace(/^\//, ''))
+        const physicalPath = path.resolve(
+          __dirname,
+          '../../../frontend/public',
+          result.file_path.replace(/^\//, ''),
+        )
         await fs.unlink(physicalPath).catch(() => {})
       }
     } catch (_) {}

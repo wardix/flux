@@ -1,7 +1,7 @@
 import type { Context, Next } from 'hono'
 import { verify } from 'hono/jwt'
-import { checkObserverPermission } from './permission'
 import * as patService from '../services/personalAccessService'
+import { checkObserverPermission } from './permission'
 
 export async function authMiddleware(c: Context, next: Next) {
   const token = c.req.header('Authorization')?.replace('Bearer ', '')
@@ -29,4 +29,3 @@ export async function authMiddleware(c: Context, next: Next) {
     return c.json({ error: 'Invalid token' }, 401)
   }
 }
-

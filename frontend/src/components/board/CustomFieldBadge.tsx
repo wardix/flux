@@ -12,7 +12,9 @@ export function CustomFieldBadge({ cardId }: CustomFieldBadgeProps) {
   useEffect(() => {
     const fetchValues = async () => {
       try {
-        const res = await api.get<{ data: CustomFieldValueData[] }>(`/cards/${cardId}/custom-fields`)
+        const res = await api.get<{ data: CustomFieldValueData[] }>(
+          `/cards/${cardId}/custom-fields`,
+        )
         // Filter out empty or null values
         const nonNull = (res.data || []).filter((item) => {
           if (item.value === null || item.value === undefined || item.value === '') {

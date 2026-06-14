@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { api } from '../../lib/api'
-import type { CustomFieldValueData, CustomField } from '../../lib/types'
+import type { CustomField, CustomFieldValueData } from '../../lib/types'
 
 interface CustomFieldValuesProps {
   cardId: number
@@ -25,7 +25,9 @@ export function CustomFieldValues({ cardId, boardId, disabled = false }: CustomF
       setFields(fieldsRes.data || [])
 
       // Get values for this card
-      const valuesRes = await api.get<{ data: CustomFieldValueData[] }>(`/cards/${cardId}/custom-fields`)
+      const valuesRes = await api.get<{ data: CustomFieldValueData[] }>(
+        `/cards/${cardId}/custom-fields`,
+      )
       const valuesMap: Record<number, string> = {}
       for (const item of valuesRes.data || []) {
         valuesMap[item.field_id] = item.value ?? ''
@@ -136,7 +138,9 @@ export function CustomFieldValues({ cardId, boardId, disabled = false }: CustomF
                     type="checkbox"
                     checked={val === 'true'}
                     disabled={disabled}
-                    onChange={(e) => handleValueChange(field.id, e.target.checked ? 'true' : 'false')}
+                    onChange={(e) =>
+                      handleValueChange(field.id, e.target.checked ? 'true' : 'false')
+                    }
                     className="checkbox checkbox-sm checkbox-primary"
                   />
                   <span className="text-xs text-base-content/70">Yes / No</span>
@@ -190,11 +194,7 @@ export function CustomFieldValues({ cardId, boardId, disabled = false }: CustomF
 
       {!disabled && (
         <div className="flex justify-end pt-1">
-          <button
-            type="submit"
-            disabled={saving}
-            className="btn btn-primary btn-xs text-white"
-          >
+          <button type="submit" disabled={saving} className="btn btn-primary btn-xs text-white">
             {saving ? 'Saving Fields...' : 'Save Fields'}
           </button>
         </div>

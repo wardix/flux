@@ -1,7 +1,7 @@
-import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi'
+import { ErrorSchema } from '../lib/schemas'
 import { authMiddleware } from '../middleware/auth'
 import * as activityService from '../services/activityService'
-import { ErrorSchema } from '../lib/schemas'
 
 const activityRoutes = new OpenAPIHono()
 
