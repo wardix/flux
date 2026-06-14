@@ -1,0 +1,41 @@
+name: CD
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [] # In a real scenario, this might need CI to pass, but GitHub actions allows branch protection to enforce CI anyway
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Build Backend Docker Image (Mock)
+        run: |
+          echo "Building backend Docker image..."
+          # docker build -t my-registry/flux-backend:latest ./backend
+          
+      - name: Build Frontend Docker Image (Mock)
+        run: |
+          echo "Building frontend Docker image..."
+          # docker build -t my-registry/flux-frontend:latest ./frontend
+          
+      - name: Push to Registry (Mock)
+        run: |
+          echo "Pushing images to registry..."
+          # docker push my-registry/flux-backend:latest
+          # docker push my-registry/flux-frontend:latest
+          
+      - name: Trigger Deployment (Mock)
+        run: |
+          echo "Triggering deployment on staging server..."
+          # ssh user@staging-server "docker-compose pull && docker-compose up -d"
+          echo "Deployment successful!"
