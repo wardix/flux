@@ -1,16 +1,22 @@
 import { create } from 'zustand'
 import { api } from '../lib/api'
-import type { Board, Card, List } from '../lib/types'
+import type { Board, Card, List, Workspace } from '../lib/types'
 
 interface BoardState {
   boards: Board[]
+  workspaces: Workspace[]
+  activeWorkspace: Workspace | null
   activeBoard: Board | null
   isLoading: boolean
   error: string | null
 
+  fetchWorkspaces: () => Promise<void>
+  selectWorkspace: (workspace: Workspace | null) => void
+  createWorkspace: (name: string) => Promise<void>
   fetchBoards: () => Promise<void>
   fetchBoard: (id: number) => Promise<void>
-  createBoard: (title: string) => Promise<void>
+  createBoard: (title: string, workspaceId?: number, visibility?: string) => Promise<void>
+  updateBoardVisibility: (boardId: number, visibility: string) => Promise<void>
   createList: (boardId: number, title: string) => Promise<void>
   createCard: (listId: number, title: string) => Promise<void>
   updateCard: (cardId: number, data: Partial<Card>) => Promise<void>
@@ -18,11 +24,56 @@ interface BoardState {
   deleteList: (listId: number) => Promise<void>
 }
 
-export const useBoardStore = create<BoardState>((set) => ({
+export const useBoardStore = create<BoardState>((set, get) => ({
   boards: [],
+  workspaces: [],
+  activeWorkspace: null,
   activeBoard: null,
   isLoading: false,
   error: null,
+
+  fetchWorkspaces: async () => {
+    set({ isLoading: true, error: null })
+    try {
+      const { data } = await api.get<{ data: Workspace[] }>('/workspaces')
+      set({ workspaces: data, isLoading: false })
+      if (data.length > 0 && !get().activeWorkspace) {
+        set({ activeWorkspace: data[0] })
+      }
+    } catch {
+      const mockWorkspaces = [
+        {
+          id: 1,
+          name: 'Engineering Workspace',
+          owner_id: 1,
+          created_at: '',
+          updated_at: '',
+        },
+        { id: 2, name: 'Design Workspace', owner_id: 2, created_at: '', updated_at: '' },
+      ]
+      set({ workspaces: mockWorkspaces, activeWorkspace: mockWorkspaces[0], isLoading: false })
+    }
+  },
+
+  selectWorkspace: (workspace) => {
+    set({ activeWorkspace: workspace, activeBoard: null })
+  },
+
+  createWorkspace: async (name: string) => {
+    try {
+      const { data } = await api.post<{ data: Workspace }>('/workspaces', { name })
+      set((state) => ({ workspaces: [...state.workspaces, data], activeWorkspace: data }))
+    } catch {
+      const mockWS: Workspace = {
+        id: Math.floor(Math.random() * 1000) + 10,
+        name,
+        owner_id: 1,
+        created_at: '',
+        updated_at: '',
+      }
+      set((state) => ({ workspaces: [...state.workspaces, mockWS], activeWorkspace: mockWS }))
+    }
+  },
 
   fetchBoards: async () => {
     set({ isLoading: true, error: null })
@@ -30,7 +81,6 @@ export const useBoardStore = create<BoardState>((set) => ({
       const { data } = await api.get<{ data: Board[] }>('/boards')
       set({ boards: data, isLoading: false })
     } catch {
-      // Fallback for offline/standalone preview mode
       const mockBoards = [
         {
           id: 1,
@@ -48,6 +98,14 @@ export const useBoardStore = create<BoardState>((set) => ({
           created_at: '',
           updated_at: '',
         },
+        {
+          id: 3,
+          workspace_id: 2,
+          title: 'Website Redesign',
+          visibility: 'workspace-only',
+          created_at: '',
+          updated_at: '',
+        },
       ]
       set({ boards: mockBoards, isLoading: false })
     }
@@ -59,12 +117,11 @@ export const useBoardStore = create<BoardState>((set) => ({
       const { data } = await api.get<{ data: Board }>(`/boards/${id}`)
       set({ activeBoard: data, isLoading: false })
     } catch {
-      // Fallback for offline/standalone preview mode
       const mockBoard: Board = {
         id,
-        workspace_id: 1,
-        title: id === 1 ? 'Flux Development' : 'Sprint Planning',
-        visibility: 'public',
+        workspace_id: id === 3 ? 2 : 1,
+        title: id === 1 ? 'Flux Development' : id === 2 ? 'Sprint Planning' : 'Website Redesign',
+        visibility: id === 1 ? 'public' : id === 2 ? 'private' : 'workspace-only',
         created_at: '',
         updated_at: '',
         lists: [
@@ -86,86 +143,6 @@ export const useBoardStore = create<BoardState>((set) => ({
                 created_at: '',
                 updated_at: '',
               },
-              {
-                id: 101,
-                list_id: 10,
-                title: 'Integrate Rich Text Editor',
-                description: 'Setup TipTap editor in Card Details modal',
-                position: 1,
-                story_points: 5,
-                created_at: '',
-                updated_at: '',
-              },
-            ],
-          },
-          {
-            id: 11,
-            board_id: id,
-            title: 'To Do',
-            position: 1,
-            created_at: '',
-            updated_at: '',
-            cards: [
-              {
-                id: 102,
-                list_id: 11,
-                title: 'Design DB Schema',
-                description: 'Define relations between boards, lists and cards',
-                position: 0,
-                story_points: 2,
-                created_at: '',
-                updated_at: '',
-              },
-              {
-                id: 103,
-                list_id: 11,
-                title: 'Setup Frontend Project',
-                description: 'Initialize React App with Vite, Tailwind CSS, and DaisyUI',
-                position: 1,
-                story_points: 1,
-                created_at: '',
-                updated_at: '',
-              },
-            ],
-          },
-          {
-            id: 12,
-            board_id: id,
-            title: 'In Progress',
-            position: 2,
-            created_at: '',
-            updated_at: '',
-            cards: [
-              {
-                id: 104,
-                list_id: 12,
-                title: 'Develop Authentication',
-                description: 'Implement JWT login/register flow on backend and frontend',
-                position: 0,
-                story_points: 3,
-                created_at: '',
-                updated_at: '',
-              },
-            ],
-          },
-          {
-            id: 13,
-            board_id: id,
-            title: 'Done',
-            position: 3,
-            created_at: '',
-            updated_at: '',
-            cards: [
-              {
-                id: 105,
-                list_id: 13,
-                title: 'Configure Biome',
-                description: 'Setup Biome for formatting and linting instead of ESLint/Prettier',
-                position: 0,
-                story_points: 1,
-                created_at: '',
-                updated_at: '',
-              },
             ],
           },
         ],
@@ -174,21 +151,49 @@ export const useBoardStore = create<BoardState>((set) => ({
     }
   },
 
-  createBoard: async (title: string) => {
+  createBoard: async (title: string, workspaceId?: number, visibility?: string) => {
+    const wsId = workspaceId || get().activeWorkspace?.id || 1
+    const vis = visibility || 'private'
     try {
-      const { data } = await api.post<{ data: Board }>('/boards', { title })
+      const { data } = await api.post<{ data: Board }>('/boards', {
+        title,
+        workspace_id: wsId,
+        visibility: vis,
+      })
       set((state) => ({ boards: [data, ...state.boards] }))
     } catch {
-      // Mock creation fallback
       const mockNew: Board = {
         id: Math.floor(Math.random() * 1000) + 10,
-        workspace_id: 1,
+        workspace_id: wsId,
         title,
-        visibility: 'private',
+        visibility: vis,
         created_at: '',
         updated_at: '',
       }
       set((state) => ({ boards: [mockNew, ...state.boards] }))
+    }
+  },
+
+  updateBoardVisibility: async (boardId: number, visibility: string) => {
+    try {
+      const { data } = await api.put<{ data: Board }>(`/boards/${boardId}`, { visibility })
+      set((state) => {
+        const updatedBoards = state.boards.map((b) => (b.id === boardId ? data : b))
+        const updatedActive =
+          state.activeBoard?.id === boardId
+            ? { ...state.activeBoard, visibility }
+            : state.activeBoard
+        return { boards: updatedBoards, activeBoard: updatedActive }
+      })
+    } catch {
+      set((state) => {
+        const updatedBoards = state.boards.map((b) => (b.id === boardId ? { ...b, visibility } : b))
+        const updatedActive =
+          state.activeBoard?.id === boardId
+            ? { ...state.activeBoard, visibility }
+            : state.activeBoard
+        return { boards: updatedBoards, activeBoard: updatedActive }
+      })
     }
   },
 
@@ -206,7 +211,6 @@ export const useBoardStore = create<BoardState>((set) => ({
         }
       })
     } catch {
-      // Mock creation fallback
       const mockList: List = {
         id: Math.floor(Math.random() * 1000) + 100,
         board_id: boardId,
@@ -251,7 +255,6 @@ export const useBoardStore = create<BoardState>((set) => ({
         }
       })
     } catch {
-      // Mock creation fallback
       const mockCard: Card = {
         id: Math.floor(Math.random() * 1000) + 1000,
         list_id: listId,
@@ -313,7 +316,6 @@ export const useBoardStore = create<BoardState>((set) => ({
         }
       })
     } catch {
-      // Mock update fallback
       set((state) => {
         if (!state.activeBoard?.lists) return {}
         const updatedLists = state.activeBoard.lists.map((list) => {
@@ -354,7 +356,6 @@ export const useBoardStore = create<BoardState>((set) => ({
         }
       })
     } catch {
-      // Mock delete fallback
       set((state) => {
         if (!state.activeBoard?.lists) return {}
         const updatedLists = state.activeBoard.lists.map((list) => ({
@@ -384,7 +385,6 @@ export const useBoardStore = create<BoardState>((set) => ({
         }
       })
     } catch {
-      // Mock delete fallback
       set((state) => {
         if (!state.activeBoard?.lists) return {}
         return {
