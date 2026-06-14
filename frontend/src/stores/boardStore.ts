@@ -20,6 +20,8 @@ interface BoardState {
   fetchBoard: (id: number, sort?: string) => Promise<void>
   toggleVote: (cardId: number) => Promise<void>
   createBoard: (title: string, workspaceId?: number, visibility?: string) => Promise<void>
+  createBoardFromTemplate: (templateKey: string, title: string, workspaceId: number) => Promise<void>
+  cloneBoard: (boardId: number, targetWorkspaceId: number, title?: string) => Promise<void>
   updateBoardVisibility: (boardId: number, visibility: string) => Promise<void>
   createList: (boardId: number, title: string) => Promise<void>
   createCard: (listId: number, title: string) => Promise<void>
@@ -243,6 +245,43 @@ export const useBoardStore = create<BoardState>((set, get) => ({
         updated_at: '',
       }
       set((state) => ({ boards: [mockNew, ...state.boards] }))
+    }
+  },
+
+  createBoardFromTemplate: async (templateKey: string, title: string, workspaceId: number) => {
+    set({ isLoading: true, error: null })
+    try {
+      const { data } = await api.post<{ data: Board }>('/boards/templates/create', {
+        template_key: templateKey,
+        title,
+        workspace_id: workspaceId,
+      })
+      set((state) => ({
+        boards: [data, ...state.boards],
+        activeBoard: data,
+        isLoading: false,
+      }))
+    } catch (err: any) {
+      set({ error: err.message || 'Failed to create board from template', isLoading: false })
+      throw err
+    }
+  },
+
+  cloneBoard: async (boardId: number, targetWorkspaceId: number, title?: string) => {
+    set({ isLoading: true, error: null })
+    try {
+      const { data } = await api.post<{ data: Board }>(`/boards/${boardId}/clone`, {
+        workspace_id: targetWorkspaceId,
+        title,
+      })
+      set((state) => ({
+        boards: [data, ...state.boards],
+        activeBoard: data,
+        isLoading: false,
+      }))
+    } catch (err: any) {
+      set({ error: err.message || 'Failed to clone board', isLoading: false })
+      throw err
     }
   },
 

@@ -31,6 +31,8 @@ import { automationRoutes } from './routes/automations'
 import { sprintRoutes } from './routes/sprints'
 import { epicRoutes } from './routes/epics'
 import { recurringRoutes } from './routes/recurring'
+import { boardTemplateRoutes } from './routes/boardTemplates'
+
 
 
 
@@ -68,8 +70,10 @@ app.route('/api/docs', docsRoutes)
 app.route('/api/auth/2fa', twoFactorRoutes)
 app.route('/api/auth', oauthRoutes)
 app.route('/api/auth', authRoutes)
+app.route('/api/boards', boardTemplateRoutes)
 app.route('/api/boards', boardRoutes)
 app.route('/api/lists', listRoutes)
+
 app.route('/api/cards', cardRoutes)
 app.route('/api/workspaces', workspaceRoutes)
 app.route('/api/labels', labelRoutes)

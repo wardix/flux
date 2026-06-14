@@ -62,6 +62,8 @@ function App() {
     fetchBoards,
     fetchBoard,
     createBoard,
+    createBoardFromTemplate,
+    cloneBoard,
     updateBoardVisibility,
     createList,
     fetchLabels,
@@ -287,12 +289,32 @@ function App() {
     setIsAddingWorkspace(false)
   }
 
+  const [selectedTemplate, setSelectedTemplate] = useState<string>('')
+
   const handleCreateBoard = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newBoardTitle.trim()) return
-    await createBoard(newBoardTitle.trim(), activeWorkspace?.id, 'private')
+    const wsId = activeWorkspace?.id || 1
+    if (selectedTemplate) {
+      await createBoardFromTemplate(selectedTemplate, newBoardTitle.trim(), wsId)
+    } else {
+      await createBoard(newBoardTitle.trim(), wsId, 'private')
+    }
     setNewBoardTitle('')
+    setSelectedTemplate('')
     setIsAddingBoard(false)
+  }
+
+  const handleCloneBoard = async () => {
+    if (!activeBoard || !activeWorkspace) return
+    const title = prompt('Enter cloned board title (optional):', `${activeBoard.title} (Clone)`)
+    if (title === null) return // cancelled
+    try {
+      await cloneBoard(activeBoard.id, activeWorkspace.id, title || undefined)
+      alert('Board cloned successfully!')
+    } catch (err: any) {
+      alert(err.message || 'Failed to clone board')
+    }
   }
 
   const handleCreateColumn = async (e: React.FormEvent) => {
@@ -513,7 +535,18 @@ function App() {
                   value={newBoardTitle}
                   onChange={(e) => setNewBoardTitle(e.target.value)}
                   className="input input-xs input-bordered input-primary w-full focus:outline-none"
+                  required
                 />
+                <select
+                  value={selectedTemplate}
+                  onChange={(e) => setSelectedTemplate(e.target.value)}
+                  className="select select-xs select-bordered w-full focus:outline-none"
+                >
+                  <option value="">No Template (Empty Board)</option>
+                  <option value="agile">Agile Sprint Board</option>
+                  <option value="marketing">Marketing Campaign</option>
+                  <option value="crm">Sales Pipeline (CRM)</option>
+                </select>
                 <div className="flex gap-2">
                   <button type="submit" className="btn btn-primary btn-xs flex-1">
                     Create
@@ -523,6 +556,7 @@ function App() {
                     onClick={() => {
                       setIsAddingBoard(false)
                       setNewBoardTitle('')
+                      setSelectedTemplate('')
                     }}
                     className="btn btn-ghost btn-xs flex-1"
                   >
@@ -853,6 +887,17 @@ function App() {
                     )}
                   </div>
                 )}
+
+                 {/* Clone Board Option */}
+                 {activeBoard && userRole !== 'observer' && (
+                   <button
+                     type="button"
+                     onClick={handleCloneBoard}
+                     className="btn btn-outline btn-xs gap-1 font-semibold uppercase tracking-wider text-base-content/85 hover:bg-base-200"
+                   >
+                     👥 Clone Board
+                   </button>
+                 )}
 
                 {/* Board Sorting Options */}
                 {activeBoard && (
