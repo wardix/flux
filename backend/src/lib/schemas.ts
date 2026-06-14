@@ -8,6 +8,8 @@ export const UserSchema = z
     id: z.number().openapi({ example: 1 }),
     email: z.string().email().openapi({ example: 'user@example.com' }),
     avatar_url: z.string().nullable().openapi({ example: 'https://example.com/avatar.png' }),
+    is_super_admin: z.boolean().openapi({ example: false }),
+    is_suspended: z.boolean().openapi({ example: false }),
     created_at: z.string().openapi({ example: '2026-06-14T04:49:15.000Z' }),
     updated_at: z.string().openapi({ example: '2026-06-14T04:49:15.000Z' }),
   })
