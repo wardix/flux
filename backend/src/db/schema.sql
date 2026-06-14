@@ -575,3 +575,42 @@ CREATE TABLE board_emails (
 CREATE TRIGGER update_board_emails_updated_at BEFORE UPDATE ON board_emails FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE INDEX idx_board_emails_board_id ON board_emails(board_id);
 CREATE INDEX idx_board_emails_email_address ON board_emails(email_address);
+
+-- Chat Channels Table
+CREATE TABLE chat_channels (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255),
+    type VARCHAR(20) NOT NULL, -- 'group' or 'direct'
+    workspace_id INTEGER REFERENCES workspaces(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Chat Channel Members Table
+CREATE TABLE chat_channel_members (
+    channel_id INTEGER NOT NULL REFERENCES chat_channels(id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    last_read_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (channel_id, user_id)
+);
+
+-- Chat Messages Table
+CREATE TABLE chat_messages (
+    id SERIAL PRIMARY KEY,
+    channel_id INTEGER NOT NULL REFERENCES chat_channels(id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    content TEXT NOT NULL,
+    mentions JSONB DEFAULT '[]',
+    card_links JSONB DEFAULT '[]',
+    deleted_at TIMESTAMPTZ,
+    edited_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TRIGGER update_chat_channels_updated_at BEFORE UPDATE ON chat_channels FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_chat_messages_updated_at BEFORE UPDATE ON chat_messages FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE INDEX idx_chat_channel_members_user_id ON chat_channel_members(user_id);
+CREATE INDEX idx_chat_messages_channel_id_created_at ON chat_messages(channel_id, created_at DESC);
