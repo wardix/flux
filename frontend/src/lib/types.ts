@@ -19,6 +19,15 @@ export interface Card {
   cover_file_path?: string | null
   assignee_email?: string | null
   assignee_avatar?: string | null
+  vote_count?: number
+  user_voted?: boolean
+}
+
+export interface Voter {
+  id: number
+  name: string
+  avatar_url: string | null
+  voted_at: string
 }
 
 export interface SubtaskCard extends Card {

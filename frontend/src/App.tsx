@@ -70,6 +70,8 @@ function App() {
     removeCardLocally,
     moveCardLocally,
     fetchActiveTimer,
+    currentSort,
+    setSort,
   } = useBoardStore()
 
   const decoded = decodeToken(token)
@@ -691,6 +693,39 @@ function App() {
                         </li>
                       </ul>
                     )}
+                  </div>
+                )}
+
+                {/* Board Sorting Options */}
+                {activeBoard && (
+                  <div className="dropdown dropdown-bottom">
+                    <button
+                      type="button"
+                      tabIndex={0}
+                      className="btn btn-outline btn-xs gap-1 font-semibold uppercase tracking-wider"
+                    >
+                      排序 / Sort: {currentSort === 'votes' ? '👍 Votes' : '📋 Default'}
+                    </button>
+                    <ul className="dropdown-content menu bg-base-200 rounded-box z-[1] w-40 p-2 shadow-lg gap-1 border border-base-300 mt-1">
+                      <li>
+                        <button
+                          type="button"
+                          onClick={() => setSort(null)}
+                          className={currentSort === null ? 'active' : ''}
+                        >
+                          Default
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          type="button"
+                          onClick={() => setSort('votes')}
+                          className={currentSort === 'votes' ? 'active' : ''}
+                        >
+                          👍 Vote Count
+                        </button>
+                      </li>
+                    </ul>
                   </div>
                 )}
 

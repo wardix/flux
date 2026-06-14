@@ -10,12 +10,15 @@ interface BoardState {
   activeBoard: Board | null
   isLoading: boolean
   error: string | null
+  currentSort: string | null
+  setSort: (sort: string | null) => void
 
   fetchWorkspaces: () => Promise<void>
   selectWorkspace: (workspace: Workspace | null) => void
   createWorkspace: (name: string) => Promise<void>
   fetchBoards: () => Promise<void>
-  fetchBoard: (id: number) => Promise<void>
+  fetchBoard: (id: number, sort?: string) => Promise<void>
+  toggleVote: (cardId: number) => Promise<void>
   createBoard: (title: string, workspaceId?: number, visibility?: string) => Promise<void>
   updateBoardVisibility: (boardId: number, visibility: string) => Promise<void>
   createList: (boardId: number, title: string) => Promise<void>
@@ -74,6 +77,14 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   activeBoard: null,
   isLoading: false,
   error: null,
+  currentSort: null,
+  setSort: (sort: string | null) => {
+    set({ currentSort: sort })
+    const activeBoard = get().activeBoard
+    if (activeBoard) {
+      get().fetchBoard(activeBoard.id, sort || undefined)
+    }
+  },
 
   fetchWorkspaces: async () => {
     set({ isLoading: true, error: null })
@@ -154,10 +165,12 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     }
   },
 
-  fetchBoard: async (id: number) => {
+  fetchBoard: async (id: number, sort?: string) => {
     set({ isLoading: true, error: null })
     try {
-      const { data } = await api.get<{ data: Board }>(`/boards/${id}`)
+      const activeSort = sort !== undefined ? sort : get().currentSort
+      const url = activeSort ? `/boards/${id}?sort=${activeSort}` : `/boards/${id}`
+      const { data } = await api.get<{ data: Board }>(url)
       set({ activeBoard: data, isLoading: false })
       get().fetchBoardMembers(id).catch(console.error)
       get().fetchUserRole(id).catch(console.error)
@@ -1017,6 +1030,100 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   stopTimer: async (cardId: number) => {
     await api.post('/cards/' + cardId + '/timer/stop', {})
     set({ activeTimer: null })
+  },
+
+  toggleVote: async (cardId: number) => {
+    const activeBoard = get().activeBoard
+    if (!activeBoard || !activeBoard.lists) return
+
+    // Find the card to store its original values for rollback
+    let originalCard: Card | null = null
+    let targetListId = -1
+    for (const list of activeBoard.lists) {
+      const card = (list.cards || []).find((c) => c.id === cardId)
+      if (card) {
+        originalCard = { ...card }
+        targetListId = list.id
+        break
+      }
+    }
+    if (!originalCard) return
+
+    const originalUserVoted = !!originalCard.user_voted
+    const originalVoteCount = originalCard.vote_count || 0
+    const newUserVoted = !originalUserVoted
+    const newVoteCount = newUserVoted ? originalVoteCount + 1 : Math.max(0, originalVoteCount - 1)
+
+    // Helper function to update activeBoard cards with new values
+    const updateCardState = (voted: boolean, count: number) => {
+      set((state) => {
+        if (!state.activeBoard || !state.activeBoard.lists) return {}
+        const updatedLists = state.activeBoard.lists.map((list) => {
+          if (list.id !== targetListId) return list
+          return {
+            ...list,
+            cards: (list.cards || []).map((c) => {
+              if (c.id !== cardId) return c
+              return {
+                ...c,
+                user_voted: voted,
+                vote_count: count,
+              }
+            }),
+          }
+        })
+        return {
+          activeBoard: {
+            ...state.activeBoard,
+            lists: updatedLists,
+          },
+        }
+      })
+    }
+
+    // Apply optimistic updates
+    updateCardState(newUserVoted, newVoteCount)
+
+    try {
+      const res = await api.post<{ data: { voted: boolean; vote_count: number; user_voted: boolean } }>(
+        `/cards/${cardId}/vote`,
+        {}
+      )
+      // Update with the final server state
+      updateCardState(res.data.user_voted, res.data.vote_count)
+
+      // Apply client-side sorting if currentSort is 'votes'
+      const currentSort = get().currentSort
+      if (currentSort === 'votes') {
+        set((state) => {
+          if (!state.activeBoard || !state.activeBoard.lists) return {}
+          const updatedLists = state.activeBoard.lists.map((list) => {
+            if (list.id !== targetListId) return list
+            const sortedCards = [...(list.cards || [])].sort((a, b) => {
+              const va = a.vote_count || 0
+              const vb = b.vote_count || 0
+              if (va !== vb) return vb - va
+              if (a.position !== b.position) return a.position - b.position
+              return a.id - b.id
+            })
+            return {
+              ...list,
+              cards: sortedCards.map((c, idx) => ({ ...c, position: idx })),
+            }
+          })
+          return {
+            activeBoard: {
+              ...state.activeBoard,
+              lists: updatedLists,
+            },
+          }
+        })
+      }
+    } catch (err) {
+      console.error('Failed to toggle vote, rolling back:', err)
+      // Rollback to original state
+      updateCardState(originalUserVoted, originalVoteCount)
+    }
   },
 }))
 

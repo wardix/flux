@@ -17,6 +17,9 @@ import { MarkdownRenderer } from '../shared/MarkdownRenderer'
 import { TimeTracker } from './TimeTracker'
 import { TimeLogList } from './TimeLogList'
 import { ManualTimeForm } from './ManualTimeForm'
+import { VoteCount } from './VoteCount'
+import { VoteButton } from './VoteButton'
+import { VoterList } from './VoterList'
 
 
 
@@ -368,6 +371,20 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
             </div>
           </div>
 
+          {!card.parent_card_id && (
+            <div className="border-t border-base-200 pt-3 space-y-2">
+              <span className="text-xs text-base-content/50 font-bold uppercase block">
+                Voting & Priority
+              </span>
+              <div className="flex flex-col gap-3">
+                <div>
+                  <VoteButton card={card} />
+                </div>
+                <VoterList card={card} />
+              </div>
+            </div>
+          )}
+
           <div className="border-t border-base-200 pt-3 space-y-3">
             <span className="text-xs text-base-content/50 font-bold uppercase block mb-1">
               Time Tracking
@@ -549,6 +566,7 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
                 total={card.checklist_count.total}
               />
             )}
+            <VoteCount card={card} />
           </div>
           <div className="flex items-center gap-1.5">
             {card.assignee_avatar && (
