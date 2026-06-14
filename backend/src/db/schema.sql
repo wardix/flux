@@ -1,4 +1,7 @@
 -- Drop tables if they exist (for easy migration reset)
+DROP TABLE IF EXISTS card_dependencies CASCADE;
+DROP TABLE IF EXISTS release_items CASCADE;
+DROP TABLE IF EXISTS releases CASCADE;
 DROP TABLE IF EXISTS github_links CASCADE;
 DROP TABLE IF EXISTS github_installations CASCADE;
 DROP TABLE IF EXISTS approval_votes CASCADE;
@@ -147,6 +150,15 @@ CREATE INDEX idx_lists_board_id ON lists(board_id);
 CREATE INDEX idx_cards_list_id ON cards(list_id);
 CREATE INDEX idx_cards_assignee_id ON cards(assignee_id);
 CREATE INDEX idx_cards_parent_card_id ON cards(parent_card_id);
+CREATE TABLE IF NOT EXISTS card_dependencies (
+    id SERIAL PRIMARY KEY,
+    blocking_card_id INTEGER NOT NULL REFERENCES cards(id) ON DELETE CASCADE,
+    blocked_card_id INTEGER NOT NULL REFERENCES cards(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT prevent_self_dependency CHECK (blocking_card_id != blocked_card_id),
+    UNIQUE (blocking_card_id, blocked_card_id)
+);
+
 CREATE INDEX IF NOT EXISTS idx_card_dependencies_blocking ON card_dependencies(blocking_card_id);
 CREATE INDEX IF NOT EXISTS idx_card_dependencies_blocked ON card_dependencies(blocked_card_id);
 
@@ -685,3 +697,34 @@ CREATE TABLE github_links (
 
 CREATE INDEX idx_github_links_card_id ON github_links(card_id);
 CREATE INDEX idx_github_installations_repo ON github_installations(repo_full_name);
+
+-- Create releases table
+CREATE TABLE releases (
+    id SERIAL PRIMARY KEY,
+    board_id INTEGER REFERENCES boards(id) ON DELETE CASCADE,
+    version VARCHAR(50) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    body TEXT,
+    body_html TEXT,
+    status VARCHAR(50) NOT NULL DEFAULT 'draft',
+    created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    published_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE (board_id, version)
+);
+
+-- Create release_items table
+CREATE TABLE release_items (
+    id SERIAL PRIMARY KEY,
+    release_id INTEGER REFERENCES releases(id) ON DELETE CASCADE,
+    card_id INTEGER REFERENCES cards(id) ON DELETE SET NULL,
+    category VARCHAR(50) NOT NULL,
+    summary TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TRIGGER update_releases_updated_at BEFORE UPDATE ON releases FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE INDEX idx_releases_board_id ON releases(board_id);
+CREATE INDEX idx_releases_status ON releases(status);

@@ -52,6 +52,8 @@ import { approvalsRoutes } from './routes/approvals'
 import { githubWebhookRoutes } from './routes/githubWebhook'
 import { githubInstallationRoutes } from './routes/githubInstallations'
 import { analyticsRoutes } from './routes/analytics'
+import { releaseRoutes } from './routes/releases'
+import { changelogRoutes } from './routes/changelog'
 
 // Trigger database old trash clean up on server startup
 cleanOldTrash().catch((err) => console.error('Trash cleanup failed:', err))
@@ -61,6 +63,8 @@ export const app = new OpenAPIHono()
 
 app.use('*', corsMiddleware)
 app.use('*', rateLimitMiddleware())
+
+app.route('/api/changelog', changelogRoutes)
 
 app.onError((err, c) => {
   console.error('API Error:', err)
@@ -131,6 +135,8 @@ app.route('/api', formRoutes)
 app.route('/api/chat', chatRoutes)
 app.route('/api/boards/:boardId/github', githubInstallationRoutes)
 app.route('/api/analytics', analyticsRoutes)
+app.route('/api/boards/:boardId/releases', releaseRoutes)
+    // changelogRoutes is mounted at the top
 
 export default {
   port: process.env.PORT || 3000,
