@@ -3,6 +3,8 @@ import { CSS } from '@dnd-kit/utilities'
 import { useState } from 'react'
 import type { Card } from '../../lib/types'
 import { useBoardStore } from '../../stores/boardStore'
+import { StoryPointBadge } from './StoryPointBadge'
+import { StoryPointPicker } from './StoryPointPicker'
 
 interface CardItemProps {
   card: Card
@@ -23,7 +25,7 @@ export function CardItem({ card }: CardItemProps) {
   const [title, setTitle] = useState(card.title)
   const [description, setDescription] = useState(card.description || '')
   const [dueDate, setDueDate] = useState(card.due_date ? card.due_date.split('T')[0] : '')
-  const [storyPoints, setStoryPoints] = useState(card.story_points || '')
+  const [storyPoints, setStoryPoints] = useState<number | null>(card.story_points)
 
   const updateCard = useBoardStore((s) => s.updateCard)
   const deleteCard = useBoardStore((s) => s.deleteCard)
@@ -39,7 +41,7 @@ export function CardItem({ card }: CardItemProps) {
       title,
       description: description || null,
       due_date: dueDate ? new Date(dueDate).toISOString() : null,
-      story_points: storyPoints ? Number(storyPoints) : null,
+      story_points: storyPoints,
     })
     setIsOpen(false)
   }
@@ -107,19 +109,19 @@ export function CardItem({ card }: CardItemProps) {
         )}
 
         <div className="flex items-center justify-between pt-1">
+          <div>
+            {card.due_date && (
+              <span
+                className={`text-[10px] font-medium flex items-center gap-1 ${
+                  isOverdue ? 'text-error font-bold' : 'text-base-content/50'
+                }`}
+              >
+                {isOverdue ? '⚠️ Overdue:' : '📅'} {new Date(card.due_date).toLocaleDateString()}
+              </span>
+            )}
+          </div>
           {card.story_points !== null && card.story_points !== undefined && (
-            <span className="badge badge-sm badge-outline font-semibold text-primary">
-              {card.story_points} pts
-            </span>
-          )}
-          {card.due_date && (
-            <span
-              className={`text-[10px] ml-auto font-medium flex items-center gap-1 ${
-                isOverdue ? 'text-error font-bold' : 'text-base-content/50'
-              }`}
-            >
-              {isOverdue ? '⚠️ Overdue:' : '📅'} {new Date(card.due_date).toLocaleDateString()}
-            </span>
+            <StoryPointBadge points={card.story_points} />
           )}
         </div>
       </div>
@@ -173,17 +175,13 @@ export function CardItem({ card }: CardItemProps) {
                     className="input input-bordered input-sm w-full focus:outline-none"
                   />
                 </div>
-                <div>
-                  <span className="text-xs text-base-content/50 font-bold uppercase block mb-1">
-                    Story Points
-                  </span>
-                  <input
-                    type="number"
-                    value={storyPoints}
-                    onChange={(e) => setStoryPoints(e.target.value)}
-                    className="input input-bordered input-sm w-full focus:outline-none"
-                  />
-                </div>
+              </div>
+
+              <div>
+                <span className="text-xs text-base-content/50 font-bold uppercase block mb-1">
+                  Story Points
+                </span>
+                <StoryPointPicker value={storyPoints} onChange={setStoryPoints} />
               </div>
 
               {/* Labels list toggle */}

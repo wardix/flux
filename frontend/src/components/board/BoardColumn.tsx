@@ -28,14 +28,16 @@ export function BoardColumn({ list }: BoardColumnProps) {
     setIsAdding(false)
   }
 
+  const totalStoryPoints = list.cards?.reduce((sum, card) => sum + (card.story_points || 0), 0) || 0
+
   return (
     <div className="flex flex-col bg-base-200/60 border border-base-200 w-80 rounded-2xl p-4 max-h-[80vh] shadow-sm">
       <div className="flex items-center justify-between pb-3 border-b border-base-300">
         <div className="flex items-center gap-2">
-          <h3 className="font-semibold text-base-content/90 text-sm tracking-wide">{list.title}</h3>
-          <span className="badge badge-sm bg-base-300 border-none font-bold text-[10px]">
-            {list.cards?.length || 0}
-          </span>
+          <h3 className="font-semibold text-base-content/90 text-sm tracking-wide">
+            {list.title} ({list.cards?.length || 0})
+            {totalStoryPoints > 0 && ` • ${totalStoryPoints} pts`}
+          </h3>
         </div>
         <div className="dropdown dropdown-end">
           <button
