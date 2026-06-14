@@ -53,7 +53,7 @@ const getActivitiesRoute = createRoute({
   },
 })
 
-activityRoutes.use('*', authMiddleware)
+activityRoutes.use('/cards/*', authMiddleware)
 
 activityRoutes.openapi(getActivitiesRoute, async (c) => {
   try {

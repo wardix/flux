@@ -1,3 +1,5 @@
+import { Routes, Route, useLocation } from 'react-router-dom'
+import { PublicFormPage } from './pages/PublicFormPage'
 import { DndContext, type DragEndEvent } from '@dnd-kit/core'
 import { useEffect, useState } from 'react'
 import { BoardColumn } from './components/board/BoardColumn'
@@ -23,6 +25,9 @@ import { EpicList } from './components/board/EpicList'
 import { EpicDetail } from './components/board/EpicDetail'
 import { WebhookList } from './components/board/WebhookList'
 import { ImportDialog } from './components/board/ImportDialog'
+import { PublicFormSettings } from './components/board/PublicFormSettings'
+
+
 
 
 function decodeToken(token: string | null) {
@@ -385,6 +390,17 @@ function App() {
     }
   }
 
+  const location = useLocation()
+  const isPublicForm = location.pathname.startsWith('/public/forms')
+
+  if (isPublicForm) {
+    return (
+      <Routes>
+        <Route path="/public/forms/:id" element={<PublicFormPage />} />
+      </Routes>
+    )
+  }
+
   if (!token) {
     return (
       <LoginPage
@@ -395,6 +411,7 @@ function App() {
       />
     )
   }
+
 
   return (
     <div className="flex h-screen bg-base-300 text-base-content overflow-hidden selection:bg-primary selection:text-primary-content transition-colors duration-300">
@@ -1006,6 +1023,22 @@ function App() {
                     </button>
                     <div className="dropdown-content menu bg-base-200 rounded-box z-[1] w-96 p-3 shadow-lg gap-2 border border-base-300 mt-1 max-h-[500px] overflow-y-auto">
                       <WebhookList boardId={activeBoard.id} disabled={userRole === 'observer'} />
+                    </div>
+                  </div>
+                )}
+
+                {/* Board Public Form Settings */}
+                {activeBoard && (
+                  <div className="dropdown dropdown-bottom">
+                    <button
+                      type="button"
+                      tabIndex={0}
+                      className="btn btn-outline btn-xs gap-1 font-semibold uppercase tracking-wider"
+                    >
+                      📋 Public Form
+                    </button>
+                    <div className="dropdown-content menu bg-base-200 rounded-box z-[1] w-80 p-3 shadow-lg gap-2 border border-base-300 mt-1">
+                      <PublicFormSettings boardId={activeBoard.id} disabled={userRole === 'observer'} />
                     </div>
                   </div>
                 )}

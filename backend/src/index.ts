@@ -35,6 +35,9 @@ import { boardTemplateRoutes } from './routes/boardTemplates'
 import { personalAccessRoutes } from './routes/personalAccessTokens'
 import { webhookRoutes } from './routes/webhooks'
 import { importRoutes } from './routes/import'
+import { formRoutes } from './routes/publicForms'
+
+
 
 
 
@@ -99,6 +102,8 @@ app.route('/api/recurring-tasks', recurringRoutes)
 app.route('/api/personal-access-tokens', personalAccessRoutes)
 app.route('/api/boards/:boardId/webhooks', webhookRoutes)
 app.route('/api/import', importRoutes)
+app.route('/api', formRoutes)
+
 
 
 
