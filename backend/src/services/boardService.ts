@@ -71,36 +71,19 @@ export async function update(
   id: number,
   data: { title?: string; visibility?: string; background?: string },
 ) {
-  const updates: string[] = []
-  const values: unknown[] = []
-  let index = 1
+  const current = await db`SELECT * FROM boards WHERE id = ${id}`
+  if (current.length === 0) return null
 
-  if (data.title !== undefined) {
-    updates.push(`title = $${index++}`)
-    values.push(data.title)
-  }
-  if (data.visibility !== undefined) {
-    updates.push(`visibility = $${index++}`)
-    values.push(data.visibility)
-  }
-  if (data.background !== undefined) {
-    updates.push(`background = $${index++}`)
-    values.push(data.background)
-  }
+  const title = data.title !== undefined ? data.title : current[0].title
+  const visibility = data.visibility !== undefined ? data.visibility : current[0].visibility
+  const background = data.background !== undefined ? data.background : current[0].background
 
-  if (updates.length === 0) {
-    const current = await db`SELECT * FROM boards WHERE id = ${id}`
-    return current[0] || null
-  }
-
-  values.push(id)
-  const query = `
+  const result = await db`
     UPDATE boards
-    SET ${updates.join(', ')}, updated_at = NOW()
-    WHERE id = $${index}
+    SET title = ${title}, visibility = ${visibility}, background = ${background}, updated_at = NOW()
+    WHERE id = ${id}
     RETURNING *
   `
-  const result = await db.query(query, values)
   return result[0] || null
 }
 

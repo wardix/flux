@@ -8,6 +8,7 @@ function App() {
   const {
     boards,
     workspaces,
+    labels,
     activeWorkspace,
     activeBoard,
     fetchWorkspaces,
@@ -18,6 +19,8 @@ function App() {
     createBoard,
     updateBoardVisibility,
     createList,
+    fetchLabels,
+    createLabel,
   } = useBoardStore()
 
   const [newBoardTitle, setNewBoardTitle] = useState('')
@@ -43,6 +46,12 @@ function App() {
     fetchWorkspaces()
     fetchBoards()
   }, [fetchWorkspaces, fetchBoards])
+
+  useEffect(() => {
+    if (activeBoard?.id) {
+      fetchLabels(activeBoard.id)
+    }
+  }, [activeBoard?.id, fetchLabels])
 
   // Filter boards based on selected workspace
   const filteredBoards = boards.filter((b) => b.workspace_id === activeWorkspace?.id)
@@ -395,6 +404,71 @@ function App() {
                     </button>
                   </li>
                 </ul>
+              </div>
+            )}
+
+            {/* Board Labels Manager */}
+            {activeBoard && (
+              <div className="dropdown dropdown-bottom">
+                <button
+                  type="button"
+                  tabIndex={0}
+                  className="btn btn-outline btn-xs gap-1 font-semibold uppercase tracking-wider"
+                >
+                  🏷️ Labels
+                </button>
+                <div className="dropdown-content menu bg-base-200 rounded-box z-[1] w-64 p-3 shadow-lg gap-2 border border-base-300 mt-1">
+                  <span className="text-[10px] font-bold text-base-content/50 uppercase tracking-wide">
+                    Board Labels
+                  </span>
+                  <div className="flex flex-wrap gap-1.5 py-1">
+                    {labels.map((l) => (
+                      <span
+                        key={l.id}
+                        style={{ backgroundColor: l.color }}
+                        className="badge text-white border-none text-[9px] font-bold uppercase px-2 py-0.5 rounded"
+                      >
+                        {l.name}
+                      </span>
+                    ))}
+                    {labels.length === 0 && (
+                      <span className="text-xs text-base-content/40">No labels created</span>
+                    )}
+                  </div>
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault()
+                      const form = e.currentTarget
+                      const name = (form.elements.namedItem('labelName') as HTMLInputElement).value
+                      const color = (form.elements.namedItem('labelColor') as HTMLInputElement)
+                        .value
+                      if (name && color) {
+                        createLabel(activeBoard.id, name, color)
+                        form.reset()
+                      }
+                    }}
+                    className="space-y-2 pt-2 border-t border-base-300"
+                  >
+                    <input
+                      name="labelName"
+                      type="text"
+                      placeholder="New label name..."
+                      className="input input-xs input-bordered w-full focus:outline-none"
+                      required
+                    />
+                    <div className="flex items-center justify-between gap-2">
+                      <input
+                        name="labelColor"
+                        type="color"
+                        defaultValue="#4f46e5"
+                        className="w-8 h-6 rounded cursor-pointer border-none bg-transparent"
+                      />
+                      <button type="submit" className="btn btn-primary btn-xs flex-1 text-white">
+                        Add Label
+                      </button>
+                    </div>
+                  </form>
+                </div>
               </div>
             )}
           </div>

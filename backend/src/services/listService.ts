@@ -17,32 +17,18 @@ export async function create(data: { board_id: number; title: string; position?:
 }
 
 export async function update(id: number, data: { title?: string; position?: number }) {
-  const updates: string[] = []
-  const values: unknown[] = []
-  let index = 1
+  const current = await db`SELECT * FROM lists WHERE id = ${id}`
+  if (current.length === 0) return null
 
-  if (data.title !== undefined) {
-    updates.push(`title = $${index++}`)
-    values.push(data.title)
-  }
-  if (data.position !== undefined) {
-    updates.push(`position = $${index++}`)
-    values.push(data.position)
-  }
+  const title = data.title !== undefined ? data.title : current[0].title
+  const position = data.position !== undefined ? data.position : current[0].position
 
-  if (updates.length === 0) {
-    const current = await db`SELECT * FROM lists WHERE id = ${id}`
-    return current[0] || null
-  }
-
-  values.push(id)
-  const query = `
+  const result = await db`
     UPDATE lists
-    SET ${updates.join(', ')}, updated_at = NOW()
-    WHERE id = $${index}
+    SET title = ${title}, position = ${position}, updated_at = NOW()
+    WHERE id = ${id}
     RETURNING *
   `
-  const result = await db.query(query, values)
   return result[0] || null
 }
 
