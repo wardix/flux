@@ -507,3 +507,15 @@ export interface ChatMessage {
     email: string
   }
 }
+
+export interface StatusCount { status: string; count: number }
+export interface MemberCount { id: number; name: string; avatar_url: string | null; total: number; completed: number }
+export interface CompletionData { date: string; completed: number; total: number; rate: number }
+export interface VelocityData { period: string; completed: number; added: number }
+export interface SummaryData {
+  total_cards: number
+  completed_cards: number
+  overdue_cards: number
+  avg_completion_days: number
+  completion_percentage: number
+}

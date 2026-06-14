@@ -51,6 +51,7 @@ import { websocket } from './websocket'
 import { approvalsRoutes } from './routes/approvals'
 import { githubWebhookRoutes } from './routes/githubWebhook'
 import { githubInstallationRoutes } from './routes/githubInstallations'
+import { analyticsRoutes } from './routes/analytics'
 
 // Trigger database old trash clean up on server startup
 cleanOldTrash().catch((err) => console.error('Trash cleanup failed:', err))
@@ -129,6 +130,7 @@ app.route('/api/import', importRoutes)
 app.route('/api', formRoutes)
 app.route('/api/chat', chatRoutes)
 app.route('/api/boards/:boardId/github', githubInstallationRoutes)
+app.route('/api/analytics', analyticsRoutes)
 
 export default {
   port: process.env.PORT || 3000,
