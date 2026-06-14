@@ -28,6 +28,12 @@ interface BoardState {
   deleteLabel: (id: number) => Promise<void>
   addLabelToCard: (cardId: number, label: Label) => Promise<void>
   removeLabelFromCard: (cardId: number, labelId: number) => Promise<void>
+  moveCard: (
+    cardId: number,
+    sourceListId: number,
+    targetListId: number,
+    targetIndex: number,
+  ) => Promise<void>
 }
 
 export const useBoardStore = create<BoardState>((set, get) => ({
@@ -531,6 +537,83 @@ export const useBoardStore = create<BoardState>((set, get) => ({
         }))
         return { activeBoard: { ...state.activeBoard, lists: updatedLists } }
       })
+    }
+  },
+
+  moveCard: async (
+    cardId: number,
+    sourceListId: number,
+    targetListId: number,
+    targetIndex: number,
+  ) => {
+    const activeBoard = get().activeBoard
+    if (!activeBoard?.lists) return
+
+    // Find the card being moved
+    let movedCard: Card | null = null
+    for (const list of activeBoard.lists) {
+      const card = list.cards?.find((c) => c.id === cardId)
+      if (card) {
+        movedCard = { ...card, list_id: targetListId }
+        break
+      }
+    }
+    if (!movedCard) return
+
+    // Create a copy of lists and cards
+    const updatedLists = activeBoard.lists.map((list) => {
+      let cards = [...(list.cards || [])]
+      if (list.id === sourceListId) {
+        cards = cards.filter((c) => c.id !== cardId)
+      }
+      if (list.id === targetListId) {
+        if (sourceListId === targetListId) {
+          cards = cards.filter((c) => c.id !== cardId)
+        }
+        cards.splice(targetIndex, 0, movedCard!)
+      }
+      // Re-assign positions
+      const updatedCards = cards.map((c, idx) => ({
+        ...c,
+        position: idx,
+      }))
+      return {
+        ...list,
+        cards: updatedCards,
+      }
+    })
+
+    // Optimistic state update
+    set({
+      activeBoard: {
+        ...activeBoard,
+        lists: updatedLists,
+      },
+    })
+
+    // Persist changes
+    try {
+      const cardsToUpdate: { id: number; list_id: number; position: number }[] = []
+      const sourceList = updatedLists.find((l) => l.id === sourceListId)
+      const targetList = updatedLists.find((l) => l.id === targetListId)
+
+      if (sourceList?.cards) {
+        for (const c of sourceList.cards) {
+          cardsToUpdate.push({ id: c.id, list_id: sourceListId, position: c.position })
+        }
+      }
+      if (targetList && targetListId !== sourceListId && targetList.cards) {
+        for (const c of targetList.cards) {
+          cardsToUpdate.push({ id: c.id, list_id: targetListId, position: c.position })
+        }
+      }
+
+      await api.put('/cards/positions', { cards: cardsToUpdate })
+    } catch (error) {
+      console.error('Failed to update card positions:', error)
+      if (activeBoard.id) {
+        await get().fetchBoard(activeBoard.id)
+      }
     }
   },
 }))

@@ -1,3 +1,5 @@
+import { useDroppable } from '@dnd-kit/core'
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useState } from 'react'
 import type { List } from '../../lib/types'
 import { useBoardStore } from '../../stores/boardStore'
@@ -8,6 +10,10 @@ interface BoardColumnProps {
 }
 
 export function BoardColumn({ list }: BoardColumnProps) {
+  const { setNodeRef } = useDroppable({
+    id: `list-${list.id}`,
+  })
+
   const [newCardTitle, setNewCardTitle] = useState('')
   const [isAdding, setIsAdding] = useState(false)
   const createCard = useBoardStore((s) => s.createCard)
@@ -40,10 +46,15 @@ export function BoardColumn({ list }: BoardColumnProps) {
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto py-3 space-y-3 scrollbar-thin">
-        {list.cards?.map((card) => (
-          <CardItem key={card.id} card={card} />
-        ))}
+      <div ref={setNodeRef} className="flex-1 overflow-y-auto py-3 space-y-3 scrollbar-thin">
+        <SortableContext
+          items={list.cards?.map((c) => c.id) || []}
+          strategy={verticalListSortingStrategy}
+        >
+          {list.cards?.map((card) => (
+            <CardItem key={card.id} card={card} />
+          ))}
+        </SortableContext>
       </div>
 
       <div className="pt-2">
