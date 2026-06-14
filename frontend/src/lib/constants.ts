@@ -33,3 +33,17 @@ export const CAPACITY_LABELS = {
   optimal: 'Balanced (6-10)',
   overload: 'Overloaded (>10)',
 }
+
+export type EmbedSize = 'small' | 'medium' | 'full'
+
+export const EMBED_SIZE_CLASSES = {
+  small: 'max-w-sm',
+  medium: 'max-w-2xl',
+  full: 'w-full'
+}
+
+export const EMBED_HEIGHT = {
+  small: 'h-48',
+  medium: 'h-96',
+  full: 'h-[500px]'
+}
