@@ -12,6 +12,7 @@ import { PresenceIndicator } from './components/shared/PresenceIndicator'
 import { ActiveTimerIndicator } from './components/shared/ActiveTimerIndicator'
 import { AdminDashboardPage } from './pages/AdminDashboardPage'
 import { ExportDialog } from './components/board/ExportDialog'
+import { CustomFieldEditor } from './components/board/CustomFieldEditor'
 import { api } from './lib/api'
 
 function decodeToken(token: string | null) {
@@ -792,6 +793,22 @@ function App() {
                   >
                     📤 Export
                   </button>
+                )}
+
+                {/* Board Custom Fields Manager */}
+                {activeBoard && (
+                  <div className="dropdown dropdown-bottom">
+                    <button
+                      type="button"
+                      tabIndex={0}
+                      className="btn btn-outline btn-xs gap-1 font-semibold uppercase tracking-wider"
+                    >
+                      ⚙️ Custom Fields
+                    </button>
+                    <div className="dropdown-content menu bg-base-200 rounded-box z-[1] w-80 p-3 shadow-lg gap-2 border border-base-300 mt-1 max-h-[400px] overflow-y-auto">
+                      <CustomFieldEditor boardId={activeBoard.id} disabled={userRole === 'observer'} />
+                    </div>
+                  </div>
                 )}
 
                 {/* Board Labels Manager */}

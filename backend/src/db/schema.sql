@@ -1,4 +1,6 @@
 -- Drop tables if they exist (for easy migration reset)
+DROP TABLE IF EXISTS card_custom_field_values CASCADE;
+DROP TABLE IF EXISTS custom_fields CASCADE;
 DROP TABLE IF EXISTS card_votes CASCADE;
 DROP TABLE IF EXISTS time_logs CASCADE;
 DROP TABLE IF EXISTS board_stars CASCADE;
@@ -293,6 +295,37 @@ CREATE TABLE card_votes (
 );
 
 CREATE INDEX idx_card_votes_user_id ON card_votes(user_id);
+
+-- Custom Fields Table
+CREATE TABLE custom_fields (
+    id SERIAL PRIMARY KEY,
+    board_id INTEGER NOT NULL REFERENCES boards(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    field_type VARCHAR(50) NOT NULL,
+    options JSONB,
+    is_required BOOLEAN NOT NULL DEFAULT FALSE,
+    position INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE (board_id, name)
+);
+
+CREATE TRIGGER update_custom_fields_updated_at BEFORE UPDATE ON custom_fields FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE INDEX idx_custom_fields_board_id ON custom_fields(board_id);
+
+-- Card Custom Field Values Table
+CREATE TABLE card_custom_field_values (
+    card_id INTEGER NOT NULL REFERENCES cards(id) ON DELETE CASCADE,
+    field_id INTEGER NOT NULL REFERENCES custom_fields(id) ON DELETE CASCADE,
+    value TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (card_id, field_id)
+);
+
+CREATE TRIGGER update_card_custom_field_values_updated_at BEFORE UPDATE ON card_custom_field_values FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE INDEX idx_card_custom_field_values_card_id ON card_custom_field_values(card_id);
+CREATE INDEX idx_card_custom_field_values_field_id ON card_custom_field_values(field_id);
 
 
 
