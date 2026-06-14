@@ -21,6 +21,7 @@ export interface Card {
   assignee_avatar?: string | null
   vote_count?: number
   user_voted?: boolean
+  sprint_id?: number | null
 }
 
 export interface Voter {
@@ -171,6 +172,19 @@ export interface AutomationRule {
   last_executed_at: string | null
   created_at: string
 }
+
+export interface Sprint {
+  id: number
+  board_id: number
+  title: string
+  goal: string | null
+  start_date: string
+  end_date: string
+  status: 'planning' | 'active' | 'completed'
+  created_at: string
+  updated_at: string
+}
+
 
 
 

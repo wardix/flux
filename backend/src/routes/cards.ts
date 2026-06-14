@@ -584,4 +584,56 @@ cardRoutes.openapi(deleteCardRoute, async (c) => {
   return c.body(null, 204)
 })
 
+// Assign Card to Sprint Endpoint
+const assignCardSprintRoute = createRoute({
+  method: 'put',
+  path: '/{id}/sprint',
+  tags: ['Cards'],
+  summary: 'Assign card to sprint',
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      id: z.string(),
+    }),
+    body: {
+      content: {
+        'application/json': {
+          schema: z.object({
+            sprint_id: z.number().nullable(),
+          }),
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Sprint assigned successfully',
+      content: {
+        'application/json': {
+          schema: z.object({
+            data: z.any(),
+          }),
+        },
+      },
+    },
+  },
+})
+
+cardRoutes.openapi(assignCardSprintRoute, async (c) => {
+  const cardId = Number(c.req.param('id'))
+  if (Number.isNaN(cardId)) return c.json({ error: 'Invalid ID' }, 400)
+
+  const body = await c.req.json()
+  const sprintId = body.sprint_id
+
+  try {
+    const sprintService = await import('../services/sprintService')
+    const card = await sprintService.assignCardToSprint(cardId, sprintId)
+    return c.json({ data: card }, 200)
+  } catch (err: any) {
+    const status = err.status || 400
+    return c.json({ error: err.message }, status)
+  }
+})
+
 export { cardRoutes }
