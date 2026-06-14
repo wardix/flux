@@ -1,6 +1,7 @@
 import type { Context, Next } from 'hono'
 import { verify } from 'hono/jwt'
 import { checkObserverPermission } from './permission'
+import * as patService from '../services/personalAccessService'
 
 export async function authMiddleware(c: Context, next: Next) {
   const token = c.req.header('Authorization')?.replace('Bearer ', '')
@@ -15,7 +16,16 @@ export async function authMiddleware(c: Context, next: Next) {
     c.set('userId', Number(payload.sub))
     return await checkObserverPermission(c, next)
   } catch (err) {
-    console.error('JWT verification error:', err)
+    // Try validating as Personal Access Token
+    const patUserId = await patService.validatePAT(token)
+    if (patUserId !== null) {
+      c.set('userId', patUserId)
+      return await checkObserverPermission(c, next)
+    }
+
+    if (err instanceof Error && !err.message.includes('invalid JWT token')) {
+      console.error('JWT verification error:', err)
+    }
     return c.json({ error: 'Invalid token' }, 401)
   }
 }
