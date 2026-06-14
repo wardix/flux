@@ -27,6 +27,8 @@ export interface Card {
   is_mirror?: boolean
   source_board_title?: string | null
   source_board_id?: number | null
+  cover_color?: string | null
+  cover_image_url?: string | null
 }
 
 export interface RecurringRule {
@@ -80,6 +82,8 @@ export interface Board {
   title: string
   visibility: string
   background?: string | null
+  bg_image_url?: string | null
+  bg_color?: string | null
   created_by?: number | null
   created_at: string
   updated_at: string

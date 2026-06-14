@@ -9,6 +9,7 @@ import { CardActivities } from './CardActivities'
 import { CardAttachments } from './CardAttachments'
 import { CardChecklists } from './CardChecklists'
 import { CardComments } from './CardComments'
+import { CardCoverPicker } from './CardCoverPicker'
 import { CardGoalBadge } from './CardGoalBadge'
 import { ChecklistProgress } from './ChecklistProgress'
 import { CustomFieldBadge } from './CustomFieldBadge'
@@ -138,6 +139,7 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
 
   const [mirrors, setMirrors] = useState<CardMirror[]>([])
   const [showMirrorSelector, setShowMirrorSelector] = useState(false)
+  const [isCoverPickerOpen, setIsCoverPickerOpen] = useState(false)
 
   const fetchMirrors = async () => {
     try {
@@ -160,6 +162,42 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
       fetchMirrors()
     } catch (err) {
       console.error('Failed to delete mirror:', err)
+    }
+  }
+
+  const handleSelectCoverColor = async (color: string) => {
+    try {
+      await updateCard(card.id, { cover_color: color, cover_image_url: null })
+      const activeBoard = useBoardStore.getState().activeBoard
+      if (activeBoard?.id) {
+        await useBoardStore.getState().fetchBoard(activeBoard.id)
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const handleSelectCoverImage = async (url: string) => {
+    try {
+      await updateCard(card.id, { cover_image_url: url, cover_color: null })
+      const activeBoard = useBoardStore.getState().activeBoard
+      if (activeBoard?.id) {
+        await useBoardStore.getState().fetchBoard(activeBoard.id)
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const handleRemoveCover = async () => {
+    try {
+      await updateCard(card.id, { cover_color: null, cover_image_url: null })
+      const activeBoard = useBoardStore.getState().activeBoard
+      if (activeBoard?.id) {
+        await useBoardStore.getState().fetchBoard(activeBoard.id)
+      }
+    } catch (err) {
+      console.error(err)
     }
   }
 
@@ -402,9 +440,31 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
         >
           ✕
         </button>
-        <h3 className="font-bold text-lg text-primary">
-          {isObserver ? 'Card Details (Read-only)' : 'Edit Card Details'}
-        </h3>
+        <div className="flex justify-between items-center pr-8">
+          <h3 className="font-bold text-lg text-primary">
+            {isObserver ? 'Card Details (Read-only)' : 'Edit Card Details'}
+          </h3>
+          {!isObserver && (
+            <div className="relative">
+              <button
+                type="button"
+                className="btn btn-xs btn-outline btn-primary font-semibold"
+                onClick={() => setIsCoverPickerOpen(!isCoverPickerOpen)}
+              >
+                🖼️ Cover
+              </button>
+              <CardCoverPicker
+                currentCoverColor={card.cover_color ?? null}
+                currentCoverImageUrl={card.cover_image_url ?? null}
+                onSelectColor={handleSelectCoverColor}
+                onSelectImage={handleSelectCoverImage}
+                onRemove={handleRemoveCover}
+                isOpen={isCoverPickerOpen}
+                onClose={() => setIsCoverPickerOpen(false)}
+              />
+            </div>
+          )}
+        </div>
 
         <div className="space-y-3">
           <div>
@@ -868,12 +928,21 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
         onKeyDown={(e) => e.key === 'Enter' && setIsOpen(true)}
         className="card bg-base-100 shadow-sm border border-base-200/50 hover:shadow-md hover:border-primary/30 transition-all p-3 space-y-2 group relative cursor-pointer text-left focus:outline-none focus:ring-2 focus:ring-primary/40 overflow-hidden"
       >
-        {/* Cover Image */}
-        {card.cover_file_path && (
+        {/* Cover Image/Color */}
+        {card.cover_image_url ? (
+          <div className="w-[calc(100%+1.5rem)] h-[120px] -mt-3 -mx-3 mb-2 overflow-hidden relative">
+            <img src={card.cover_image_url} alt="Cover" className="w-full h-full object-cover" />
+          </div>
+        ) : card.cover_color ? (
+          <div
+            className="w-[calc(100%+1.5rem)] h-[32px] -mt-3 -mx-3 mb-2"
+            style={{ backgroundColor: card.cover_color }}
+          />
+        ) : card.cover_file_path ? (
           <div className="w-[calc(100%+1.5rem)] h-28 -mt-3 -mx-3 mb-2 overflow-hidden relative">
             <img src={card.cover_file_path} alt="Cover" className="w-full h-full object-cover" />
           </div>
-        )}
+        ) : null}
 
         {/* Labels header */}
         {card.labels && card.labels.length > 0 && (

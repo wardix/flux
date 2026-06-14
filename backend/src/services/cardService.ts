@@ -70,6 +70,8 @@ export async function update(
     assignee_id?: number | null
     parent_card_id?: number | null
     story_points?: number | null
+    cover_color?: string | null
+    cover_image_url?: string | null
     archived_at?: string | null
     deleted_at?: string | null
     is_recurring?: boolean
@@ -88,6 +90,8 @@ export async function update(
   const parent_card_id =
     data.parent_card_id !== undefined ? data.parent_card_id : row.parent_card_id
   const story_points = data.story_points !== undefined ? data.story_points : row.story_points
+  const cover_color = data.cover_color !== undefined ? data.cover_color : row.cover_color
+  const cover_image_url = data.cover_image_url !== undefined ? data.cover_image_url : row.cover_image_url
   const archived_at = data.archived_at !== undefined ? data.archived_at : row.archived_at
   const deleted_at = data.deleted_at !== undefined ? data.deleted_at : row.deleted_at
   const is_recurring = data.is_recurring !== undefined ? data.is_recurring : row.is_recurring
@@ -103,6 +107,8 @@ export async function update(
       assignee_id = ${assignee_id},
       parent_card_id = ${parent_card_id},
       story_points = ${story_points},
+      cover_color = ${cover_color},
+      cover_image_url = ${cover_image_url},
       is_recurring = ${is_recurring},
       archived_at = ${archived_at},
       deleted_at = ${deleted_at},

@@ -20,6 +20,7 @@ import { docsRoutes } from './routes/docs'
 import { epicRoutes } from './routes/epics'
 import { exportRoutes } from './routes/export'
 import { goalRoutes } from './routes/goals'
+import { unsplashRoutes } from './routes/unsplash'
 
 import { importRoutes } from './routes/import'
 import { labelRoutes } from './routes/labels'
@@ -79,6 +80,7 @@ app.route('/api/lists', listRoutes)
 app.route('/api/cards', cardRoutes)
 app.route('/api/cards', mirrorRoutes)
 app.route('/api/goals', goalRoutes)
+app.route('/api/unsplash', unsplashRoutes)
 
 app.route('/api/workspaces', workspaceRoutes)
 app.route('/api/labels', labelRoutes)

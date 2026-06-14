@@ -160,6 +160,8 @@ const updateBoardRoute = createRoute({
           schema: z.object({
             title: z.string().optional().openapi({ example: 'New Title' }),
             background: z.string().optional().openapi({ example: 'green' }),
+            bg_image_url: z.string().nullable().optional().openapi({ example: 'https://example.com/bg.png' }),
+            bg_color: z.string().nullable().optional().openapi({ example: '#ff0000' }),
             visibility: z.string().optional().openapi({ example: 'public' }),
             deleted_at: z.string().nullable().optional(),
           }),
