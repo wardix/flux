@@ -35,6 +35,9 @@ import { JSONContent } from '@tiptap/react'
 import { VoteButton } from './VoteButton'
 import { VoteCount } from './VoteCount'
 import { VoterList } from './VoterList'
+import { DependencyWithCard } from '../../lib/types'
+import { DependencyBadge } from './DependencyBadge'
+import { DependencySelector } from './DependencySelector'
 
 interface CardItemProps {
   card: Card
@@ -158,6 +161,7 @@ export function CardItem({
 
   const [mirrors, setMirrors] = useState<CardMirror[]>([])
   const [showMirrorSelector, setShowMirrorSelector] = useState(false)
+  const [showDependencySelector, setShowDependencySelector] = useState(false)
   const [isCoverPickerOpen, setIsCoverPickerOpen] = useState(false)
 
   const fetchMirrors = async () => {
@@ -178,11 +182,45 @@ export function CardItem({
   const handleRemoveMirror = async (mirrorId: number) => {
     try {
       await api.delete(`/cards/${card.id}/mirror/${mirrorId}`)
-      fetchMirrors()
+      await fetchMirrors()
     } catch (err) {
-      console.error('Failed to delete mirror:', err)
+      console.error('Failed to remove mirror:', err)
     }
   }
+
+  const [dependencies, setDependencies] = useState<{ blocking: DependencyWithCard[], blocked_by: DependencyWithCard[] }>({ blocking: [], blocked_by: [] })
+
+  const fetchDependencies = async () => {
+    try {
+      const res = await api.get<{ data: { blocking: DependencyWithCard[], blocked_by: DependencyWithCard[] } }>(`/cards/${card.id}/dependencies`)
+      setDependencies(res.data)
+    } catch (err) {
+      console.error('Failed to fetch dependencies:', err)
+    }
+  }
+
+  useEffect(() => {
+    fetchDependencies()
+  }, [card.id])
+
+  const handleAddDependency = async (blockedCardId: number) => {
+    try {
+      await api.post(`/cards/${card.id}/dependencies`, { blocked_card_id: blockedCardId })
+      await fetchDependencies()
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Failed to add dependency')
+    }
+  }
+
+  const handleRemoveDependency = async (depId: number) => {
+    try {
+      await api.delete(`/cards/${card.id}/dependencies/${depId}`)
+      await fetchDependencies()
+    } catch (err) {
+      console.error('Failed to remove dependency:', err)
+    }
+  }
+
 
   const handleSelectCoverColor = async (color: string) => {
     try {
@@ -691,6 +729,20 @@ export function CardItem({
             <>
               <div className="border-t border-base-200 pt-3">
                 <span className="text-xs text-base-content/50 font-bold uppercase block mb-2">
+                  Dependencies
+                </span>
+                <DependencySelector
+                  cardId={card.id}
+                  boardId={card.board_id!}
+                  dependencies={dependencies}
+                  onAdd={handleAddDependency}
+                  onRemove={handleRemoveDependency}
+                  disabled={isObserver}
+                />
+              </div>
+
+              <div className="border-t border-base-200 pt-3">
+                <span className="text-xs text-base-content/50 font-bold uppercase block mb-2">
                   Checklists
                 </span>
                 <CardChecklists
@@ -1138,13 +1190,28 @@ export function CardItem({
               <div className="flex items-center gap-2">
                 {card.due_date && (
                   <span
-                    className={`text-[10px] font-medium flex items-center gap-1 ${
-                      isOverdue ? 'text-error font-bold' : 'text-base-content/50'
+                    className={`badge badge-sm gap-1 text-[10px] font-bold ${
+                      new Date(card.due_date) < new Date() && !card.is_completed
+                        ? 'badge-error text-white'
+                        : 'badge-ghost'
                     }`}
                   >
-                    {isOverdue ? '⚠️ Overdue:' : '📅'} {new Date(card.due_date).toLocaleDateString()}
+                    <Calendar size={10} />
+                    {new Date(card.due_date).toLocaleDateString()}
                   </span>
                 )}
+                
+                {/* Dependency Badge */}
+                <DependencyBadge
+                  blockingCount={dependencies.blocking.length}
+                  blockedByCount={dependencies.blocked_by.length}
+                  isBlocked={dependencies.blocked_by.some(d => !d.card.is_completed)}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setShowDependencySelector(true)
+                  }}
+                />
+
                 {card.subtask_count && card.subtask_count.total > 0 && (
                   <SubtaskProgress
                     completed={card.subtask_count.completed}

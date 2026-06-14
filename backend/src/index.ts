@@ -14,6 +14,7 @@ import { boardRoutes } from './routes/boards'
 import { boardTemplateRoutes } from './routes/boardTemplates'
 import { cardRoutes } from './routes/cards'
 import { checklistRoutes } from './routes/checklists'
+import { dependencyRoutes } from './routes/dependencies'
 import { commentRoutes } from './routes/comments'
 import { boardCustomFieldRoutes, cardCustomFieldRoutes } from './routes/customFields'
 import { docsRoutes } from './routes/docs'
@@ -98,6 +99,7 @@ app.route('/api/workspaces', workspaceRoutes)
 app.route('/api/workspaces', brandingRoutes)
 app.route('/api/labels', labelRoutes)
 app.route('/api', subtaskRoutes)
+app.route('/api', dependencyRoutes)
 app.route('/api', checklistRoutes)
 app.route('/api', attachmentRoutes)
 app.route('/api', commentRoutes)

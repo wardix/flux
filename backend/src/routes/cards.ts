@@ -4,6 +4,8 @@ import { authMiddleware } from '../middleware/auth'
 import { logActivity } from '../services/activityService'
 import * as automationService from '../services/automationService'
 import * as cardService from '../services/cardService'
+import * as dependencyService from '../services/dependencyService'
+import * as listService from '../services/listService'
 import * as webhookService from '../services/webhookService'
 import * as notificationService from '../services/notificationService'
 import { broadcastToBoard } from '../websocket/events'
@@ -464,6 +466,16 @@ cardRoutes.openapi(updateCardPositionsRoute, async (c) => {
       }
     }
 
+    let warningMsg: string | undefined
+
+    if (movedCardPayload && movedCardPayload.from_list_id !== movedCardPayload.to_list_id) {
+      const blockedRes = await dependencyService.isCardBlocked(movedCardPayload.id)
+      if (blockedRes.isBlocked) {
+        const blockerTitles = blockedRes.blockers.map(b => `"${b.title}"`).join(', ')
+        warningMsg = `Card is still blocked by: ${blockerTitles}`
+      }
+    }
+
     await cardService.updatePositions(body.cards)
 
     if (boardId && movedCardPayload) {
@@ -491,7 +503,7 @@ cardRoutes.openapi(updateCardPositionsRoute, async (c) => {
       })
     }
 
-    return c.json({ success: true }, 200)
+    return c.json({ data: { success: true }, warning: warningMsg }, 200)
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Internal Server Error'
     return c.json({ error: message }, 500)
