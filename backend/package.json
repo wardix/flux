@@ -4,7 +4,9 @@
     "dev": "bun run --hot src/index.ts",
     "lint": "biome lint .",
     "format": "biome format --write .",
-    "check": "biome check ."
+    "check": "biome check .",
+    "db:migrate": "bun run src/db/migrate.ts",
+    "db:seed": "bun run src/db/migrate.ts --seed"
   },
   "dependencies": {
     "argon2": "0.41",
