@@ -42,6 +42,8 @@ import { twoFactorRoutes } from './routes/twoFactor'
 import { userRoutes } from './routes/users'
 import { voteRoutes } from './routes/votes'
 import { webhookRoutes } from './routes/webhooks'
+import { emailWebhooksRoutes } from './routes/emailWebhooks'
+import { boardEmailsRoutes } from './routes/boardEmails'
 import { workspaceRoutes } from './routes/workspaces'
 import { websocket } from './websocket'
 
@@ -112,6 +114,8 @@ app.route('/api/workspaces/:workspaceId/epics', epicRoutes)
 app.route('/api/recurring-tasks', recurringRoutes)
 app.route('/api/personal-access-tokens', personalAccessRoutes)
 app.route('/api/boards/:boardId/webhooks', webhookRoutes)
+app.route('/api/boards/:boardId/email', boardEmailsRoutes)
+app.route('/api/webhooks', emailWebhooksRoutes)
 app.route('/api/import', importRoutes)
 app.route('/api', formRoutes)
 

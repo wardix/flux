@@ -560,3 +560,18 @@ CREATE TABLE notifications (
 
 CREATE TRIGGER update_notifications_updated_at BEFORE UPDATE ON notifications FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE INDEX idx_notifications_user_id_is_read ON notifications(user_id, is_read);
+
+-- Board Emails Table
+CREATE TABLE board_emails (
+    id SERIAL PRIMARY KEY,
+    board_id INTEGER NOT NULL REFERENCES boards(id) ON DELETE CASCADE,
+    target_list_id INTEGER NOT NULL REFERENCES lists(id) ON DELETE CASCADE,
+    email_address VARCHAR(255) UNIQUE NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TRIGGER update_board_emails_updated_at BEFORE UPDATE ON board_emails FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE INDEX idx_board_emails_board_id ON board_emails(board_id);
+CREATE INDEX idx_board_emails_email_address ON board_emails(email_address);
