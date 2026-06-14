@@ -7,7 +7,8 @@
     "lint": "bunx biome check .",
     "format": "bunx biome check --write .",
     "db:migrate": "cd backend && bun run db:migrate",
-    "db:seed": "cd backend && bun run db:seed"
+    "db:seed": "cd backend && bun run db:seed",
+    "test:frontend": "cd frontend && bun run test"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.0"
