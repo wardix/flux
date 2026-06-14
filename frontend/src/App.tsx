@@ -23,6 +23,13 @@ function App() {
     fetchLabels,
     createLabel,
     moveCard,
+    fetchArchive,
+    fetchTrash,
+    restoreCard,
+    restoreList,
+    deleteCardPermanently,
+    deleteListPermanently,
+    deleteBoard,
   } = useBoardStore()
 
   const [newBoardTitle, setNewBoardTitle] = useState('')
@@ -34,6 +41,27 @@ function App() {
   const [isAddingColumn, setIsAddingColumn] = useState(false)
   const [isAddingWorkspace, setIsAddingWorkspace] = useState(false)
   const [isInviting, setIsInviting] = useState(false)
+
+  const [archivedItems, setArchivedItems] = useState<{ lists: List[]; cards: Card[] }>({
+    lists: [],
+    cards: [],
+  })
+  const [trashedItems, setTrashedItems] = useState<{ lists: List[]; cards: Card[] }>({
+    lists: [],
+    cards: [],
+  })
+
+  const loadArchive = async () => {
+    if (!activeBoard) return
+    const data = await fetchArchive(activeBoard.id)
+    setArchivedItems(data)
+  }
+
+  const loadTrash = async () => {
+    if (!activeBoard) return
+    const data = await fetchTrash(activeBoard.id)
+    setTrashedItems(data)
+  }
 
   const accents = [
     { name: 'indigo', label: 'Indigo', color: 'bg-indigo-600' },
@@ -453,6 +481,19 @@ function App() {
                       Public
                     </button>
                   </li>
+                  <li className="border-t border-base-300 mt-1 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (confirm('Move this board to Trash?')) {
+                          deleteBoard(activeBoard.id)
+                        }
+                      }}
+                      className="text-error font-semibold hover:bg-error/10"
+                    >
+                      🗑️ Delete Board
+                    </button>
+                  </li>
                 </ul>
               </div>
             )}
@@ -518,6 +559,184 @@ function App() {
                       </button>
                     </div>
                   </form>
+                </div>
+              </div>
+            )}
+
+            {/* Archive Manager */}
+            {activeBoard && (
+              <div className="dropdown dropdown-bottom">
+                <button
+                  type="button"
+                  tabIndex={0}
+                  onClick={loadArchive}
+                  className="btn btn-outline btn-xs gap-1 font-semibold uppercase tracking-wider"
+                >
+                  📦 Archive
+                </button>
+                <div className="dropdown-content menu bg-base-200 rounded-box z-[1] w-72 p-3 shadow-lg gap-2 border border-base-300 mt-1 max-h-[300px] overflow-y-auto">
+                  <span className="text-[10px] font-bold text-base-content/50 uppercase tracking-wide">
+                    Archived Items
+                  </span>
+
+                  {/* Lists */}
+                  {archivedItems.lists.length > 0 && (
+                    <div className="space-y-1">
+                      <span className="text-[9px] font-bold text-warning uppercase">Columns</span>
+                      {archivedItems.lists.map((l) => (
+                        <div
+                          key={l.id}
+                          className="flex items-center justify-between gap-2 bg-base-100 p-1.5 rounded border border-base-300"
+                        >
+                          <span className="text-xs truncate font-medium">{l.title}</span>
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              await restoreList(l.id)
+                              loadArchive()
+                            }}
+                            className="btn btn-xs btn-primary text-white"
+                          >
+                            Restore
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Cards */}
+                  {archivedItems.cards.length > 0 && (
+                    <div className="space-y-1 pt-1.5 border-t border-base-300">
+                      <span className="text-[9px] font-bold text-warning uppercase">Cards</span>
+                      {archivedItems.cards.map((c) => (
+                        <div
+                          key={c.id}
+                          className="flex items-center justify-between gap-2 bg-base-100 p-1.5 rounded border border-base-300"
+                        >
+                          <span className="text-xs truncate font-medium">{c.title}</span>
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              await restoreCard(c.id)
+                              loadArchive()
+                            }}
+                            className="btn btn-xs btn-primary text-white"
+                          >
+                            Restore
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {archivedItems.lists.length === 0 && archivedItems.cards.length === 0 && (
+                    <span className="text-xs text-base-content/40 py-2 text-center">
+                      No archived items
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Trash Manager */}
+            {activeBoard && (
+              <div className="dropdown dropdown-bottom">
+                <button
+                  type="button"
+                  tabIndex={0}
+                  onClick={loadTrash}
+                  className="btn btn-outline btn-xs gap-1 font-semibold uppercase tracking-wider text-error hover:bg-error/10 hover:border-error"
+                >
+                  🗑️ Trash
+                </button>
+                <div className="dropdown-content menu bg-base-200 rounded-box z-[1] w-80 p-3 shadow-lg gap-2 border border-base-300 mt-1 max-h-[300px] overflow-y-auto">
+                  <span className="text-[10px] font-bold text-base-content/50 uppercase tracking-wide">
+                    Trash Bin (Auto-deletes in 30 days)
+                  </span>
+
+                  {/* Lists */}
+                  {trashedItems.lists.length > 0 && (
+                    <div className="space-y-1">
+                      <span className="text-[9px] font-bold text-error uppercase">Columns</span>
+                      {trashedItems.lists.map((l) => (
+                        <div
+                          key={l.id}
+                          className="flex items-center justify-between gap-2 bg-base-100 p-1.5 rounded border border-base-300"
+                        >
+                          <span className="text-xs truncate font-medium">{l.title}</span>
+                          <div className="flex gap-1">
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                await restoreList(l.id)
+                                loadTrash()
+                              }}
+                              className="btn btn-xs btn-primary text-white"
+                            >
+                              Restore
+                            </button>
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                if (confirm('Permanently delete list and all its cards?')) {
+                                  await deleteListPermanently(l.id)
+                                  loadTrash()
+                                }
+                              }}
+                              className="btn btn-xs btn-error text-white"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Cards */}
+                  {trashedItems.cards.length > 0 && (
+                    <div className="space-y-1 pt-1.5 border-t border-base-300">
+                      <span className="text-[9px] font-bold text-error uppercase">Cards</span>
+                      {trashedItems.cards.map((c) => (
+                        <div
+                          key={c.id}
+                          className="flex items-center justify-between gap-2 bg-base-100 p-1.5 rounded border border-base-300"
+                        >
+                          <span className="text-xs truncate font-medium">{c.title}</span>
+                          <div className="flex gap-1">
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                await restoreCard(c.id)
+                                loadTrash()
+                              }}
+                              className="btn btn-xs btn-primary text-white"
+                            >
+                              Restore
+                            </button>
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                if (confirm('Permanently delete card?')) {
+                                  await deleteCardPermanently(c.id)
+                                  loadTrash()
+                                }
+                              }}
+                              className="btn btn-xs btn-error text-white"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {trashedItems.lists.length === 0 && trashedItems.cards.length === 0 && (
+                    <span className="text-xs text-base-content/40 py-2 text-center">
+                      Trash is empty
+                    </span>
+                  )}
                 </div>
               </div>
             )}

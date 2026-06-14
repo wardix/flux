@@ -34,6 +34,17 @@ interface BoardState {
     targetListId: number,
     targetIndex: number,
   ) => Promise<void>
+  archiveCard: (cardId: number) => Promise<void>
+  restoreCard: (cardId: number) => Promise<void>
+  archiveList: (listId: number) => Promise<void>
+  restoreList: (listId: number) => Promise<void>
+  deleteBoard: (boardId: number) => Promise<void>
+  restoreBoard: (boardId: number) => Promise<void>
+  deleteCardPermanently: (cardId: number) => Promise<void>
+  deleteListPermanently: (listId: number) => Promise<void>
+  deleteBoardPermanently: (boardId: number) => Promise<void>
+  fetchArchive: (boardId: number) => Promise<{ lists: List[]; cards: Card[] }>
+  fetchTrash: (boardId: number) => Promise<{ lists: List[]; cards: Card[] }>
 }
 
 export const useBoardStore = create<BoardState>((set, get) => ({
@@ -614,6 +625,128 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       if (activeBoard.id) {
         await get().fetchBoard(activeBoard.id)
       }
+    }
+  },
+
+  archiveCard: async (cardId: number) => {
+    try {
+      await api.put(`/cards/${cardId}`, { archived_at: new Date().toISOString() })
+      set((state) => {
+        if (!state.activeBoard?.lists) return {}
+        const updatedLists = state.activeBoard.lists.map((list) => ({
+          ...list,
+          cards: list.cards.filter((c) => c.id !== cardId),
+        }))
+        return { activeBoard: { ...state.activeBoard, lists: updatedLists } }
+      })
+    } catch (err) {
+      console.error('Failed to archive card:', err)
+    }
+  },
+
+  restoreCard: async (cardId: number) => {
+    try {
+      await api.put(`/cards/${cardId}`, { archived_at: null, deleted_at: null })
+      if (get().activeBoard?.id) {
+        await get().fetchBoard(get().activeBoard!.id)
+      }
+    } catch (err) {
+      console.error('Failed to restore card:', err)
+    }
+  },
+
+  archiveList: async (listId: number) => {
+    try {
+      await api.put(`/lists/${listId}`, { archived_at: new Date().toISOString() })
+      set((state) => {
+        if (!state.activeBoard?.lists) return {}
+        const updatedLists = state.activeBoard.lists.filter((l) => l.id !== listId)
+        return { activeBoard: { ...state.activeBoard, lists: updatedLists } }
+      })
+    } catch (err) {
+      console.error('Failed to archive list:', err)
+    }
+  },
+
+  restoreList: async (listId: number) => {
+    try {
+      await api.put(`/lists/${listId}`, { archived_at: null, deleted_at: null })
+      if (get().activeBoard?.id) {
+        await get().fetchBoard(get().activeBoard!.id)
+      }
+    } catch (err) {
+      console.error('Failed to restore list:', err)
+    }
+  },
+
+  deleteBoard: async (boardId: number) => {
+    try {
+      await api.delete(`/boards/${boardId}`)
+      set((state) => ({
+        boards: state.boards.filter((b) => b.id !== boardId),
+        activeBoard: state.activeBoard?.id === boardId ? null : state.activeBoard,
+      }))
+    } catch (err) {
+      console.error('Failed to delete board:', err)
+    }
+  },
+
+  restoreBoard: async (boardId: number) => {
+    try {
+      await api.put(`/boards/${boardId}`, { deleted_at: null, archived_at: null })
+      await get().fetchBoards()
+    } catch (err) {
+      console.error('Failed to restore board:', err)
+    }
+  },
+
+  deleteCardPermanently: async (cardId: number) => {
+    try {
+      await api.delete(`/cards/${cardId}?permanent=true`)
+    } catch (err) {
+      console.error('Failed to delete card permanently:', err)
+    }
+  },
+
+  deleteListPermanently: async (listId: number) => {
+    try {
+      await api.delete(`/lists/${listId}?permanent=true`)
+    } catch (err) {
+      console.error('Failed to delete list permanently:', err)
+    }
+  },
+
+  deleteBoardPermanently: async (boardId: number) => {
+    try {
+      await api.delete(`/boards/${boardId}?permanent=true`)
+      set((state) => ({
+        boards: state.boards.filter((b) => b.id !== boardId),
+        activeBoard: state.activeBoard?.id === boardId ? null : state.activeBoard,
+      }))
+    } catch (err) {
+      console.error('Failed to delete board permanently:', err)
+    }
+  },
+
+  fetchArchive: async (boardId: number) => {
+    try {
+      const res = await api.get<{ data: { lists: List[]; cards: Card[] } }>(
+        `/boards/${boardId}/archive`,
+      )
+      return res.data
+    } catch {
+      return { lists: [], cards: [] }
+    }
+  },
+
+  fetchTrash: async (boardId: number) => {
+    try {
+      const res = await api.get<{ data: { lists: List[]; cards: Card[] } }>(
+        `/boards/${boardId}/trash`,
+      )
+      return res.data
+    } catch {
+      return { lists: [], cards: [] }
     }
   },
 }))

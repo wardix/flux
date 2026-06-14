@@ -18,6 +18,7 @@ export function BoardColumn({ list }: BoardColumnProps) {
   const [isAdding, setIsAdding] = useState(false)
   const createCard = useBoardStore((s) => s.createCard)
   const deleteList = useBoardStore((s) => s.deleteList)
+  const archiveList = useBoardStore((s) => s.archiveList)
 
   const handleCreateCard = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -36,14 +37,36 @@ export function BoardColumn({ list }: BoardColumnProps) {
             {list.cards?.length || 0}
           </span>
         </div>
-        <button
-          type="button"
-          onClick={() => deleteList(list.id)}
-          className="btn btn-ghost btn-xs btn-circle text-base-content/40 hover:text-error hover:bg-error/10"
-          title="Delete Column"
-        >
-          ✕
-        </button>
+        <div className="dropdown dropdown-end">
+          <button
+            type="button"
+            tabIndex={0}
+            className="btn btn-ghost btn-xs btn-circle text-base-content/40 hover:text-base-content/85"
+            title="Column Options"
+          >
+            ⋮
+          </button>
+          <ul className="dropdown-content menu p-2 shadow-lg bg-base-200 rounded-box w-40 z-[2] border border-base-300 gap-1 mt-1">
+            <li>
+              <button
+                type="button"
+                onClick={() => archiveList(list.id)}
+                className="text-warning text-xs font-semibold py-1.5"
+              >
+                📦 Archive List
+              </button>
+            </li>
+            <li>
+              <button
+                type="button"
+                onClick={() => deleteList(list.id)}
+                className="text-error text-xs font-semibold py-1.5"
+              >
+                🗑️ Delete List
+              </button>
+            </li>
+          </ul>
+        </div>
       </div>
 
       <div ref={setNodeRef} className="flex-1 overflow-y-auto py-3 space-y-3 scrollbar-thin">

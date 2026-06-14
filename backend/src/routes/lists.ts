@@ -40,7 +40,10 @@ listRoutes.delete('/:id', async (c) => {
   const id = Number(c.req.param('id'))
   if (Number.isNaN(id)) return c.json({ error: 'Invalid ID' }, 400)
 
-  const list = await listService.remove(id)
+  const permanent = c.req.query('permanent') === 'true'
+  const list = permanent
+    ? await listService.remove(id)
+    : await listService.update(id, { deleted_at: new Date().toISOString() })
   if (!list) return c.json({ error: 'List not found' }, 404)
 
   return c.body(null, 204)

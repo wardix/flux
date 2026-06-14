@@ -45,6 +45,8 @@ CREATE TABLE boards (
     visibility VARCHAR(50) NOT NULL DEFAULT 'private',
     background VARCHAR(255),
     created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    archived_at TIMESTAMPTZ,
+    deleted_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -55,6 +57,8 @@ CREATE TABLE lists (
     board_id INTEGER REFERENCES boards(id) ON DELETE CASCADE,
     title VARCHAR(255) NOT NULL,
     position INTEGER NOT NULL DEFAULT 0,
+    archived_at TIMESTAMPTZ,
+    deleted_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -71,6 +75,7 @@ CREATE TABLE cards (
     parent_card_id INTEGER REFERENCES cards(id) ON DELETE SET NULL,
     story_points INTEGER,
     archived_at TIMESTAMPTZ,
+    deleted_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

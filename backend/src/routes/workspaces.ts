@@ -56,4 +56,14 @@ workspaceRoutes.post('/:id/members', async (c) => {
   }
 })
 
+workspaceRoutes.get('/:id/trash', async (c) => {
+  const id = Number(c.req.param('id'))
+  if (Number.isNaN(id)) return c.json({ error: 'Invalid ID' }, 400)
+
+  const { db } = await import('../db')
+  const boards =
+    await db`SELECT * FROM boards WHERE workspace_id = ${id} AND deleted_at IS NOT NULL`
+  return c.json({ data: { boards } })
+})
+
 export { workspaceRoutes }

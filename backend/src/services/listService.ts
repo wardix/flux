@@ -16,16 +16,27 @@ export async function create(data: { board_id: number; title: string; position?:
   return result[0]
 }
 
-export async function update(id: number, data: { title?: string; position?: number }) {
+export async function update(
+  id: number,
+  data: {
+    title?: string
+    position?: number
+    archived_at?: string | null
+    deleted_at?: string | null
+  },
+) {
   const current = await db`SELECT * FROM lists WHERE id = ${id}`
   if (current.length === 0) return null
 
-  const title = data.title !== undefined ? data.title : current[0].title
-  const position = data.position !== undefined ? data.position : current[0].position
+  const row = current[0]
+  const title = data.title !== undefined ? data.title : row.title
+  const position = data.position !== undefined ? data.position : row.position
+  const archived_at = data.archived_at !== undefined ? data.archived_at : row.archived_at
+  const deleted_at = data.deleted_at !== undefined ? data.deleted_at : row.deleted_at
 
   const result = await db`
     UPDATE lists
-    SET title = ${title}, position = ${position}, updated_at = NOW()
+    SET title = ${title}, position = ${position}, archived_at = ${archived_at}, deleted_at = ${deleted_at}, updated_at = NOW()
     WHERE id = ${id}
     RETURNING *
   `

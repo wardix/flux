@@ -27,6 +27,7 @@ export function CardItem({ card }: CardItemProps) {
 
   const updateCard = useBoardStore((s) => s.updateCard)
   const deleteCard = useBoardStore((s) => s.deleteCard)
+  const archiveCard = useBoardStore((s) => s.archiveCard)
   const labels = useBoardStore((s) => s.labels)
   const addLabelToCard = useBoardStore((s) => s.addLabelToCard)
   const removeLabelFromCard = useBoardStore((s) => s.removeLabelFromCard)
@@ -214,17 +215,33 @@ export function CardItem({ card }: CardItemProps) {
               </div>
             </div>
 
-            <div className="modal-action">
-              <button type="button" onClick={handleUpdate} className="btn btn-primary btn-sm px-6">
-                Save
-              </button>
+            <div className="modal-action flex justify-between items-center w-full">
               <button
                 type="button"
-                onClick={() => setIsOpen(false)}
-                className="btn btn-ghost btn-sm"
+                onClick={async () => {
+                  await archiveCard(card.id)
+                  setIsOpen(false)
+                }}
+                className="btn btn-warning btn-sm btn-outline gap-1"
               >
-                Cancel
+                📦 Archive
               </button>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={handleUpdate}
+                  className="btn btn-primary btn-sm px-6"
+                >
+                  Save
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsOpen(false)}
+                  className="btn btn-ghost btn-sm"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         </div>

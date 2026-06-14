@@ -36,6 +36,7 @@ export async function update(
     parent_card_id?: number | null
     story_points?: number | null
     archived_at?: string | null
+    deleted_at?: string | null
   },
 ) {
   const current = await db`SELECT * FROM cards WHERE id = ${id}`
@@ -52,6 +53,7 @@ export async function update(
     data.parent_card_id !== undefined ? data.parent_card_id : row.parent_card_id
   const story_points = data.story_points !== undefined ? data.story_points : row.story_points
   const archived_at = data.archived_at !== undefined ? data.archived_at : row.archived_at
+  const deleted_at = data.deleted_at !== undefined ? data.deleted_at : row.deleted_at
 
   const result = await db`
     UPDATE cards
@@ -65,6 +67,7 @@ export async function update(
       parent_card_id = ${parent_card_id},
       story_points = ${story_points},
       archived_at = ${archived_at},
+      deleted_at = ${deleted_at},
       updated_at = NOW()
     WHERE id = ${id}
     RETURNING *
