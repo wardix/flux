@@ -40,6 +40,9 @@ import { DependencyBadge } from './DependencyBadge'
 import { DependencySelector } from './DependencySelector'
 import { LocationPicker } from './LocationPicker'
 import { MapPin } from 'lucide-react'
+import { ApprovalBadge } from './ApprovalBadge'
+import { ApprovalDialog } from './ApprovalDialog'
+import type { ApprovalRuleWithVotes } from '../../lib/types'
 
 interface CardItemProps {
   card: Card
@@ -93,6 +96,22 @@ export function CardItem({
     total_logs: 0,
     by_user: [],
   })
+
+  const [approvalStatus, setApprovalStatus] = useState<ApprovalRuleWithVotes[]>([])
+  const [selectedRuleForVote, setSelectedRuleForVote] = useState<ApprovalRuleWithVotes | null>(null)
+
+  const fetchApprovalStatus = async () => {
+    try {
+      const res = await api.get<{ data: { rules: ApprovalRuleWithVotes[] } }>(`/cards/${card.id}/approval/status`)
+      setApprovalStatus(res.data.rules || [])
+    } catch (err) {
+      console.error('Failed to fetch approval status', err)
+    }
+  }
+
+  useEffect(() => {
+    fetchApprovalStatus()
+  }, [card.id, card.list_id]) // refetch if list changes
 
   const fetchTimeLogs = async () => {
     try {
@@ -1216,6 +1235,15 @@ export function CardItem({
             {/* Linked Goals Badges */}
             {linkedGoals.length > 0 && <CardGoalBadge goals={linkedGoals} />}
 
+            {/* Approval Badges */}
+            {approvalStatus.length > 0 && (
+              <div className="flex flex-wrap gap-1" onClick={(e) => { e.stopPropagation(); setSelectedRuleForVote(approvalStatus[0]); }}>
+                {approvalStatus.map(rule => (
+                  <ApprovalBadge key={rule.id} status={rule} />
+                ))}
+              </div>
+            )}
+
             <div className="flex items-start justify-between relative">
               <h4 className="font-medium text-sm text-base-content/90 line-clamp-2 pr-6">
                 {card.title}
@@ -1298,6 +1326,14 @@ export function CardItem({
         </div>
       </div>
       {isOpen && renderModal()}
+      {selectedRuleForVote && (
+        <ApprovalDialog 
+          cardId={card.id} 
+          rule={selectedRuleForVote} 
+          onClose={() => setSelectedRuleForVote(null)} 
+          onVoteComplete={fetchApprovalStatus} 
+        />
+      )}
     </>
   )
 }

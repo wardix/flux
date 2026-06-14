@@ -9,6 +9,7 @@ import * as listService from '../services/listService'
 import * as webhookService from '../services/webhookService'
 import * as notificationService from '../services/notificationService'
 import { broadcastToBoard } from '../websocket/events'
+import { approvalService } from '../services/approvalService'
 
 async function getUserName(userId: number): Promise<string> {
   const result = await db`SELECT email FROM users WHERE id = ${userId}`
@@ -477,6 +478,8 @@ cardRoutes.openapi(updateCardPositionsRoute, async (c) => {
         const blockerTitles = blockedRes.blockers.map(b => `"${b.title}"`).join(', ')
         warningMsg = `Card is still blocked by: ${blockerTitles}`
       }
+      const canMove = await approvalService.canMoveCard(movedCardPayload.id, movedCardPayload.to_list_id)
+      if (!canMove) return c.json({ error: 'Insufficient approvals to move card' }, 403)
     }
 
     await cardService.updatePositions(body.cards)
@@ -635,6 +638,53 @@ cardRoutes.openapi(updateCardRoute, async (c) => {
       })
     }
 
+    return c.json({ data: card }, 200)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Internal Server Error'
+    return c.json({ error: message }, 500)
+  }
+})
+
+const moveCardRoute = createRoute({
+  method: 'put',
+  path: '/{id}/move',
+  tags: ['Cards'],
+  summary: 'Move card to a list',
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({ id: z.string() }),
+    body: {
+      content: {
+        'application/json': {
+          schema: z.object({
+            list_id: z.number().int(),
+            position: z.number().int(),
+          }),
+        },
+      },
+    },
+  },
+  responses: {
+    200: { description: 'Success' },
+    403: { description: 'Forbidden' },
+    404: { description: 'Not found' },
+    500: { description: 'Server error' }
+  },
+})
+
+cardRoutes.openapi(moveCardRoute, async (c) => {
+  try {
+    const id = Number(c.req.param('id'))
+    const body = await c.req.json()
+    
+    const canMove = await approvalService.canMoveCard(id, body.list_id)
+    if (!canMove) {
+      return c.json({ error: 'Insufficient approvals to move card' }, 403)
+    }
+
+    const card = await cardService.update(id, { list_id: body.list_id, position: body.position })
+    if (!card) return c.json({ error: 'Card not found' }, 404)
+    
     return c.json({ data: card }, 200)
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Internal Server Error'

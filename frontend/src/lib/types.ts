@@ -40,6 +40,51 @@ export interface Card {
   address?: string | null
 }
 
+export interface Webhook {
+  id: number
+  board_id: number
+  url: string
+  secret: string
+  events: string[]
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface ApprovalRule {
+  id: number
+  board_id: number
+  from_list_id: number
+  to_list_id: number
+  min_approvals: number
+  created_at: string
+}
+
+export interface ApprovalVote {
+  id: number
+  card_id: number
+  rule_id: number
+  user_id: number
+  status: 'approved' | 'rejected'
+  comment: string | null
+  created_at: string
+}
+
+export interface ApprovalRuleWithVotes extends ApprovalRule {
+  from_list: string
+  to_list: string
+  votes: Array<{
+    user_id: number
+    name: string
+    status: 'approved' | 'rejected'
+    comment: string | null
+    voted_at: string
+  }>
+  approvals_received: number
+  rejections: number
+  is_approved: boolean
+}
+
 export interface RecurringRule {
   id: number
   card_id: number
