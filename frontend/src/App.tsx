@@ -2,9 +2,10 @@ import { DndContext, type DragEndEvent } from '@dnd-kit/core'
 import { useEffect, useState } from 'react'
 import { BoardColumn } from './components/board/BoardColumn'
 import { useTheme } from './hooks/useTheme'
+import { useTranslation } from 'react-i18next'
 import { useBoardStore } from './stores/boardStore'
 import { LoginPage } from './pages/LoginPage'
-import { TwoFactorSetup } from './components/settings/TwoFactorSetup'
+import { SettingsPage } from './pages/SettingsPage'
 import type { List, Card } from './lib/types'
 import { useWebSocket } from './hooks/useWebSocket'
 import { PresenceIndicator } from './components/shared/PresenceIndicator'
@@ -32,6 +33,7 @@ function decodeToken(token: string | null) {
 }
 
 function App() {
+  const { t } = useTranslation()
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'))
   const [user, setUser] = useState<any>(null)
   const [show2FASettings, setShow2FASettings] = useState(false)
@@ -575,7 +577,7 @@ function App() {
                 show2FASettings ? 'btn-primary text-white' : 'btn-ghost'
               }`}
             >
-              🔒 Security & 2FA
+              ⚙️ {t('settings.title')}
             </button>
             <button
               type="button"
@@ -664,8 +666,8 @@ function App() {
             <AdminDashboardPage onBack={() => setShowAdminPage(false)} />
           </div>
         ) : show2FASettings ? (
-          <div className="flex-1 overflow-y-auto p-8 max-w-2xl mx-auto w-full z-10">
-            <TwoFactorSetup />
+          <div className="flex-1 overflow-y-auto z-10 bg-base-100">
+            <SettingsPage onBack={() => setShow2FASettings(false)} />
           </div>
         ) : (
           <>

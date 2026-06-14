@@ -25,6 +25,7 @@ import { rateLimitMiddleware } from './middleware/rateLimit'
 import { corsMiddleware } from './middleware/cors'
 import { adminRoutes } from './routes/admin'
 import { exportRoutes } from './routes/export'
+import { userRoutes } from './routes/users'
 
 
 
@@ -74,6 +75,7 @@ app.route('/api', timeTrackingRoutes)
 app.route('/api', voteRoutes)
 app.route('/api', adminRoutes)
 app.route('/api', exportRoutes)
+app.route('/api', userRoutes)
 
 
 export default {
