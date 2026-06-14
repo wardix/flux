@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+.bun/
+
+# Issue files (managed via GitHub Issues)
+issues/
+
+# Build output
+dist/
+build/
+.vite/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Testing
+coverage/
+
+# Docker
+.docker/
+
+# Database
+*.sql.bak
+
+# Temporary files
+tmp/
+temp/
