@@ -72,6 +72,16 @@ export async function update(
   return result[0] || null
 }
 
+export async function updatePositions(cards: { id: number; list_id: number; position: number }[]) {
+  for (const card of cards) {
+    await db`
+      UPDATE cards
+      SET list_id = ${card.list_id}, position = ${card.position}, updated_at = NOW()
+      WHERE id = ${card.id}
+    `
+  }
+}
+
 export async function remove(id: number) {
   const result = await db`DELETE FROM cards WHERE id = ${id} RETURNING *`
   return result[0] || null

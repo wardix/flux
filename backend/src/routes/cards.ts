@@ -20,6 +20,21 @@ cardRoutes.post('/', async (c) => {
   }
 })
 
+cardRoutes.put('/positions', async (c) => {
+  try {
+    const body = await c.req.json()
+    if (!body.cards || !Array.isArray(body.cards)) {
+      return c.json({ error: 'cards array is required' }, 400)
+    }
+
+    await cardService.updatePositions(body.cards)
+    return c.json({ success: true })
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Internal Server Error'
+    return c.json({ error: message }, 500)
+  }
+})
+
 cardRoutes.put('/:id', async (c) => {
   try {
     const id = Number(c.req.param('id'))

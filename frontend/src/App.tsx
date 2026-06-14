@@ -1,3 +1,4 @@
+import { DndContext, type DragEndEvent } from '@dnd-kit/core'
 import { useEffect, useState } from 'react'
 import { BoardColumn } from './components/board/BoardColumn'
 import { useTheme } from './hooks/useTheme'
@@ -21,6 +22,7 @@ function App() {
     createList,
     fetchLabels,
     createLabel,
+    moveCard,
   } = useBoardStore()
 
   const [newBoardTitle, setNewBoardTitle] = useState('')
@@ -92,6 +94,54 @@ function App() {
     alert(`Mock Invitation sent to ${inviteEmail} for workspace: ${activeWorkspace.name}`)
     setInviteEmail('')
     setIsInviting(false)
+  }
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event
+    if (!over) return
+
+    const cardId = Number(active.id)
+    const overId = over.id
+
+    let targetListId: number | null = null
+    let targetIndex = 0
+
+    const targetIsList = activeBoard?.lists?.some(
+      (l) => `list-${l.id}` === overId || l.id === overId,
+    )
+
+    let sourceListId: number | null = null
+    for (const list of activeBoard?.lists || []) {
+      if (list.cards?.some((c) => c.id === cardId)) {
+        sourceListId = list.id
+        break
+      }
+    }
+    if (!sourceListId) return
+
+    if (targetIsList) {
+      const parsedId =
+        typeof overId === 'string' && overId.startsWith('list-')
+          ? Number(overId.replace('list-', ''))
+          : Number(overId)
+      targetListId = parsedId
+      const targetList = activeBoard?.lists?.find((l) => l.id === targetListId)
+      targetIndex = targetList?.cards?.length || 0
+    } else {
+      const targetCardId = Number(overId)
+      for (const list of activeBoard?.lists || []) {
+        const idx = list.cards?.findIndex((c) => c.id === targetCardId)
+        if (idx !== undefined && idx !== -1) {
+          targetListId = list.id
+          targetIndex = idx
+          break
+        }
+      }
+    }
+
+    if (targetListId !== null) {
+      await moveCard(cardId, sourceListId, targetListId, targetIndex)
+    }
   }
 
   return (
@@ -480,54 +530,56 @@ function App() {
         </header>
 
         {/* Columns Board view */}
-        <div className="flex-1 overflow-x-auto p-6 flex gap-6 items-start">
-          {activeBoard?.lists?.map((list) => (
-            <BoardColumn key={list.id} list={list} />
-          ))}
+        <DndContext onDragEnd={handleDragEnd}>
+          <div className="flex-1 overflow-x-auto p-6 flex gap-6 items-start">
+            {activeBoard?.lists?.map((list) => (
+              <BoardColumn key={list.id} list={list} />
+            ))}
 
-          {/* Add Column Button */}
-          {activeBoard && (
-            <div className="w-80 flex-shrink-0">
-              {isAddingColumn ? (
-                <form
-                  onSubmit={handleCreateColumn}
-                  className="bg-base-100 border border-base-200 rounded-2xl p-4 shadow-md space-y-2"
-                >
-                  <input
-                    type="text"
-                    placeholder="Enter list title..."
-                    value={newColumnTitle}
-                    onChange={(e) => setNewColumnTitle(e.target.value)}
-                    className="input input-sm input-bordered input-primary w-full focus:outline-none"
-                  />
-                  <div className="flex gap-2">
-                    <button type="submit" className="btn btn-primary btn-xs flex-1">
-                      Add List
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsAddingColumn(false)
-                        setNewColumnTitle('')
-                      }}
-                      className="btn btn-ghost btn-xs flex-1"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </form>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setIsAddingColumn(true)}
-                  className="btn btn-block bg-base-100/60 hover:bg-base-100 border border-dashed border-base-content/10 hover:border-primary/40 rounded-2xl p-4 text-left font-semibold text-sm text-base-content/60 hover:text-primary transition-all duration-200 flex items-center gap-2 h-14"
-                >
-                  + Add List
-                </button>
-              )}
-            </div>
-          )}
-        </div>
+            {/* Add Column Button */}
+            {activeBoard && (
+              <div className="w-80 flex-shrink-0">
+                {isAddingColumn ? (
+                  <form
+                    onSubmit={handleCreateColumn}
+                    className="bg-base-100 border border-base-200 rounded-2xl p-4 shadow-md space-y-2"
+                  >
+                    <input
+                      type="text"
+                      placeholder="Enter list title..."
+                      value={newColumnTitle}
+                      onChange={(e) => setNewColumnTitle(e.target.value)}
+                      className="input input-sm input-bordered input-primary w-full focus:outline-none"
+                    />
+                    <div className="flex gap-2">
+                      <button type="submit" className="btn btn-primary btn-xs flex-1">
+                        Add List
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsAddingColumn(false)
+                          setNewColumnTitle('')
+                        }}
+                        className="btn btn-ghost btn-xs flex-1"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setIsAddingColumn(true)}
+                    className="btn btn-block bg-base-100/60 hover:bg-base-100 border border-dashed border-base-content/10 hover:border-primary/40 rounded-2xl p-4 text-left font-semibold text-sm text-base-content/60 hover:text-primary transition-all duration-200 flex items-center gap-2 h-14"
+                  >
+                    + Add List
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        </DndContext>
       </main>
     </div>
   )

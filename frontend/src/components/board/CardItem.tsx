@@ -1,3 +1,5 @@
+import { useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { useState } from 'react'
 import type { Card } from '../../lib/types'
 import { useBoardStore } from '../../stores/boardStore'
@@ -7,6 +9,16 @@ interface CardItemProps {
 }
 
 export function CardItem({ card }: CardItemProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: card.id,
+  })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.3 : 1,
+  }
+
   const [isOpen, setIsOpen] = useState(false)
   const [title, setTitle] = useState(card.title)
   const [description, setDescription] = useState(card.description || '')
@@ -45,6 +57,10 @@ export function CardItem({ card }: CardItemProps) {
       {/* Card Body */}
       {/* biome-ignore lint/a11y/useSemanticElements: using div as button for complex CardItem trigger */}
       <div
+        ref={setNodeRef}
+        style={style}
+        {...attributes}
+        {...listeners}
         role="button"
         tabIndex={0}
         onClick={() => setIsOpen(true)}

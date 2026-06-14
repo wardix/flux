@@ -91,6 +91,24 @@ describe('Cards Route', () => {
     expect(body.data.story_points).toBe(3)
   })
 
+  test('PUT /api/cards/positions - should update positions in batch', async () => {
+    const res = await app.fetch(
+      new Request('http://localhost/api/cards/positions', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          cards: [{ id: cardId, list_id: listId, position: 10 }],
+        }),
+      }),
+    )
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.success).toBe(true)
+  })
+
   test('DELETE /api/cards/:id - should delete card', async () => {
     const res = await app.fetch(
       new Request(`http://localhost/api/cards/${cardId}`, {
