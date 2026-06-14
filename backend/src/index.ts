@@ -34,6 +34,7 @@ import { recurringRoutes } from './routes/recurring'
 import { boardTemplateRoutes } from './routes/boardTemplates'
 import { personalAccessRoutes } from './routes/personalAccessTokens'
 import { webhookRoutes } from './routes/webhooks'
+import { importRoutes } from './routes/import'
 
 
 
@@ -97,6 +98,7 @@ app.route('/api/workspaces/:workspaceId/epics', epicRoutes)
 app.route('/api/recurring-tasks', recurringRoutes)
 app.route('/api/personal-access-tokens', personalAccessRoutes)
 app.route('/api/boards/:boardId/webhooks', webhookRoutes)
+app.route('/api/import', importRoutes)
 
 
 
