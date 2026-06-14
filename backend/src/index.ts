@@ -29,6 +29,7 @@ import { userRoutes } from './routes/users'
 import { boardCustomFieldRoutes, cardCustomFieldRoutes } from './routes/customFields'
 import { automationRoutes } from './routes/automations'
 import { sprintRoutes } from './routes/sprints'
+import { epicRoutes } from './routes/epics'
 
 
 
@@ -83,6 +84,7 @@ app.route('/api/boards/:boardId/custom-fields', boardCustomFieldRoutes)
 app.route('/api/cards/:cardId/custom-fields', cardCustomFieldRoutes)
 app.route('/api/boards/:boardId/automations', automationRoutes)
 app.route('/api/boards/:boardId/sprints', sprintRoutes)
+app.route('/api/workspaces/:workspaceId/epics', epicRoutes)
 
 
 

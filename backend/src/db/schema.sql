@@ -1,4 +1,5 @@
 -- Drop tables if they exist (for easy migration reset)
+DROP TABLE IF EXISTS epics CASCADE;
 DROP TABLE IF EXISTS sprints CASCADE;
 DROP TABLE IF EXISTS automation_rules CASCADE;
 DROP TABLE IF EXISTS card_custom_field_values CASCADE;
@@ -370,5 +371,27 @@ CREATE INDEX idx_sprints_status ON sprints(status);
 -- Alter cards table to add sprint_id references sprints(id) ON DELETE SET NULL
 ALTER TABLE cards ADD COLUMN sprint_id INTEGER REFERENCES sprints(id) ON DELETE SET NULL;
 CREATE INDEX idx_cards_sprint_id ON cards(sprint_id);
+
+-- Epics Table
+CREATE TABLE epics (
+    id SERIAL PRIMARY KEY,
+    workspace_id INTEGER NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    color VARCHAR(50) NOT NULL DEFAULT '#6366f1',
+    status VARCHAR(50) NOT NULL DEFAULT 'open', -- 'open', 'done'
+    created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TRIGGER update_epics_updated_at BEFORE UPDATE ON epics FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE INDEX idx_epics_workspace_id ON epics(workspace_id);
+CREATE INDEX idx_epics_status ON epics(status);
+
+-- Alter cards table to add epic_id references epics(id) ON DELETE SET NULL
+ALTER TABLE cards ADD COLUMN epic_id INTEGER REFERENCES epics(id) ON DELETE SET NULL;
+CREATE INDEX idx_cards_epic_id ON cards(epic_id);
+
 
 
