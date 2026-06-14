@@ -7,11 +7,31 @@ export interface Card {
   due_date?: string | null
   assignee_id?: number | null
   parent_card_id?: number | null
+  is_completed?: boolean
   story_points?: number | null
   archived_at?: string | null
   created_at: string
   updated_at: string
   labels?: Label[]
+  subtask_count?: { total: number; completed: number }
+}
+
+export interface SubtaskCard extends Card {
+  parent_card_id: number
+  is_completed: boolean
+}
+
+export interface CreateSubtaskRequest {
+  title: string
+  description?: string
+  due_date?: string
+}
+
+export interface UpdateSubtaskRequest {
+  title?: string
+  description?: string
+  due_date?: string | null
+  is_completed?: boolean
 }
 
 export interface List {

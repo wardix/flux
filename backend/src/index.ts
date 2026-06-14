@@ -6,6 +6,7 @@ import { boardRoutes } from './routes/boards'
 import { cardRoutes } from './routes/cards'
 import { labelRoutes } from './routes/labels'
 import { listRoutes } from './routes/lists'
+import { subtaskRoutes } from './routes/subtasks'
 import { workspaceRoutes } from './routes/workspaces'
 
 // Trigger database old trash clean up on server startup
@@ -30,6 +31,7 @@ app.route('/api/lists', listRoutes)
 app.route('/api/cards', cardRoutes)
 app.route('/api/workspaces', workspaceRoutes)
 app.route('/api/labels', labelRoutes)
+app.route('/api', subtaskRoutes)
 
 export default {
   port: process.env.PORT || 3000,
