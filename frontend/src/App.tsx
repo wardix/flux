@@ -5,12 +5,30 @@ import { useBoardStore } from './stores/boardStore'
 
 function App() {
   const { theme, setTheme, accentColor, setAccentColor } = useTheme()
-  const { boards, activeBoard, fetchBoards, fetchBoard, createBoard, createList } = useBoardStore()
+  const {
+    boards,
+    workspaces,
+    activeWorkspace,
+    activeBoard,
+    fetchWorkspaces,
+    selectWorkspace,
+    createWorkspace,
+    fetchBoards,
+    fetchBoard,
+    createBoard,
+    updateBoardVisibility,
+    createList,
+  } = useBoardStore()
 
   const [newBoardTitle, setNewBoardTitle] = useState('')
   const [newColumnTitle, setNewColumnTitle] = useState('')
+  const [newWorkspaceName, setNewWorkspaceName] = useState('')
+  const [inviteEmail, setInviteEmail] = useState('')
+
   const [isAddingBoard, setIsAddingBoard] = useState(false)
   const [isAddingColumn, setIsAddingColumn] = useState(false)
+  const [isAddingWorkspace, setIsAddingWorkspace] = useState(false)
+  const [isInviting, setIsInviting] = useState(false)
 
   const accents = [
     { name: 'indigo', label: 'Indigo', color: 'bg-indigo-600' },
@@ -21,22 +39,32 @@ function App() {
     { name: 'violet', label: 'Violet', color: 'bg-violet-600' },
   ]
 
-  // Fetch all boards on load
   useEffect(() => {
+    fetchWorkspaces()
     fetchBoards()
-  }, [fetchBoards])
+  }, [fetchWorkspaces, fetchBoards])
 
-  // Select first board by default if activeBoard is not set
+  // Filter boards based on selected workspace
+  const filteredBoards = boards.filter((b) => b.workspace_id === activeWorkspace?.id)
+
   useEffect(() => {
-    if (boards.length > 0 && !activeBoard) {
-      fetchBoard(boards[0].id)
+    if (filteredBoards.length > 0 && !activeBoard) {
+      fetchBoard(filteredBoards[0].id)
     }
-  }, [boards, activeBoard, fetchBoard])
+  }, [filteredBoards, activeBoard, fetchBoard])
+
+  const handleCreateWorkspace = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newWorkspaceName.trim()) return
+    await createWorkspace(newWorkspaceName.trim())
+    setNewWorkspaceName('')
+    setIsAddingWorkspace(false)
+  }
 
   const handleCreateBoard = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newBoardTitle.trim()) return
-    await createBoard(newBoardTitle.trim())
+    await createBoard(newBoardTitle.trim(), activeWorkspace?.id, 'private')
     setNewBoardTitle('')
     setIsAddingBoard(false)
   }
@@ -49,13 +77,87 @@ function App() {
     setIsAddingColumn(false)
   }
 
+  const handleInviteMember = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!inviteEmail.trim() || !activeWorkspace) return
+    alert(`Mock Invitation sent to ${inviteEmail} for workspace: ${activeWorkspace.name}`)
+    setInviteEmail('')
+    setIsInviting(false)
+  }
+
   return (
     <div className="flex h-screen bg-base-300 text-base-content overflow-hidden selection:bg-primary selection:text-primary-content transition-colors duration-300">
       {/* Sidebar */}
       <aside className="w-64 bg-base-100 flex flex-col border-r border-base-200/50">
-        {/* Brand */}
-        <div className="p-6 border-b border-base-200/50 flex items-center justify-between">
-          <span className="text-2xl font-bold tracking-wider text-primary">⚡ Flux</span>
+        {/* Workspace Dropdown Header */}
+        <div className="p-4 border-b border-base-200/50 flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wider text-base-content/50">
+              Workspace
+            </span>
+            <button
+              type="button"
+              onClick={() => setIsAddingWorkspace(!isAddingWorkspace)}
+              className="btn btn-ghost btn-xs btn-circle text-primary hover:bg-primary/10"
+              title="Add Workspace"
+            >
+              +
+            </button>
+          </div>
+
+          {isAddingWorkspace ? (
+            <form
+              onSubmit={handleCreateWorkspace}
+              className="space-y-2 p-2 bg-base-200/50 rounded-xl border border-base-200"
+            >
+              <input
+                type="text"
+                placeholder="Workspace name..."
+                value={newWorkspaceName}
+                onChange={(e) => setNewWorkspaceName(e.target.value)}
+                className="input input-xs input-bordered input-primary w-full focus:outline-none"
+              />
+              <div className="flex gap-2">
+                <button type="submit" className="btn btn-primary btn-xs flex-1">
+                  Create
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsAddingWorkspace(false)
+                    setNewWorkspaceName('')
+                  }}
+                  className="btn btn-ghost btn-xs flex-1"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          ) : (
+            <div className="dropdown w-full">
+              <button
+                type="button"
+                tabIndex={0}
+                className="btn btn-primary btn-sm btn-block justify-between capitalize text-white"
+              >
+                🏢 {activeWorkspace ? activeWorkspace.name : 'Select WS'}
+                <span>▾</span>
+              </button>
+              <ul className="dropdown-content menu bg-base-200 rounded-box z-[1] w-full p-2 shadow-lg gap-1 border border-base-300">
+                {workspaces.map((ws) => (
+                  <li key={ws.id}>
+                    <button
+                      type="button"
+                      onClick={() => selectWorkspace(ws)}
+                      className={activeWorkspace?.id === ws.id ? 'active font-bold' : ''}
+                    >
+                      {ws.name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
 
         {/* Boards Section */}
@@ -63,7 +165,7 @@ function App() {
           <div className="space-y-2">
             <div className="flex items-center justify-between px-2">
               <span className="text-xs font-semibold uppercase tracking-wider text-base-content/50">
-                My Boards
+                Boards
               </span>
               <button
                 type="button"
@@ -105,7 +207,7 @@ function App() {
             )}
 
             <ul className="menu menu-sm p-0 gap-1">
-              {boards.map((b) => (
+              {filteredBoards.map((b) => (
                 <li key={b.id}>
                   <button
                     type="button"
@@ -117,16 +219,68 @@ function App() {
                     }`}
                   >
                     <span className="truncate">📋 {b.title}</span>
-                    <span className="text-[10px] uppercase opacity-60">{b.visibility}</span>
+                    <span className="text-[9px] uppercase opacity-60 ml-2 px-1 border border-base-content/20 rounded">
+                      {b.visibility === 'workspace-only' ? 'WS' : b.visibility}
+                    </span>
                   </button>
                 </li>
               ))}
+              {filteredBoards.length === 0 && (
+                <div className="text-center text-xs text-base-content/40 py-4">
+                  No boards in this workspace
+                </div>
+              )}
             </ul>
           </div>
         </div>
 
-        {/* Customization Footer */}
+        {/* Invitation & Customization Footer */}
         <div className="p-4 border-t border-base-200/50 space-y-4 bg-base-200/20">
+          {/* Invite Members */}
+          {activeWorkspace && (
+            <div className="space-y-2 border-b border-base-200/50 pb-4">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-base-content/50">
+                  Members
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsInviting(!isInviting)}
+                  className="text-xs text-primary hover:underline"
+                >
+                  Invite
+                </button>
+              </div>
+
+              {isInviting && (
+                <form onSubmit={handleInviteMember} className="space-y-2">
+                  <input
+                    type="email"
+                    placeholder="User email..."
+                    value={inviteEmail}
+                    onChange={(e) => setInviteEmail(e.target.value)}
+                    className="input input-xs input-bordered input-primary w-full focus:outline-none"
+                  />
+                  <div className="flex gap-2">
+                    <button type="submit" className="btn btn-primary btn-xs flex-1">
+                      Invite
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsInviting(false)
+                        setInviteEmail('')
+                      }}
+                      className="btn btn-ghost btn-xs flex-1"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          )}
+
           {/* Accent Pickers */}
           <div className="space-y-2">
             <span className="text-[10px] font-semibold uppercase tracking-wider text-base-content/50 block">
@@ -201,14 +355,53 @@ function App() {
             <h2 className="text-xl font-bold tracking-tight text-base-content/90">
               {activeBoard ? activeBoard.title : 'Loading Board...'}
             </h2>
+
+            {/* Board Visibility Selector */}
             {activeBoard && (
-              <span className="badge badge-outline badge-sm capitalize text-[10px] tracking-wide font-medium">
-                {activeBoard.visibility}
-              </span>
+              <div className="dropdown dropdown-bottom">
+                <button
+                  type="button"
+                  tabIndex={0}
+                  className="btn btn-outline btn-xs uppercase tracking-wider font-semibold"
+                >
+                  👁️ {activeBoard.visibility}
+                </button>
+                <ul className="dropdown-content menu bg-base-200 rounded-box z-[1] w-40 p-2 shadow-lg gap-1 border border-base-300 mt-1">
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() => updateBoardVisibility(activeBoard.id, 'private')}
+                      className={activeBoard.visibility === 'private' ? 'active' : ''}
+                    >
+                      Private
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() => updateBoardVisibility(activeBoard.id, 'workspace-only')}
+                      className={activeBoard.visibility === 'workspace-only' ? 'active' : ''}
+                    >
+                      Workspace Only
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() => updateBoardVisibility(activeBoard.id, 'public')}
+                      className={activeBoard.visibility === 'public' ? 'active' : ''}
+                    >
+                      Public
+                    </button>
+                  </li>
+                </ul>
+              </div>
             )}
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-base-content/50">Workspace ID: 1</span>
+            <span className="text-xs text-base-content/50">
+              Active Workspace: {activeWorkspace ? activeWorkspace.name : 'None'}
+            </span>
           </div>
         </header>
 
