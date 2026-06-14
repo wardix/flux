@@ -8,6 +8,10 @@ import { StoryPointBadge } from './StoryPointBadge'
 import { StoryPointPicker } from './StoryPointPicker'
 import { SubtaskList } from './SubtaskList'
 import { SubtaskProgress } from './SubtaskProgress'
+import { CardChecklists } from './CardChecklists'
+import { CardAttachments } from './CardAttachments'
+import { ChecklistProgress } from './ChecklistProgress'
+
 
 interface CardItemProps {
   card: Card
@@ -194,6 +198,40 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
             <StoryPointPicker value={storyPoints} onChange={setStoryPoints} />
           </div>
 
+          {!card.parent_card_id && (
+            <>
+              <div className="border-t border-base-200 pt-3">
+                <span className="text-xs text-base-content/50 font-bold uppercase block mb-2">
+                  Checklists
+                </span>
+                <CardChecklists
+                  cardId={card.id}
+                  onProgressChange={async () => {
+                    const activeBoard = useBoardStore.getState().activeBoard
+                    if (activeBoard?.id) {
+                      await useBoardStore.getState().fetchBoard(activeBoard.id)
+                    }
+                  }}
+                />
+              </div>
+
+              <div className="border-t border-base-200 pt-3">
+                <span className="text-xs text-base-content/50 font-bold uppercase block mb-2">
+                  Attachments
+                </span>
+                <CardAttachments
+                  cardId={card.id}
+                  onCoverChange={async () => {
+                    const activeBoard = useBoardStore.getState().activeBoard
+                    if (activeBoard?.id) {
+                      await useBoardStore.getState().fetchBoard(activeBoard.id)
+                    }
+                  }}
+                />
+              </div>
+            </>
+          )}
+
           {/* Labels list toggle */}
           <div>
             <span className="text-xs text-base-content/50 font-bold uppercase block mb-2">
@@ -280,8 +318,19 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
         tabIndex={0}
         onClick={() => setIsOpen(true)}
         onKeyDown={(e) => e.key === 'Enter' && setIsOpen(true)}
-        className="card bg-base-100 shadow-sm border border-base-200/50 hover:shadow-md hover:border-primary/30 transition-all p-3 space-y-2 group relative cursor-pointer text-left focus:outline-none focus:ring-2 focus:ring-primary/40"
+        className="card bg-base-100 shadow-sm border border-base-200/50 hover:shadow-md hover:border-primary/30 transition-all p-3 space-y-2 group relative cursor-pointer text-left focus:outline-none focus:ring-2 focus:ring-primary/40 overflow-hidden"
       >
+        {/* Cover Image */}
+        {card.cover_file_path && (
+          <div className="w-[calc(100%+1.5rem)] h-28 -mt-3 -mx-3 mb-2 overflow-hidden relative">
+            <img
+              src={card.cover_file_path}
+              alt="Cover"
+              className="w-full h-full object-cover"
+            />
+          </div>
+        )}
+
         {/* Labels header */}
         {card.labels && card.labels.length > 0 && (
           <div className="flex flex-wrap gap-1">
@@ -335,6 +384,12 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
               <SubtaskProgress
                 completed={card.subtask_count.completed}
                 total={card.subtask_count.total}
+              />
+            )}
+            {card.checklist_count && card.checklist_count.total > 0 && (
+              <ChecklistProgress
+                completed={card.checklist_count.completed}
+                total={card.checklist_count.total}
               />
             )}
           </div>

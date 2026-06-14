@@ -1,4 +1,7 @@
 -- Drop tables if they exist (for easy migration reset)
+DROP TABLE IF EXISTS attachments CASCADE;
+DROP TABLE IF EXISTS checklist_items CASCADE;
+DROP TABLE IF EXISTS checklists CASCADE;
 DROP TABLE IF EXISTS user_2fa CASCADE;
 DROP TABLE IF EXISTS oauth_accounts CASCADE;
 DROP TABLE IF EXISTS card_labels CASCADE;
@@ -9,6 +12,7 @@ DROP TABLE IF EXISTS boards CASCADE;
 DROP TABLE IF EXISTS workspace_members CASCADE;
 DROP TABLE IF EXISTS workspaces CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
+
 
 -- Create users table
 CREATE TABLE users (
@@ -153,4 +157,50 @@ CREATE TRIGGER update_user_2fa_updated_at BEFORE UPDATE ON user_2fa FOR EACH ROW
 CREATE TRIGGER update_oauth_accounts_updated_at BEFORE UPDATE ON oauth_accounts FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE INDEX idx_oauth_accounts_user_id ON oauth_accounts(user_id);
+
+-- Checklists Table
+CREATE TABLE checklists (
+    id SERIAL PRIMARY KEY,
+    card_id INTEGER NOT NULL REFERENCES cards(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    position INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Checklist Items Table
+CREATE TABLE checklist_items (
+    id SERIAL PRIMARY KEY,
+    checklist_id INTEGER NOT NULL REFERENCES checklists(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    is_completed BOOLEAN NOT NULL DEFAULT FALSE,
+    position INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Attachments Table
+CREATE TABLE attachments (
+    id SERIAL PRIMARY KEY,
+    card_id INTEGER NOT NULL REFERENCES cards(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    file_path VARCHAR(255) NOT NULL,
+    file_type VARCHAR(100),
+    size INTEGER NOT NULL,
+    is_cover BOOLEAN NOT NULL DEFAULT FALSE,
+    uploaded_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Triggers for updated_at on new tables
+CREATE TRIGGER update_checklists_updated_at BEFORE UPDATE ON checklists FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_checklist_items_updated_at BEFORE UPDATE ON checklist_items FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_attachments_updated_at BEFORE UPDATE ON attachments FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Indexes for new tables
+CREATE INDEX idx_checklists_card_id ON checklists(card_id);
+CREATE INDEX idx_checklist_items_checklist_id ON checklist_items(checklist_id);
+CREATE INDEX idx_attachments_card_id ON attachments(card_id);
+
 

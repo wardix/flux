@@ -14,6 +14,8 @@ export interface Card {
   updated_at: string
   labels?: Label[]
   subtask_count?: { total: number; completed: number }
+  checklist_count?: { total: number; completed: number }
+  cover_file_path?: string | null
 }
 
 export interface SubtaskCard extends Card {

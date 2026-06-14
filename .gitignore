@@ -45,3 +45,8 @@ temp/
 
 # Local database data
 postgres_data/
+
+# Uploads directory
+frontend/public/uploads/*
+!frontend/public/uploads/.gitkeep
+
