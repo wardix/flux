@@ -1,17 +1,27 @@
 version: '3.8'
 
 services:
-  postgres:
-    image: postgres:16-alpine
-    container_name: flux-db-dev
-    environment:
-      POSTGRES_USER: flux_user
-      POSTGRES_PASSWORD: secret123
-      POSTGRES_DB: flux
-    ports:
-      - "5432:5432"
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: bun run dev
     volumes:
-      - pgdata-dev:/var/lib/postgresql/data
+      - ./backend:/app
+      - /app/node_modules
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgres://flux_user:secret123@db:5432/flux
 
-volumes:
-  pgdata-dev:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    command: bun run dev --host 0.0.0.0 --port 8080
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "8080:8080"
+    environment:
+      NODE_ENV: development

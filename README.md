@@ -46,7 +46,20 @@
 ### With Docker (Recommended)
 
 ```bash
-docker compose up
+# Start all services (frontend, backend, database)
+docker compose up -d
+
+# Check logs
+docker compose logs -f
+
+# Stop services
+docker compose down
+```
+
+### Development with Docker (Hot-Reload)
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 ```
 
 ### Manual Setup
