@@ -714,4 +714,39 @@ cardRoutes.openapi(assignCardEpicRoute, async (c) => {
   }
 })
 
+// GET /api/cards/:id/goals
+const getCardGoalsRoute = createRoute({
+  method: 'get',
+  path: '/{id}/goals',
+  tags: ['Cards'],
+  summary: 'Get card linked goals',
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      id: z.string(),
+    }),
+  },
+  responses: {
+    200: {
+      description: 'Linked goals retrieved successfully',
+      content: {
+        'application/json': {
+          schema: z.object({
+            data: z.array(z.any()),
+          }),
+        },
+      },
+    },
+  },
+})
+
+cardRoutes.openapi(getCardGoalsRoute, async (c) => {
+  const cardId = Number(c.req.param('id'))
+  if (Number.isNaN(cardId)) return c.json({ error: 'Invalid ID' }, 400)
+
+  const goalService = await import('../services/goalService')
+  const goals = await goalService.getGoalsByCardId(cardId)
+  return c.json({ data: goals }, 200)
+})
+
 export { cardRoutes }

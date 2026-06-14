@@ -9,6 +9,7 @@ import { CardActivities } from './CardActivities'
 import { CardAttachments } from './CardAttachments'
 import { CardChecklists } from './CardChecklists'
 import { CardComments } from './CardComments'
+import { CardGoalBadge } from './CardGoalBadge'
 import { ChecklistProgress } from './ChecklistProgress'
 import { CustomFieldBadge } from './CustomFieldBadge'
 import { CustomFieldValues } from './CustomFieldValues'
@@ -165,6 +166,77 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
   const handleMirrorCreated = (newMirror: CardMirror) => {
     setMirrors((prev) => [...prev, newMirror])
     fetchMirrors()
+  }
+  const [linkedGoals, setLinkedGoals] = useState<any[]>([])
+  const [allWorkspaceGoals, setAllWorkspaceGoals] = useState<any[]>([])
+  const [selectedGoalToLink, setSelectedGoalToLink] = useState<number | null>(null)
+
+  const fetchLinkedGoals = async () => {
+    try {
+      const res = await api.get<{ data: any[] }>(`/cards/${card.id}/goals`)
+      setLinkedGoals(res.data || [])
+    } catch (err) {
+      console.error('Failed to fetch linked goals:', err)
+    }
+  }
+
+  const fetchWorkspaceGoals = async () => {
+    if (!activeWorkspace?.id) return
+    try {
+      const res = await api.get<{ data: any[] }>(`/goals?workspace_id=${activeWorkspace.id}`)
+      const krs: any[] = []
+      for (const obj of res.data || []) {
+        if (obj.key_results) {
+          for (const kr of obj.key_results) {
+            krs.push({
+              ...kr,
+              objective_title: obj.title,
+            })
+          }
+        }
+      }
+      setAllWorkspaceGoals(krs)
+    } catch (err) {
+      console.error('Failed to fetch workspace goals:', err)
+    }
+  }
+
+  useEffect(() => {
+    fetchLinkedGoals()
+  }, [card.id])
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchWorkspaceGoals()
+    }
+  }, [isOpen, activeWorkspace?.id])
+
+  const handleLinkGoal = async () => {
+    if (!selectedGoalToLink) return
+    try {
+      await api.post(`/goals/${selectedGoalToLink}/cards`, { card_id: card.id })
+      setSelectedGoalToLink(null)
+      fetchLinkedGoals()
+      const activeBoard = useBoardStore.getState().activeBoard
+      if (activeBoard) {
+        useBoardStore.getState().fetchBoard(activeBoard.id)
+      }
+    } catch (err: any) {
+      alert(err.message || 'Gagal menghubungkan kartu ke sasaran')
+    }
+  }
+
+  const handleUnlinkGoal = async (goalId: number) => {
+    try {
+      await api.delete(`/goals/${goalId}/cards/${card.id}`)
+      fetchLinkedGoals()
+      const activeBoard = useBoardStore.getState().activeBoard
+      if (activeBoard) {
+        useBoardStore.getState().fetchBoard(activeBoard.id)
+      }
+    } catch (err: any) {
+      alert(err.message || 'Gagal memutuskan tautan')
+    }
   }
 
   useEffect(() => {
@@ -622,6 +694,74 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
             </div>
           )}
 
+          {!card.parent_card_id && (
+            <div className="border-t border-base-200 pt-3 space-y-3">
+              <span className="text-xs text-base-content/50 font-bold uppercase block">
+                Tautan Sasaran (OKR Goals)
+              </span>
+
+              {!isObserver && allWorkspaceGoals.length > 0 && (
+                <div className="flex gap-2">
+                  <select
+                    className="select select-bordered select-xs w-full"
+                    value={selectedGoalToLink || ''}
+                    onChange={(e) =>
+                      setSelectedGoalToLink(e.target.value ? Number(e.target.value) : null)
+                    }
+                  >
+                    <option value="">-- Hubungkan ke Key Result --</option>
+                    {allWorkspaceGoals
+                      .filter((g) => !linkedGoals.some((lg) => lg.id === g.id))
+                      .map((g) => (
+                        <option key={g.id} value={g.id}>
+                          🎯 {g.objective_title} → 📊 {g.title}
+                        </option>
+                      ))}
+                  </select>
+                  <button
+                    type="button"
+                    className="btn btn-xs btn-primary font-semibold"
+                    disabled={!selectedGoalToLink}
+                    onClick={handleLinkGoal}
+                  >
+                    Tautkan
+                  </button>
+                </div>
+              )}
+
+              {linkedGoals.length === 0 ? (
+                <p className="text-xs text-base-content/40 italic">
+                  Kartu ini belum terhubung ke sasaran mana pun.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {linkedGoals.map((g) => (
+                    <div
+                      key={g.id}
+                      className="flex justify-between items-center text-xs p-2 rounded-lg border border-base-200 bg-base-50"
+                    >
+                      <div className="flex flex-col min-w-0">
+                        <span className="font-semibold truncate text-base-content">{g.title}</span>
+                        <span className="text-[10px] text-base-content/50">
+                          Progress: {Math.round(g.progress)}%
+                        </span>
+                      </div>
+                      {!isObserver && (
+                        <button
+                          type="button"
+                          onClick={() => handleUnlinkGoal(g.id)}
+                          className="btn btn-xs btn-ghost text-error hover:bg-error/10"
+                        >
+                          Unlink
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="border-t border-base-200 pt-3">
             <span className="text-xs text-base-content/50 font-bold uppercase block mb-2">
               Komentar
@@ -783,6 +923,9 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
             />
           </div>
         )}
+
+        {/* Linked Goals Badges */}
+        {linkedGoals.length > 0 && <CardGoalBadge goals={linkedGoals} />}
 
         <div className="flex items-start justify-between">
           <h4 className="font-medium text-sm text-base-content/90 line-clamp-2 pr-6">

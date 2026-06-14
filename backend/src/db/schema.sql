@@ -1,4 +1,6 @@
 -- Drop tables if they exist (for easy migration reset)
+DROP TABLE IF EXISTS goal_card_links CASCADE;
+DROP TABLE IF EXISTS goals CASCADE;
 DROP TABLE IF EXISTS card_mirrors CASCADE;
 DROP TABLE IF EXISTS public_forms CASCADE;
 DROP TABLE IF EXISTS personal_access_tokens CASCADE;
@@ -474,6 +476,45 @@ CREATE INDEX idx_card_mirrors_source_card_id ON card_mirrors(source_card_id);
 CREATE INDEX idx_card_mirrors_mirror_board_id ON card_mirrors(mirror_board_id);
 CREATE INDEX idx_card_mirrors_mirror_list_id ON card_mirrors(mirror_list_id);
 CREATE INDEX idx_card_mirrors_mirror_card_id ON card_mirrors(mirror_card_id);
+
+-- Goals table
+CREATE TABLE goals (
+  id              SERIAL PRIMARY KEY,
+  workspace_id    INTEGER NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
+  parent_id       INTEGER REFERENCES goals(id) ON DELETE CASCADE,
+  title           VARCHAR(255) NOT NULL,
+  description     TEXT,
+  type            VARCHAR(20) NOT NULL CHECK (type IN ('objective', 'key_result')),
+  status          VARCHAR(20) NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'completed', 'cancelled')),
+  target_value    NUMERIC(10,2),
+  current_value   NUMERIC(10,2) NOT NULL DEFAULT 0,
+  unit            VARCHAR(50),
+  due_date        TIMESTAMPTZ,
+  color           VARCHAR(7),
+  created_by      INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TRIGGER update_goals_updated_at BEFORE UPDATE ON goals FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE INDEX idx_goals_workspace_id ON goals (workspace_id);
+CREATE INDEX idx_goals_parent_id ON goals (parent_id);
+CREATE INDEX idx_goals_type ON goals (type);
+CREATE INDEX idx_goals_status ON goals (status);
+
+-- Goal Card Links table
+CREATE TABLE goal_card_links (
+  id          SERIAL PRIMARY KEY,
+  goal_id     INTEGER NOT NULL REFERENCES goals(id) ON DELETE CASCADE,
+  card_id     INTEGER NOT NULL REFERENCES cards(id) ON DELETE CASCADE,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX uq_goal_card_links ON goal_card_links (goal_id, card_id);
+CREATE INDEX idx_goal_card_links_goal_id ON goal_card_links (goal_id);
+CREATE INDEX idx_goal_card_links_card_id ON goal_card_links (card_id);
+
 
 
 

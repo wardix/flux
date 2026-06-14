@@ -21,6 +21,7 @@ import { useWebSocket } from './hooks/useWebSocket'
 import { api } from './lib/api'
 import type { Card, List, Sprint } from './lib/types'
 import { AdminDashboardPage } from './pages/AdminDashboardPage'
+import { GoalsPage } from './pages/GoalsPage'
 import { LoginPage } from './pages/LoginPage'
 import { PublicFormPage } from './pages/PublicFormPage'
 import { SettingsPage } from './pages/SettingsPage'
@@ -45,6 +46,7 @@ function decodeToken(token: string | null) {
 }
 
 function App() {
+  const location = useLocation()
   const { t } = useTranslation()
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'))
   const [user, setUser] = useState<any>(null)
@@ -187,6 +189,34 @@ function App() {
   // Epics related States
   const [epicViewEnabled, setEpicViewEnabled] = useState(false)
   const [selectedEpicId, setSelectedEpicId] = useState<number | null>(null)
+
+  // Goals related States
+  const [goalsViewEnabled, setGoalsViewEnabled] = useState(false)
+
+  useEffect(() => {
+    if (location.pathname === '/goals') {
+      setGoalsViewEnabled(true)
+      setEpicViewEnabled(false)
+      setShow2FASettings(false)
+      setShowAdminPage(false)
+    } else {
+      setGoalsViewEnabled(false)
+    }
+  }, [location])
+
+  useEffect(() => {
+    if (goalsViewEnabled) {
+      window.history.pushState({}, '', '/goals')
+    } else if (epicViewEnabled) {
+      window.history.pushState({}, '', '/epics')
+    } else if (show2FASettings) {
+      window.history.pushState({}, '', '/settings')
+    } else if (showAdminPage) {
+      window.history.pushState({}, '', '/admin')
+    } else {
+      window.history.pushState({}, '', '/')
+    }
+  }, [goalsViewEnabled, epicViewEnabled, show2FASettings, showAdminPage])
 
   const fetchSprints = async () => {
     if (!activeBoard) return
@@ -386,7 +416,6 @@ function App() {
     }
   }
 
-  const location = useLocation()
   const isPublicForm = location.pathname.startsWith('/public/forms')
 
   if (isPublicForm) {
@@ -499,10 +528,15 @@ function App() {
                       type="button"
                       onClick={() => {
                         setShow2FASettings(false)
+                        setEpicViewEnabled(false)
+                        setGoalsViewEnabled(false)
                         fetchBoard(b.id)
                       }}
                       className={`flex items-center justify-between py-2 px-3 rounded-lg text-left ${
-                        !show2FASettings && activeBoard?.id === b.id
+                        !show2FASettings &&
+                        !epicViewEnabled &&
+                        !goalsViewEnabled &&
+                        activeBoard?.id === b.id
                           ? 'active bg-primary text-primary-content font-semibold'
                           : 'hover:bg-base-200'
                       }`}
@@ -599,10 +633,14 @@ function App() {
                     onClick={() => {
                       setShow2FASettings(false)
                       setEpicViewEnabled(false)
+                      setGoalsViewEnabled(false)
                       fetchBoard(b.id)
                     }}
                     className={`flex items-center justify-between py-2 px-3 rounded-lg text-left ${
-                      !show2FASettings && !epicViewEnabled && activeBoard?.id === b.id
+                      !show2FASettings &&
+                      !epicViewEnabled &&
+                      !goalsViewEnabled &&
+                      activeBoard?.id === b.id
                         ? 'active bg-primary text-primary-content font-semibold'
                         : 'hover:bg-base-200'
                     }`}
@@ -719,6 +757,20 @@ function App() {
             <button
               type="button"
               onClick={() => {
+                setGoalsViewEnabled(true)
+                setEpicViewEnabled(false)
+                setShow2FASettings(false)
+                setShowAdminPage(false)
+              }}
+              className={`btn btn-sm btn-block justify-start capitalize ${
+                goalsViewEnabled ? 'btn-primary text-white' : 'btn-ghost'
+              }`}
+            >
+              🎯 Goals & OKRs
+            </button>
+            <button
+              type="button"
+              onClick={() => {
                 setShow2FASettings(true)
                 setShowAdminPage(false)
                 setEpicViewEnabled(false)
@@ -818,6 +870,10 @@ function App() {
         ) : show2FASettings ? (
           <div className="flex-1 overflow-y-auto z-10 bg-base-100">
             <SettingsPage onBack={() => setShow2FASettings(false)} />
+          </div>
+        ) : goalsViewEnabled ? (
+          <div className="flex-1 overflow-y-auto z-10 bg-base-100">
+            <GoalsPage />
           </div>
         ) : epicViewEnabled && activeWorkspace ? (
           <div className="flex-1 overflow-y-auto z-10 bg-base-100 p-8">
