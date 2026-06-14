@@ -52,11 +52,43 @@ boardRoutes.put('/:id', async (c) => {
   }
 })
 
+boardRoutes.get('/:id/archive', async (c) => {
+  const id = Number(c.req.param('id'))
+  if (Number.isNaN(id)) return c.json({ error: 'Invalid ID' }, 400)
+
+  const { db } = await import('../db')
+  const lists =
+    await db`SELECT * FROM lists WHERE board_id = ${id} AND archived_at IS NOT NULL AND deleted_at IS NULL`
+  const cards = await db`
+    SELECT c.* FROM cards c
+    JOIN lists l ON c.list_id = l.id
+    WHERE l.board_id = ${id} AND c.archived_at IS NOT NULL AND c.deleted_at IS NULL
+  `
+  return c.json({ data: { lists, cards } })
+})
+
+boardRoutes.get('/:id/trash', async (c) => {
+  const id = Number(c.req.param('id'))
+  if (Number.isNaN(id)) return c.json({ error: 'Invalid ID' }, 400)
+
+  const { db } = await import('../db')
+  const lists = await db`SELECT * FROM lists WHERE board_id = ${id} AND deleted_at IS NOT NULL`
+  const cards = await db`
+    SELECT c.* FROM cards c
+    JOIN lists l ON c.list_id = l.id
+    WHERE l.board_id = ${id} AND c.deleted_at IS NOT NULL
+  `
+  return c.json({ data: { lists, cards } })
+})
+
 boardRoutes.delete('/:id', async (c) => {
   const id = Number(c.req.param('id'))
   if (Number.isNaN(id)) return c.json({ error: 'Invalid ID' }, 400)
 
-  const board = await boardService.remove(id)
+  const permanent = c.req.query('permanent') === 'true'
+  const board = permanent
+    ? await boardService.remove(id)
+    : await boardService.update(id, { deleted_at: new Date().toISOString() })
   if (!board) return c.json({ error: 'Board not found' }, 404)
 
   return c.body(null, 204)

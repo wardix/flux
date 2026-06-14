@@ -4,23 +4,31 @@ export async function getAll(userId: number) {
   return await db`
     SELECT DISTINCT b.* FROM boards b
     LEFT JOIN workspace_members wm ON b.workspace_id = wm.workspace_id
-    WHERE wm.user_id = ${userId} OR b.created_by = ${userId}
+    WHERE (wm.user_id = ${userId} OR b.created_by = ${userId})
+      AND b.archived_at IS NULL AND b.deleted_at IS NULL
     ORDER BY b.created_at DESC
   `
 }
 
 export async function getById(id: number) {
-  const boards = await db`SELECT * FROM boards WHERE id = ${id}`
+  const boards = await db`SELECT * FROM boards WHERE id = ${id} AND deleted_at IS NULL`
   if (boards.length === 0) return null
   const board = boards[0]
 
-  const lists = await db`SELECT * FROM lists WHERE board_id = ${id} ORDER BY position ASC, id ASC`
+  const lists = await db`
+    SELECT * FROM lists 
+    WHERE board_id = ${id} AND archived_at IS NULL AND deleted_at IS NULL 
+    ORDER BY position ASC, id ASC
+  `
 
   const listIds = lists.map((l) => l.id)
   let cards: unknown[] = []
   if (listIds.length > 0) {
-    cards =
-      await db`SELECT * FROM cards WHERE list_id IN (${listIds}) ORDER BY position ASC, id ASC`
+    cards = await db`
+      SELECT * FROM cards 
+      WHERE list_id IN (${listIds}) AND archived_at IS NULL AND deleted_at IS NULL 
+      ORDER BY position ASC, id ASC
+    `
   }
 
   const listsWithCards = lists.map((list) => {
@@ -69,18 +77,27 @@ export async function create(
 
 export async function update(
   id: number,
-  data: { title?: string; visibility?: string; background?: string },
+  data: {
+    title?: string
+    visibility?: string
+    background?: string
+    archived_at?: string | null
+    deleted_at?: string | null
+  },
 ) {
   const current = await db`SELECT * FROM boards WHERE id = ${id}`
   if (current.length === 0) return null
 
-  const title = data.title !== undefined ? data.title : current[0].title
-  const visibility = data.visibility !== undefined ? data.visibility : current[0].visibility
-  const background = data.background !== undefined ? data.background : current[0].background
+  const row = current[0]
+  const title = data.title !== undefined ? data.title : row.title
+  const visibility = data.visibility !== undefined ? data.visibility : row.visibility
+  const background = data.background !== undefined ? data.background : row.background
+  const archived_at = data.archived_at !== undefined ? data.archived_at : row.archived_at
+  const deleted_at = data.deleted_at !== undefined ? data.deleted_at : row.deleted_at
 
   const result = await db`
     UPDATE boards
-    SET title = ${title}, visibility = ${visibility}, background = ${background}, updated_at = NOW()
+    SET title = ${title}, visibility = ${visibility}, background = ${background}, archived_at = ${archived_at}, deleted_at = ${deleted_at}, updated_at = NOW()
     WHERE id = ${id}
     RETURNING *
   `

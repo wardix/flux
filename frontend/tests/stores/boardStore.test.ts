@@ -137,4 +137,51 @@ describe('boardStore', () => {
     })
     putSpy.mockRestore()
   })
+
+  test('should archive card and remove it from active board locally', async () => {
+    // biome-ignore lint/suspicious/noExplicitAny: Mocking API response for test spy
+    const putSpy = vi.spyOn(api, 'put').mockResolvedValue({ success: true } as any)
+
+    useBoardStore.setState({
+      activeBoard: {
+        id: 1,
+        workspace_id: 1,
+        title: 'Board',
+        visibility: 'private',
+        created_at: '',
+        updated_at: '',
+        lists: [
+          {
+            id: 10,
+            board_id: 1,
+            title: 'List 1',
+            position: 0,
+            created_at: '',
+            updated_at: '',
+            cards: [
+              {
+                id: 100,
+                list_id: 10,
+                title: 'Card 1',
+                position: 0,
+                created_at: '',
+                updated_at: '',
+              },
+            ],
+          },
+        ],
+      },
+    })
+
+    await useBoardStore.getState().archiveCard(100)
+    expect(putSpy).toHaveBeenCalledWith(
+      '/cards/100',
+      expect.objectContaining({ archived_at: expect.any(String) }),
+    )
+
+    const state = useBoardStore.getState()
+    expect(state.activeBoard?.lists?.[0].cards.length).toBe(0)
+
+    putSpy.mockRestore()
+  })
 })

@@ -55,7 +55,10 @@ cardRoutes.delete('/:id', async (c) => {
   const id = Number(c.req.param('id'))
   if (Number.isNaN(id)) return c.json({ error: 'Invalid ID' }, 400)
 
-  const card = await cardService.remove(id)
+  const permanent = c.req.query('permanent') === 'true'
+  const card = permanent
+    ? await cardService.remove(id)
+    : await cardService.update(id, { deleted_at: new Date().toISOString() })
   if (!card) return c.json({ error: 'Card not found' }, 404)
 
   return c.body(null, 204)
