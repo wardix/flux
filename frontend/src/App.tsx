@@ -2,6 +2,8 @@ import { DndContext, type DragEndEvent } from '@dnd-kit/core'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Route, Routes, useLocation } from 'react-router-dom'
+import { BrandingProvider } from './components/shared/BrandingProvider'
+import { useBranding } from './hooks/useBranding'
 import { AutomationList } from './components/board/AutomationList'
 import { BackgroundPicker } from './components/board/BackgroundPicker'
 import { BoardColumn } from './components/board/BoardColumn'
@@ -51,6 +53,7 @@ function decodeToken(token: string | null) {
 }
 
 function App() {
+  const { appName, logoUrl } = useBranding()
   const location = useLocation()
   const { t } = useTranslation()
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'))
@@ -540,6 +543,20 @@ function App() {
     <div className="flex h-screen bg-base-300 text-base-content overflow-hidden selection:bg-primary selection:text-primary-content transition-colors duration-300">
       {/* Sidebar */}
       <aside className="w-64 bg-base-100 flex flex-col border-r border-base-200/50">
+        {/* Brand Header */}
+        <div className="px-5 py-4 border-b border-base-200/50 flex items-center gap-2.5">
+          {logoUrl ? (
+            <img src={logoUrl} alt="Logo" className="h-6 object-contain" />
+          ) : (
+            <div className="w-6 h-6 bg-primary rounded flex items-center justify-center text-white font-black text-xs shadow-sm">
+              F
+            </div>
+          )}
+          <span className="font-extrabold text-sm text-neutral-800 dark:text-neutral-200">
+            {appName}
+          </span>
+        </div>
+
         {/* Workspace Dropdown Header */}
         <div className="p-4 border-b border-base-200/50 flex flex-col gap-2">
           <div className="flex items-center justify-between">
@@ -1006,6 +1023,9 @@ function App() {
             <header className="navbar bg-base-100 border-b border-base-200/50 px-6 justify-between z-10 shadow-sm">
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold px-2 py-0.5 bg-base-200 rounded text-base-content/60 mr-1.5 select-none">
+                    {appName}
+                  </span>
                   <h2 className="text-xl font-bold tracking-tight text-base-content/90">
                     {activeBoard ? activeBoard.title : 'Loading Board...'}
                   </h2>
@@ -1778,4 +1798,10 @@ function App() {
   )
 }
 
-export default App
+export default function AppWrapper() {
+  return (
+    <BrandingProvider>
+      <App />
+    </BrandingProvider>
+  )
+}

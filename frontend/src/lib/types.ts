@@ -91,12 +91,25 @@ export interface Board {
   is_starred?: boolean
 }
 
+export interface WorkspaceBranding {
+  id: number
+  workspace_id: number
+  app_name: string
+  logo_url: string | null
+  favicon_url: string | null
+  primary_color: string
+  secondary_color: string
+  custom_domain: string | null
+  custom_css: string | null
+}
+
 export interface Workspace {
   id: number
   name: string
   owner_id: number
   created_at: string
   updated_at: string
+  branding?: WorkspaceBranding | null
 }
 
 export interface Label {

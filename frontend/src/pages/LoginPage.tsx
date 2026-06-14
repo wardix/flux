@@ -4,12 +4,15 @@ import { OAuthButtons } from '../components/auth/OAuthButtons'
 import { TwoFactorLoginForm } from '../components/auth/TwoFactorLoginForm'
 import { api } from '../lib/api'
 
+import { useBranding } from '../hooks/useBranding'
+
 interface LoginPageProps {
   onLoginSuccess: (token: string, user: any) => void
 }
 
 export function LoginPage({ onLoginSuccess }: LoginPageProps) {
   const { t } = useTranslation()
+  const { appName, logoUrl } = useBranding()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -75,8 +78,17 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
           />
         ) : (
           <>
-            <div className="space-y-2 text-center">
-              <h2 className="text-2xl font-bold tracking-tight">{t('auth.welcomeBack')}</h2>
+            <div className="flex flex-col items-center gap-3 text-center">
+              {logoUrl ? (
+                <img src={logoUrl} alt="Logo" className="h-10 object-contain mb-1" />
+              ) : (
+                <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-black text-xl mb-1 shadow-md">
+                  F
+                </div>
+              )}
+              <h2 className="text-2xl font-bold tracking-tight">
+                {t('auth.welcomeBack')} to {appName}
+              </h2>
               <p className="text-xs text-base-content/60">{t('auth.login')}</p>
             </div>
 
