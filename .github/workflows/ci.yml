@@ -1,0 +1,95 @@
+name: CI
+
+on:
+  push:
+    branches: [ '**' ]
+  pull_request:
+    branches: [ '**' ]
+
+jobs:
+  biome-check:
+    name: Lint & Format Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+      
+      - name: Check Backend Formatting
+        working-directory: ./backend
+        run: bunx biome ci ./src
+        continue-on-error: true # So we can see both errors if they exist
+
+      - name: Check Frontend Formatting
+        working-directory: ./frontend
+        run: bunx biome ci ./src
+        continue-on-error: true
+
+  test-backend:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: flux_user
+          POSTGRES_PASSWORD: flux_password
+          POSTGRES_DB: flux_test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+          
+      - name: Install dependencies
+        working-directory: ./backend
+        run: bun install
+        
+      - name: Migrate Database
+        working-directory: ./backend
+        env:
+          DATABASE_URL: postgres://flux_user:flux_password@localhost:5432/flux_test_db
+        run: bun run db:migrate
+        
+      - name: Run Backend Tests
+        working-directory: ./backend
+        env:
+          DATABASE_URL: postgres://flux_user:flux_password@localhost:5432/flux_test_db
+          JWT_SECRET: supersecretjwtkey
+          PORT: 3000
+        run: bun test
+
+  test-frontend:
+    name: Frontend Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+          
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: bun install
+        
+      - name: Build Frontend
+        working-directory: ./frontend
+        run: bun run build
+        
+      - name: Run Frontend Tests
+        working-directory: ./frontend
+        run: bun run test

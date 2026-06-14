@@ -3,6 +3,7 @@
 > Modern Project Management & Kanban Board — Built with Bun, React, Hono, and PostgreSQL.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
+[![CI](https://github.com/wardix/flux/actions/workflows/ci.yml/badge.svg)](https://github.com/wardix/flux/actions/workflows/ci.yml)
 
 ## 🎯 Overview
 
