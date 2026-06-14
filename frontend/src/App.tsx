@@ -37,6 +37,7 @@ import { getPendingMutations } from './lib/offlineQueue'
 import type { Card, List, Sprint } from './lib/types'
 import { AdminDashboardPage } from './pages/AdminDashboardPage'
 import { GoalsPage } from './pages/GoalsPage'
+import { DashboardPage } from './pages/DashboardPage'
 import { LoginPage } from './pages/LoginPage'
 import { PublicFormPage } from './pages/PublicFormPage'
 import { SettingsPage } from './pages/SettingsPage'
@@ -243,6 +244,9 @@ function App() {
   // Goals related States
   const [goalsViewEnabled, setGoalsViewEnabled] = useState(false)
 
+  // Dashboard related States
+  const [dashboardViewEnabled, setDashboardViewEnabled] = useState(false)
+
   // Background picker state
   const [isBackgroundPickerOpen, setIsBackgroundPickerOpen] = useState(false)
 
@@ -291,6 +295,7 @@ function App() {
   useEffect(() => {
     if (location.pathname === '/goals') {
       setGoalsViewEnabled(true)
+                setDashboardViewEnabled(false)
       setEpicViewEnabled(false)
       setShow2FASettings(false)
       setShowAdminPage(false)
@@ -909,6 +914,7 @@ function App() {
               type="button"
               onClick={() => {
                 setEpicViewEnabled(true)
+                setDashboardViewEnabled(false)
                 setSelectedEpicId(null)
                 setShow2FASettings(false)
                 setShowAdminPage(false)
@@ -923,6 +929,7 @@ function App() {
               type="button"
               onClick={() => {
                 setGoalsViewEnabled(true)
+                setDashboardViewEnabled(false)
                 setEpicViewEnabled(false)
                 setShow2FASettings(false)
                 setShowAdminPage(false)
@@ -936,7 +943,23 @@ function App() {
             <button
               type="button"
               onClick={() => {
+                setDashboardViewEnabled(true)
+                setGoalsViewEnabled(false)
+                setEpicViewEnabled(false)
+                setShow2FASettings(false)
+                setShowAdminPage(false)
+              }}
+              className={`btn btn-sm btn-block justify-start capitalize ${
+                dashboardViewEnabled ? 'btn-primary text-white' : 'btn-ghost'
+              }`}
+            >
+              📊 Analytics Dashboard
+            </button>
+            <button
+              type="button"
+              onClick={() => {
                 setShow2FASettings(true)
+                setDashboardViewEnabled(false)
                 setShowAdminPage(false)
                 setEpicViewEnabled(false)
               }}
@@ -1048,6 +1071,10 @@ function App() {
         ) : show2FASettings ? (
           <div className="flex-1 overflow-y-auto z-10 bg-base-100">
             <SettingsPage onBack={() => setShow2FASettings(false)} />
+          </div>
+        ) : dashboardViewEnabled ? (
+          <div className="flex-1 overflow-y-auto z-10 bg-base-100">
+            <DashboardPage />
           </div>
         ) : goalsViewEnabled ? (
           <div className="flex-1 overflow-y-auto z-10 bg-base-100">
