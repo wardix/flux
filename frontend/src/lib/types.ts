@@ -23,6 +23,17 @@ export interface Card {
   user_voted?: boolean
   sprint_id?: number | null
   epic_id?: number | null
+  is_recurring?: boolean
+}
+
+export interface RecurringRule {
+  id: number
+  card_id: number
+  frequency: 'daily' | 'weekly' | 'monthly'
+  next_run: string
+  is_active: boolean
+  created_at: string
+  updated_at: string
 }
 
 export interface Voter {

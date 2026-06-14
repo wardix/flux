@@ -1,11 +1,19 @@
 import { db } from '../db'
 
 export async function getFieldsByBoard(boardId: number) {
-  return await db`
+  const fields = await db`
     SELECT * FROM custom_fields
     WHERE board_id = ${boardId}
     ORDER BY position ASC, id ASC
   `
+  return fields.map((field) => {
+    if (field.options && typeof field.options === 'string') {
+      try {
+        field.options = JSON.parse(field.options)
+      } catch {}
+    }
+    return field
+  })
 }
 
 export async function createField(boardId: number, data: { name: string; field_type: string; options?: any; is_required?: boolean; position?: number }) {
@@ -36,6 +44,11 @@ export async function createField(boardId: number, data: { name: string; field_t
     VALUES (${boardId}, ${data.name}, ${data.field_type}, ${options}, ${isRequired}, ${position})
     RETURNING *
   `
+  if (field && field.options && typeof field.options === 'string') {
+    try {
+      field.options = JSON.parse(field.options)
+    } catch {}
+  }
   return field
 }
 
@@ -113,7 +126,13 @@ export async function setCardValues(cardId: number, values: { field_id: number; 
           throw error
         }
       } else if (field.field_type === 'dropdown') {
-        const choices = field.options?.choices || []
+        let options = field.options
+        if (options && typeof options === 'string') {
+          try {
+            options = JSON.parse(options)
+          } catch {}
+        }
+        const choices = options?.choices || []
         const exists = choices.some((c: any) => c.value === item.value)
         if (!exists) {
           const error = new Error(`Value "${item.value}" is not a valid choice for field "${field.name}"`)

@@ -59,6 +59,7 @@ export const CardSchema = z
     parent_card_id: z.number().nullable().openapi({ example: null }),
     is_completed: z.boolean().openapi({ example: false }),
     story_points: z.number().nullable().openapi({ example: 5 }),
+    is_recurring: z.boolean().openapi({ example: false }),
     archived_at: z.string().nullable().openapi({ example: null }),
     deleted_at: z.string().nullable().openapi({ example: null }),
     created_at: z.string().openapi({ example: '2026-06-14T04:49:15.000Z' }),
