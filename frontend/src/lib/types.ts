@@ -47,6 +47,26 @@ export interface RecurringRule {
   updated_at: string
 }
 
+export interface ChecklistItem {
+  id: number
+  checklist_id: number
+  title: string
+  is_completed: boolean
+  position: number
+  assignee: { id: number; name: string; avatar_url: string | null } | null
+  due_date: string | null
+  created_at?: string
+  updated_at?: string
+}
+
+export interface Checklist {
+  id: number
+  card_id: number
+  title: string
+  position: number
+  items: ChecklistItem[]
+}
+
 export interface Voter {
   id: number
   name: string

@@ -59,3 +59,51 @@ export async function getUnreadCount(userId: number) {
   `
   return result[0]
 }
+
+export async function checkDueSoonItems(): Promise<void> {
+  // 1. Cek cards yang due dalam 24 jam
+  const cards = await db`
+    SELECT id, title, assignee_id, due_date
+    FROM cards
+    WHERE due_date BETWEEN NOW() AND NOW() + INTERVAL '24 hours'
+      AND assignee_id IS NOT NULL
+      AND is_completed = FALSE
+      AND deleted_at IS NULL
+  `
+
+  for (const card of cards) {
+    if (card.assignee_id) {
+      await createNotification({
+        user_id: card.assignee_id,
+        type: 'due_soon',
+        title: 'Card Due Soon',
+        message: `Card "${card.title}" is due soon.`,
+        card_id: card.id,
+      })
+    }
+  }
+
+  // 2. Cek checklist_items yang due_date dalam 24 jam
+  const checklistItems = await db`
+    SELECT ci.id, ci.title, ci.assignee_id, ci.due_date, c.id as card_id, c.title as card_title
+    FROM checklist_items ci
+    JOIN checklists cl ON ci.checklist_id = cl.id
+    JOIN cards c ON cl.card_id = c.id
+    WHERE ci.due_date BETWEEN NOW() AND NOW() + INTERVAL '24 hours'
+      AND ci.assignee_id IS NOT NULL
+      AND ci.is_completed = FALSE
+      AND c.deleted_at IS NULL
+  `
+
+  for (const item of checklistItems) {
+    if (item.assignee_id) {
+      await createNotification({
+        user_id: item.assignee_id,
+        type: 'due_soon',
+        title: 'Checklist Item Due Soon',
+        message: `Checklist item "${item.title}" in card "${item.card_title}" is due soon.`,
+        card_id: item.card_id,
+      })
+    }
+  }
+}

@@ -318,6 +318,8 @@ const updateChecklistItemRoute = createRoute({
             title: z.string().optional().openapi({ example: 'New item title' }),
             is_completed: z.boolean().optional().openapi({ example: true }),
             position: z.number().optional().openapi({ example: 1 }),
+            assignee_id: z.number().nullable().optional().openapi({ example: 1 }),
+            due_date: z.string().nullable().optional().openapi({ example: '2026-06-25T00:00:00.000Z' }),
           }),
         },
       },
@@ -512,6 +514,7 @@ checklistRoutes.openapi(updateChecklistItemRoute, async (c) => {
     if (!result) return c.json({ error: 'Checklist item not found' }, 404)
     return c.json({ data: result }, 200)
   } catch (error) {
+    console.error('updateChecklistItem error:', error)
     const message = error instanceof Error ? error.message : 'Internal Server Error'
     return c.json({ error: message }, 500)
   }

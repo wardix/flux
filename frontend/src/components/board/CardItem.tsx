@@ -696,6 +696,11 @@ export function CardItem({
                 <CardChecklists
                   cardId={card.id}
                   disabled={isObserver}
+                  boardMembers={boardMembers.map((m: any) => ({
+                    id: m.user_id,
+                    name: m.name || m.email || '',
+                    avatar_url: m.avatar_url || null,
+                  }))}
                   onProgressChange={async () => {
                     const activeBoard = useBoardStore.getState().activeBoard
                     if (activeBoard?.id) {

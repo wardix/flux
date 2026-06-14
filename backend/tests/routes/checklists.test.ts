@@ -12,6 +12,7 @@ describe('Checklists API', () => {
   let checklistId: number
   let itemId: number
   let testToken: string
+  let user2Id: number
 
   beforeAll(async () => {
     const userResult = await db`
@@ -20,6 +21,13 @@ describe('Checklists API', () => {
       RETURNING id
     `
     userId = userResult[0].id
+
+    const user2Result = await db`
+      INSERT INTO users (email, password_hash)
+      VALUES ('checklist_test_user2@example.com', 'hashed')
+      RETURNING id
+    `
+    user2Id = user2Result[0].id
 
     const workspaceResult = await db`
       INSERT INTO workspaces (name, owner_id)
@@ -58,7 +66,7 @@ describe('Checklists API', () => {
   })
 
   afterAll(async () => {
-    await db`DELETE FROM users WHERE id = ${userId}`
+    await db`DELETE FROM users WHERE id IN (${userId}, ${user2Id})`
   })
 
   test('POST /api/cards/:id/checklists > should create a checklist', async () => {
@@ -155,6 +163,102 @@ describe('Checklists API', () => {
     expect(response.status).toBe(200)
     const json = await response.json()
     expect(json.data.is_completed).toBe(true)
+  })
+
+  describe('Advanced Checklist Items (assignee & due_date)', () => {
+    test('PUT /api/checklists/:checklistId/items/:itemId > should assign user to checklist item', async () => {
+      const response = await app.fetch(
+        new Request(`http://localhost/api/checklists/${checklistId}/items/${itemId}`, {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${testToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            assignee_id: user2Id,
+          }),
+        }),
+      )
+      expect(response.status).toBe(200)
+      const json = await response.json()
+      expect(json.data.assignee).toBeDefined()
+      expect(json.data.assignee.id).toBe(user2Id)
+    })
+
+    test('PUT /api/checklists/:checklistId/items/:itemId > should unassign user from checklist item', async () => {
+      const response = await app.fetch(
+        new Request(`http://localhost/api/checklists/${checklistId}/items/${itemId}`, {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${testToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            assignee_id: null,
+          }),
+        }),
+      )
+      expect(response.status).toBe(200)
+      const json = await response.json()
+      expect(json.data.assignee).toBeNull()
+    })
+
+    test('PUT /api/checklists/:checklistId/items/:itemId > should set due date on checklist item', async () => {
+      const response = await app.fetch(
+        new Request(`http://localhost/api/checklists/${checklistId}/items/${itemId}`, {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${testToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            due_date: '2026-01-20T17:00:00Z',
+          }),
+        }),
+      )
+      expect(response.status).toBe(200)
+      const json = await response.json()
+      expect(json.data.due_date).toBe('2026-01-20T17:00:00.000Z') // DB returns formatted
+    })
+
+    test('PUT /api/checklists/:checklistId/items/:itemId > should set assignee and due_date simultaneously', async () => {
+      const response = await app.fetch(
+        new Request(`http://localhost/api/checklists/${checklistId}/items/${itemId}`, {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${testToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            assignee_id: user2Id,
+            due_date: '2026-01-25T10:00:00.000Z',
+          }),
+        }),
+      )
+      expect(response.status).toBe(200)
+      const json = await response.json()
+      expect(json.data.assignee.id).toBe(user2Id)
+      expect(json.data.due_date).toBe('2026-01-25T10:00:00.000Z')
+    })
+
+    test('GET /api/cards/:id/checklists > should include assignee and due_date', async () => {
+      const response = await app.fetch(
+        new Request(`http://localhost/api/cards/${cardId}/checklists`, {
+          headers: {
+            Authorization: `Bearer ${testToken}`,
+          },
+        }),
+      )
+      expect(response.status).toBe(200)
+      const json = await response.json()
+      expect(json.length).toBeGreaterThanOrEqual(1)
+      const items = json[0].items
+      expect(items.length).toBeGreaterThanOrEqual(1)
+      const assignedItem = items.find((i: any) => i.id === itemId)
+      expect(assignedItem).toBeDefined()
+      expect(assignedItem.assignee.id).toBe(user2Id)
+      expect(assignedItem.due_date).toBe('2026-01-25T10:00:00.000Z')
+    })
   })
 
   test('DELETE /api/checklists/:checklistId/items/:itemId > should delete checklist item', async () => {
