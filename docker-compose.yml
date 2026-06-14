@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  postgres:
+  db:
     image: postgres:16-alpine
     container_name: flux-db
     environment:
@@ -12,6 +12,46 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U flux_user -d flux"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - flux-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: flux-backend
+    environment:
+      DATABASE_URL: postgres://flux_user:secret123@db:5432/flux
+      PORT: 3000
+      JWT_SECRET: my-super-secret-jwt-key
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - flux-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: flux-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    networks:
+      - flux-network
+
+networks:
+  flux-network:
+    driver: bridge
 
 volumes:
   pgdata:
