@@ -3,6 +3,7 @@ import { authMiddleware } from '../middleware/auth'
 import { db } from '../db'
 import * as cardService from '../services/cardService'
 import * as automationService from '../services/automationService'
+import * as webhookService from '../services/webhookService'
 import { logActivity } from '../services/activityService'
 import { broadcastToBoard } from '../websocket/events'
 
@@ -374,6 +375,9 @@ cardRoutes.openapi(createCardRoute, async (c) => {
         cardId: card.id,
       })
 
+      // Trigger card_created webhook
+      await webhookService.triggerWebhooks(boardId, 'card_created', card)
+
       const userName = await getUserName(userId)
       broadcastToBoard(boardId, {
         type: 'card_created',
@@ -449,6 +453,9 @@ cardRoutes.openapi(updateCardPositionsRoute, async (c) => {
           data: { to_list_id: movedCardPayload.to_list_id },
         })
       }
+
+      // Trigger card_moved webhook
+      await webhookService.triggerWebhooks(boardId, 'card_moved', movedCardPayload)
 
       const userName = await getUserName(userId)
       broadcastToBoard(boardId, {
@@ -527,6 +534,12 @@ cardRoutes.openapi(updateCardRoute, async (c) => {
           cardId: card.id,
           data: { to_list_id: body.list_id },
         })
+        // Trigger card_moved webhook
+        await webhookService.triggerWebhooks(boardId, 'card_moved', {
+          id: card.id,
+          from_list_id: oldCard.list_id,
+          to_list_id: body.list_id,
+        })
       }
       if (body.assignee_id !== undefined && body.assignee_id !== oldCard.assignee_id && body.assignee_id !== null) {
         await automationService.processAutomations({
@@ -535,6 +548,8 @@ cardRoutes.openapi(updateCardRoute, async (c) => {
           cardId: card.id,
           data: { assignee_id: body.assignee_id },
         })
+        // Trigger card_assigned webhook
+        await webhookService.triggerWebhooks(boardId, 'card_assigned', card)
       }
 
       const userName = await getUserName(userId)

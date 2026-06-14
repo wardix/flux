@@ -32,6 +32,8 @@ import { sprintRoutes } from './routes/sprints'
 import { epicRoutes } from './routes/epics'
 import { recurringRoutes } from './routes/recurring'
 import { boardTemplateRoutes } from './routes/boardTemplates'
+import { personalAccessRoutes } from './routes/personalAccessTokens'
+import { webhookRoutes } from './routes/webhooks'
 
 
 
@@ -93,6 +95,8 @@ app.route('/api/boards/:boardId/automations', automationRoutes)
 app.route('/api/boards/:boardId/sprints', sprintRoutes)
 app.route('/api/workspaces/:workspaceId/epics', epicRoutes)
 app.route('/api/recurring-tasks', recurringRoutes)
+app.route('/api/personal-access-tokens', personalAccessRoutes)
+app.route('/api/boards/:boardId/webhooks', webhookRoutes)
 
 
 
