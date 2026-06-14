@@ -1,13 +1,11 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
-import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { db } from '../src/db/index'
 
 describe('Database Tests', () => {
   beforeAll(async () => {
     const schemaPath = path.join(__dirname, '../src/db/schema.sql')
-    const schemaSql = fs.readFileSync(schemaPath, 'utf8')
-    await db.exec(schemaSql)
+    await db.file(schemaPath)
   })
 
   afterAll(async () => {
