@@ -1,9 +1,11 @@
 import { create } from 'zustand'
 import { api } from '../lib/api'
-import type { ActiveTimer, Board, Card, Label, List, Workspace } from '../lib/types'
+import type { ActiveTimer, Board, Card, Label, List, Workspace, BoardViewType } from '../lib/types'
 import { enqueueMutation } from '../lib/offlineQueue'
 
 interface BoardState {
+  activeView: BoardViewType
+  setActiveView: (view: BoardViewType) => void
   boards: Board[]
   workspaces: Workspace[]
   labels: Label[]
@@ -91,6 +93,8 @@ interface BoardState {
 }
 
 export const useBoardStore = create<BoardState>((set, get) => ({
+  activeView: 'kanban',
+  setActiveView: (view) => set({ activeView: view }),
   boards: [],
   workspaces: [],
   labels: [],

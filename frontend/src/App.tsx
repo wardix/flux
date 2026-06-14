@@ -7,6 +7,10 @@ import { useBranding } from './hooks/useBranding'
 import { AutomationList } from './components/board/AutomationList'
 import { BackgroundPicker } from './components/board/BackgroundPicker'
 import { BoardColumn } from './components/board/BoardColumn'
+import { ViewSwitcher } from './components/board/ViewSwitcher'
+import { TableView } from './components/board/TableView'
+import { CalendarView } from './components/board/CalendarView'
+import { TimelineView } from './components/board/TimelineView'
 import { BurndownChart } from './components/board/BurndownChart'
 import { CustomFieldEditor } from './components/board/CustomFieldEditor'
 import { EpicDetail } from './components/board/EpicDetail'
@@ -84,6 +88,11 @@ function App() {
     cloneBoard,
     updateBoardVisibility,
     createList,
+    updateCard,
+    activeView,
+    setActiveView,
+    activeCardId,
+    setActiveCardId,
     fetchLabels,
     createLabel,
     moveCard,
@@ -1048,6 +1057,11 @@ function App() {
                       {activeBoard.is_starred ? '★' : '☆'}
                     </button>
                   )}
+                  {activeBoard && (
+                    <div className="ml-4">
+                      <ViewSwitcher activeView={activeView} onViewChange={setActiveView} />
+                    </div>
+                  )}
                 </div>
 
                 {/* Board Visibility Selector */}
@@ -1738,8 +1752,10 @@ function App() {
                   })()}
               </div>
             ) : (
-              <DndContext onDragEnd={handleDragEnd}>
-                <div className="flex-1 overflow-x-auto p-6 flex gap-6 items-start">
+              <>
+                {activeView === 'kanban' && (
+                  <DndContext onDragEnd={handleDragEnd}>
+                    <div className="flex-1 overflow-x-auto p-6 flex gap-6 items-start">
                   {activeBoard?.lists?.map((list) => (
                     <BoardColumn key={list.id} list={list} />
                   ))}
@@ -1789,9 +1805,29 @@ function App() {
                 </div>
               </DndContext>
             )}
-          </>
-        )}
-      </main>
+                {activeView === 'table' && (
+                  <TableView 
+                    cards={activeBoard?.lists?.flatMap(l => l.cards) || []} 
+                    lists={activeBoard?.lists || []} 
+                    onCardUpdate={updateCard} 
+                  />
+                )}
+                {activeView === 'calendar' && (
+                  <CalendarView 
+                    cards={activeBoard?.lists?.flatMap(l => l.cards) || []} 
+                    onCardClick={(card) => setActiveCardId(card.id)}
+                  />
+                )}
+                {activeView === 'timeline' && (
+                  <TimelineView 
+                    cards={activeBoard?.lists?.flatMap(l => l.cards) || []} 
+                    lists={activeBoard?.lists || []}
+                    onCardClick={(card) => setActiveCardId(card.id)}
+                  />
+                )}
+              </>
+            )}
+          </main>
 
       {activeBoard && (
         <ExportDialog

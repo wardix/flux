@@ -100,6 +100,7 @@ CREATE TABLE cards (
     title VARCHAR(255) NOT NULL,
     description TEXT,
     position INTEGER NOT NULL DEFAULT 0,
+    start_date TIMESTAMPTZ DEFAULT NULL,
     due_date TIMESTAMPTZ,
     assignee_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
     parent_card_id INTEGER REFERENCES cards(id) ON DELETE CASCADE,
