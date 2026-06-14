@@ -103,7 +103,7 @@ export function BoardColumn({ list }: BoardColumnProps) {
   const isObserver = userRole === 'observer'
 
   return (
-    <div className="flex flex-col bg-base-200/60 border border-base-200 w-80 rounded-2xl p-4 max-h-[80vh] shadow-sm">
+    <div className="flex flex-col bg-base-200/60 border border-base-200 w-80 rounded-2xl p-4 max-h-[80vh] shadow-sm" data-list-id={list.id}>
       <div className="flex items-center justify-between pb-3 border-b border-base-300">
         <div className="flex items-center gap-2">
           <h3 className="font-semibold text-base-content/90 text-sm tracking-wide">
@@ -145,7 +145,7 @@ export function BoardColumn({ list }: BoardColumnProps) {
         )}
       </div>
 
-      <div ref={setNodeRef} className="flex-1 overflow-y-auto py-3 space-y-3 scrollbar-thin">
+      <div ref={setNodeRef} className="flex-1 overflow-y-auto py-3 space-y-3 scrollbar-thin" role="listbox" aria-label={`Cards in ${list.title}`}>
         <SortableContext
           items={filteredCards.map((c) => c.id)}
           strategy={verticalListSortingStrategy}
@@ -193,6 +193,7 @@ export function BoardColumn({ list }: BoardColumnProps) {
             <button
               type="button"
               onClick={() => setIsAdding(true)}
+              data-list-add-card={list.id}
               className="btn btn-ghost btn-sm btn-block text-primary/80 hover:text-primary hover:bg-primary/10 border border-dashed border-primary/20 hover:border-primary/40 rounded-xl"
             >
               + Add Card
