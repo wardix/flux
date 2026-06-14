@@ -3,6 +3,17 @@ import { authMiddleware } from '../middleware/auth'
 import { db } from '../db'
 import * as cardService from '../services/cardService'
 import { logActivity } from '../services/activityService'
+import { broadcastToBoard } from '../websocket/events'
+
+async function getUserName(userId: number): Promise<string> {
+  const result = await db`SELECT email FROM users WHERE id = ${userId}`
+  return result[0]?.email.split('@')[0] || 'User'
+}
+
+async function getBoardIdByListId(listId: number): Promise<number | null> {
+  const result = await db`SELECT board_id FROM lists WHERE id = ${listId}`
+  return result[0] ? Number(result[0].board_id) : null
+}
 
 import { ErrorSchema, CardSchema, CreateCardRequest } from '../lib/schemas'
 
@@ -350,6 +361,20 @@ cardRoutes.openapi(createCardRoute, async (c) => {
 
     const card = await cardService.create(body)
     await logActivity(card.id, userId, 'created', card.title)
+
+    const boardId = await getBoardIdByListId(card.list_id)
+    if (boardId) {
+      const userName = await getUserName(userId)
+      broadcastToBoard(boardId, {
+        type: 'card_created',
+        payload: card,
+        boardId,
+        userId,
+        userName,
+        timestamp: new Date().toISOString(),
+      })
+    }
+
     return c.json({ data: card }, 201)
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Internal Server Error'
@@ -359,12 +384,63 @@ cardRoutes.openapi(createCardRoute, async (c) => {
 
 cardRoutes.openapi(updateCardPositionsRoute, async (c) => {
   try {
+    const userId = c.get('userId')
     const body = await c.req.json()
     if (!body.cards || !Array.isArray(body.cards)) {
       return c.json({ error: 'cards array is required' }, 400)
     }
 
+    const firstCard = body.cards[0]
+    let boardId: number | null = null
+    let movedCardPayload: any = null
+
+    if (firstCard) {
+      boardId = await getBoardIdByListId(firstCard.list_id)
+      const cardIds = body.cards.map((c: any) => c.id)
+      const existingCards = await db`SELECT id, list_id, position FROM cards WHERE id IN (${cardIds})`
+      
+      for (const item of body.cards) {
+        const existing = existingCards.find((c) => c.id === item.id)
+        if (existing && existing.list_id !== item.list_id) {
+          movedCardPayload = {
+            id: item.id,
+            from_list_id: existing.list_id,
+            to_list_id: item.list_id,
+            position: item.position,
+          }
+          break
+        }
+      }
+      if (!movedCardPayload) {
+        for (const item of body.cards) {
+          const existing = existingCards.find((c) => c.id === item.id)
+          if (existing && existing.position !== item.position) {
+            movedCardPayload = {
+              id: item.id,
+              from_list_id: existing.list_id,
+              to_list_id: item.list_id,
+              position: item.position,
+            }
+            break
+          }
+        }
+      }
+    }
+
     await cardService.updatePositions(body.cards)
+
+    if (boardId && movedCardPayload) {
+      const userName = await getUserName(userId)
+      broadcastToBoard(boardId, {
+        type: 'card_moved',
+        payload: movedCardPayload,
+        boardId,
+        userId,
+        userName,
+        timestamp: new Date().toISOString(),
+      })
+    }
+
     return c.json({ success: true }, 200)
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Internal Server Error'
@@ -422,6 +498,19 @@ cardRoutes.openapi(updateCardRoute, async (c) => {
       await logActivity(id, userId, body.archived_at ? 'archived' : 'restored')
     }
 
+    const boardId = await getBoardIdByListId(card.list_id)
+    if (boardId) {
+      const userName = await getUserName(userId)
+      broadcastToBoard(boardId, {
+        type: 'card_updated',
+        payload: card,
+        boardId,
+        userId,
+        userName,
+        timestamp: new Date().toISOString(),
+      })
+    }
+
     return c.json({ data: card }, 200)
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Internal Server Error'
@@ -442,6 +531,19 @@ cardRoutes.openapi(deleteCardRoute, async (c) => {
 
   if (!permanent) {
     await logActivity(id, userId, 'deleted')
+  }
+
+  const boardId = await getBoardIdByListId(card.list_id)
+  if (boardId) {
+    const userName = await getUserName(userId)
+    broadcastToBoard(boardId, {
+      type: 'card_deleted',
+      payload: { id: card.id },
+      boardId,
+      userId,
+      userName,
+      timestamp: new Date().toISOString(),
+    })
   }
 
   return c.body(null, 204)
