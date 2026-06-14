@@ -67,6 +67,29 @@ export interface Checklist {
   items: ChecklistItem[]
 }
 
+export interface User {
+  id: number
+  email: string
+  name?: string
+  avatar_url?: string
+}
+
+export interface CardDependency {
+  id: number
+  blocking_card_id: number
+  blocked_card_id: number
+  created_at: string
+}
+
+export interface DependencyWithCard extends CardDependency {
+  card: {
+    id: number
+    title: string
+    list_id: number
+    is_completed: boolean
+  }
+}
+
 export interface Voter {
   id: number
   name: string

@@ -1,5 +1,7 @@
-import React, { useMemo, useState } from 'react'
-import type { Card, List } from '../../lib/types'
+import React, { useMemo, useState, useEffect, useRef } from 'react'
+import type { Card, List, DependencyWithCard } from '../../lib/types'
+import { api } from '../../lib/api'
+import { DependencyLine } from './DependencyLine'
 import { format, addDays, startOfWeek, endOfWeek, differenceInDays, eachDayOfInterval, startOfMonth, endOfMonth } from 'date-fns'
 
 interface TimelineViewProps {
@@ -13,6 +15,48 @@ export function TimelineView({ cards, lists, onCardClick }: TimelineViewProps) {
   const [currentDate, setCurrentDate] = useState(new Date())
 
   const validCards = useMemo(() => cards.filter(c => c.start_date && c.due_date), [cards])
+
+  const [dependencies, setDependencies] = useState<{ blocking: DependencyWithCard[], blocked_by: DependencyWithCard[] }[]>([])
+  
+  useEffect(() => {
+    const fetchAllDeps = async () => {
+      const all = await Promise.all(
+        validCards.map(c => 
+          api.get<{ data: { blocking: DependencyWithCard[], blocked_by: DependencyWithCard[] } }>(`/cards/${c.id}/dependencies`).catch(() => null)
+        )
+      )
+      setDependencies(all.filter(Boolean).map(a => a?.data!))
+    }
+    if (validCards.length > 0) fetchAllDeps()
+  }, [validCards])
+
+  const cardRefs = useRef<{ [key: number]: HTMLDivElement | null }>({})
+  const [rects, setRects] = useState<{ [key: number]: DOMRect }>({})
+
+  useEffect(() => {
+    const updateRects = () => {
+      const newRects: { [key: number]: DOMRect } = {}
+      for (const id in cardRefs.current) {
+        if (cardRefs.current[id]) {
+          newRects[id] = cardRefs.current[id]!.getBoundingClientRect()
+        }
+      }
+      setRects(newRects)
+    }
+    
+    updateRects()
+    window.addEventListener('resize', updateRects)
+    return () => window.removeEventListener('resize', updateRects)
+  }, [zoom, currentDate, validCards.length])
+
+  // Get absolute top/left offset for lines container
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [containerRect, setContainerRect] = useState<DOMRect | null>(null)
+  useEffect(() => {
+    if (containerRef.current) {
+      setContainerRect(containerRef.current.getBoundingClientRect())
+    }
+  }, [zoom, currentDate, validCards.length])
 
   if (validCards.length === 0) {
     return <div className="p-8 text-center text-base-content/50">No cards with both start_date and due_date found</div>
@@ -59,7 +103,7 @@ export function TimelineView({ cards, lists, onCardClick }: TimelineViewProps) {
         </div>
         
         {/* Rows */}
-        <div className="mt-2 space-y-2 relative">
+        <div className="mt-2 space-y-2 relative" ref={containerRef}>
           {validCards.map(card => {
             const cardStart = new Date(card.start_date!)
             const cardEnd = new Date(card.due_date!)
@@ -85,6 +129,7 @@ export function TimelineView({ cards, lists, onCardClick }: TimelineViewProps) {
                 <div className="w-48 shrink-0 pr-4 truncate text-sm" title={card.title}>{card.title}</div>
                 <div className="flex-1 relative h-8 bg-base-200 rounded">
                   <div 
+                    ref={el => cardRefs.current[card.id] = el}
                     onClick={() => onCardClick?.(card)}
                     className={`absolute h-full rounded shadow-sm text-xs text-primary-content font-medium px-2 py-1 truncate cursor-pointer hover:opacity-90 ${bgClass}`}
                     style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
@@ -95,6 +140,35 @@ export function TimelineView({ cards, lists, onCardClick }: TimelineViewProps) {
                 </div>
               </div>
             )
+          })}
+          
+          {/* Render dependency lines */}
+          {containerRect && dependencies.flatMap((depSet, i) => {
+            const blockingCardId = validCards[i].id
+            const isCompleted = lists[lists.length - 1]?.id === validCards[i].list_id
+            
+            return depSet.blocking.map(dep => {
+              const blockedCardId = dep.card.id
+              const fromRect = rects[blockingCardId]
+              const toRect = rects[blockedCardId]
+              
+              if (!fromRect || !toRect) return null
+              
+              // Adjust rects relative to container
+              const adjustedFrom = new DOMRect(fromRect.x - containerRect.x, fromRect.y - containerRect.y, fromRect.width, fromRect.height)
+              const adjustedTo = new DOMRect(toRect.x - containerRect.x, toRect.y - containerRect.y, toRect.width, toRect.height)
+              
+              return (
+                <DependencyLine 
+                  key={dep.id} 
+                  fromCardId={blockingCardId} 
+                  toCardId={blockedCardId} 
+                  fromRect={adjustedFrom} 
+                  toRect={adjustedTo} 
+                  isCompleted={isCompleted}
+                />
+              )
+            })
           })}
         </div>
       </div>
