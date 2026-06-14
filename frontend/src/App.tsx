@@ -8,6 +8,7 @@ import { TwoFactorSetup } from './components/settings/TwoFactorSetup'
 import type { List, Card } from './lib/types'
 import { useWebSocket } from './hooks/useWebSocket'
 import { PresenceIndicator } from './components/shared/PresenceIndicator'
+import { ActiveTimerIndicator } from './components/shared/ActiveTimerIndicator'
 
 function decodeToken(token: string | null) {
   if (!token) return null
@@ -68,6 +69,7 @@ function App() {
     updateCardLocally,
     removeCardLocally,
     moveCardLocally,
+    fetchActiveTimer,
   } = useBoardStore()
 
   const decoded = decodeToken(token)
@@ -151,8 +153,9 @@ function App() {
     if (token) {
       fetchWorkspaces()
       fetchBoards()
+      fetchActiveTimer()
     }
-  }, [fetchWorkspaces, fetchBoards, token])
+  }, [fetchWorkspaces, fetchBoards, fetchActiveTimer, token])
 
   useEffect(() => {
     if (activeBoard?.id) {
@@ -1016,6 +1019,7 @@ function App() {
                 )}
               </div>
               <div className="flex items-center gap-4">
+                <ActiveTimerIndicator />
                 <PresenceIndicator users={onlineUsers} />
                 <span className="text-xs text-base-content/50">
                   Active Workspace: {activeWorkspace ? activeWorkspace.name : 'None'}

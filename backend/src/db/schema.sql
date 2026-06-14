@@ -1,4 +1,5 @@
 -- Drop tables if they exist (for easy migration reset)
+DROP TABLE IF EXISTS time_logs CASCADE;
 DROP TABLE IF EXISTS board_stars CASCADE;
 DROP TABLE IF EXISTS board_members CASCADE;
 DROP TABLE IF EXISTS activity_logs CASCADE;
@@ -259,6 +260,26 @@ CREATE TABLE board_stars (
 );
 
 CREATE INDEX idx_board_stars_user_id ON board_stars(user_id);
+
+-- Time Logs Table
+CREATE TABLE time_logs (
+    id SERIAL PRIMARY KEY,
+    card_id INTEGER NOT NULL REFERENCES cards(id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    started_at TIMESTAMPTZ NOT NULL,
+    ended_at TIMESTAMPTZ,
+    duration_seconds INTEGER,
+    description TEXT,
+    is_running BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TRIGGER update_time_logs_updated_at BEFORE UPDATE ON time_logs FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE INDEX idx_time_logs_card_id ON time_logs(card_id);
+CREATE INDEX idx_time_logs_user_id ON time_logs(user_id);
+
 
 
 

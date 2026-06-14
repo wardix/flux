@@ -14,6 +14,9 @@ import { ChecklistProgress } from './ChecklistProgress'
 import { CardComments } from './CardComments'
 import { CardActivities } from './CardActivities'
 import { MarkdownRenderer } from '../shared/MarkdownRenderer'
+import { TimeTracker } from './TimeTracker'
+import { TimeLogList } from './TimeLogList'
+import { ManualTimeForm } from './ManualTimeForm'
 
 
 
@@ -47,6 +50,23 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
   const [refreshActivitiesTrigger, setRefreshActivitiesTrigger] = useState(0)
   const [isEditingDescription, setIsEditingDescription] = useState(false)
   const activeCardId = useBoardStore((s) => s.activeCardId)
+
+  const [timeLogs, setTimeLogs] = useState<any[]>([])
+  const [timeMeta, setTimeMeta] = useState<any>({ total_duration_seconds: 0, total_logs: 0, by_user: [] })
+
+  const fetchTimeLogs = async () => {
+    try {
+      const res = await api.get<{ data: any[]; meta: any }>(`/cards/${card.id}/time-logs`)
+      setTimeLogs(res.data)
+      setTimeMeta(res.meta)
+    } catch (err) {
+      console.error('Failed to fetch time logs:', err)
+    }
+  }
+
+  const token = localStorage.getItem('token')
+  const decoded = token ? JSON.parse(atob(token.split('.')[1])) : null
+  const currentUserId = decoded ? Number(decoded.sub) : null
   const setActiveCardId = useBoardStore((s) => s.setActiveCardId)
 
   const userRole = useBoardStore((s) => s.userRole)
@@ -98,12 +118,17 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
     }
   }
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: fetchSubtasks is not memoized
   useEffect(() => {
     if (isOpen && !card.parent_card_id) {
       fetchSubtasks()
     }
   }, [isOpen, card.parent_card_id])
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchTimeLogs()
+    }
+  }, [isOpen])
 
   const handleAddSubtask = async (requestData: CreateSubtaskRequest) => {
     try {
@@ -341,6 +366,22 @@ export function CardItem({ card, isSubtask = false }: CardItemProps) {
                 )
               })}
             </div>
+          </div>
+
+          <div className="border-t border-base-200 pt-3 space-y-3">
+            <span className="text-xs text-base-content/50 font-bold uppercase block mb-1">
+              Time Tracking
+            </span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <TimeTracker cardId={card.id} onLogAdded={fetchTimeLogs} />
+              <ManualTimeForm cardId={card.id} onLogAdded={fetchTimeLogs} />
+            </div>
+            <TimeLogList
+              logs={timeLogs}
+              meta={timeMeta}
+              currentUserId={currentUserId}
+              onLogDeleted={fetchTimeLogs}
+            />
           </div>
 
           <div className="border-t border-base-200 pt-3">

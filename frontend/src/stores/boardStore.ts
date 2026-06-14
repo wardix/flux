@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { api } from '../lib/api'
-import type { Board, Card, Label, List, Workspace } from '../lib/types'
+import type { Board, Card, Label, List, Workspace, ActiveTimer } from '../lib/types'
 
 interface BoardState {
   boards: Board[]
@@ -60,6 +60,10 @@ interface BoardState {
   updateCardLocally: (card: Card) => void
   removeCardLocally: (cardId: number) => void
   moveCardLocally: (payload: { id: number; from_list_id: number; to_list_id: number; position: number }) => void
+  activeTimer: ActiveTimer | null
+  fetchActiveTimer: () => Promise<void>
+  startTimer: (cardId: number, description?: string) => Promise<void>
+  stopTimer: (cardId: number) => Promise<void>
 }
 
 export const useBoardStore = create<BoardState>((set, get) => ({
@@ -993,5 +997,26 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       }
     }
   }),
+
+  activeTimer: null,
+
+  fetchActiveTimer: async () => {
+    try {
+      const res = await api.get<{ data: ActiveTimer | null }>('/users/me/active-timer')
+      set({ activeTimer: res.data })
+    } catch (err) {
+      console.error('Failed to fetch active timer:', err)
+    }
+  },
+
+  startTimer: async (cardId: number, description?: string) => {
+    const res = await api.post<{ data: ActiveTimer }>('/cards/' + cardId + '/timer/start', { description })
+    set({ activeTimer: res.data })
+  },
+
+  stopTimer: async (cardId: number) => {
+    await api.post('/cards/' + cardId + '/timer/stop', {})
+    set({ activeTimer: null })
+  },
 }))
 

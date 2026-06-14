@@ -311,4 +311,28 @@ describe('boardStore', () => {
     state = useBoardStore.getState()
     expect(state.activeBoard?.lists?.[1].cards.length).toBe(0)
   })
+
+  test('should handle activeTimer actions correctly', async () => {
+    // biome-ignore lint/suspicious/noExplicitAny: Mocking API response for test spy
+    const getSpy = vi.spyOn(api, 'get').mockResolvedValue({ data: { card_id: 100, is_running: true, elapsed_seconds: 10 } } as any)
+    // biome-ignore lint/suspicious/noExplicitAny: Mocking API response for test spy
+    const postSpy = vi.spyOn(api, 'post').mockResolvedValue({ data: { card_id: 100, is_running: true, elapsed_seconds: 0 } } as any)
+
+    // 1. fetchActiveTimer
+    await useBoardStore.getState().fetchActiveTimer()
+    expect(getSpy).toHaveBeenCalledWith('/users/me/active-timer')
+    expect(useBoardStore.getState().activeTimer?.card_id).toBe(100)
+
+    // 2. startTimer
+    await useBoardStore.getState().startTimer(100, 'Coding')
+    expect(postSpy).toHaveBeenCalledWith('/cards/100/timer/start', { description: 'Coding' })
+
+    // 3. stopTimer
+    await useBoardStore.getState().stopTimer(100)
+    expect(postSpy).toHaveBeenCalledWith('/cards/100/timer/stop', {})
+    expect(useBoardStore.getState().activeTimer).toBeNull()
+
+    getSpy.mockRestore()
+    postSpy.mockRestore()
+  })
 })
