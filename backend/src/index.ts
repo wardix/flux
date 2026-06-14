@@ -22,6 +22,7 @@ import { exportRoutes } from './routes/export'
 import { goalRoutes } from './routes/goals'
 import { unsplashRoutes } from './routes/unsplash'
 import { aiRoutes } from './routes/ai'
+import { brandingRoutes } from './routes/branding'
 
 import { batchRoutes } from './routes/batch'
 import { importRoutes } from './routes/import'
@@ -87,6 +88,7 @@ app.route('/api/unsplash', unsplashRoutes)
 app.route('/api/ai', aiRoutes)
 
 app.route('/api/workspaces', workspaceRoutes)
+app.route('/api/workspaces', brandingRoutes)
 app.route('/api/labels', labelRoutes)
 app.route('/api', subtaskRoutes)
 app.route('/api', checklistRoutes)

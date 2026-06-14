@@ -3,7 +3,9 @@ import { LanguageSwitcher } from '../components/settings/LanguageSwitcher'
 import { PersonalAccessTokens } from '../components/settings/PersonalAccessTokens'
 import { TwoFactorSetup } from '../components/settings/TwoFactorSetup'
 import { AISettingsToggle } from '../components/settings/AISettingsToggle'
+import { BrandingSettings } from '../components/settings/BrandingSettings'
 import { useUIStore } from '../stores/uiStore'
+import { useBoardStore } from '../stores/boardStore'
 
 interface SettingsPageProps {
   onBack: () => void
@@ -12,6 +14,7 @@ interface SettingsPageProps {
 export function SettingsPage({ onBack }: SettingsPageProps) {
   const { t } = useTranslation()
   const { aiFeaturesEnabled, setAiFeaturesEnabled } = useUIStore()
+  const { activeWorkspace } = useBoardStore()
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-2xl space-y-8 min-h-screen">
@@ -78,6 +81,19 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
             />
           </div>
         </div>
+
+        {/* Branding Configurations Section (White-labeling) */}
+        {activeWorkspace && (
+          <div className="card bg-base-100 border border-base-200/50 p-6 shadow-sm space-y-3">
+            <h2 className="text-lg font-bold text-base-content/95">🎨 Workspace Branding</h2>
+            <p className="text-xs text-base-content/60 mb-2">
+              Customize logos, theme colors, name branding, and custom domain configuration.
+            </p>
+            <div className="pt-2 border-t border-base-200/50">
+              <BrandingSettings workspaceId={activeWorkspace.id} />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

@@ -523,4 +523,21 @@ CREATE INDEX idx_goal_card_links_card_id ON goal_card_links (card_id);
 
 
 
+-- Workspace Branding Table (White-labeling)
+CREATE TABLE workspace_branding (
+    id SERIAL PRIMARY KEY,
+    workspace_id INTEGER UNIQUE NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
+    app_name VARCHAR(255) NOT NULL,
+    logo_url VARCHAR(255),
+    favicon_url VARCHAR(255),
+    primary_color VARCHAR(7) NOT NULL DEFAULT '#2563EB',
+    secondary_color VARCHAR(7) NOT NULL DEFAULT '#7C3AED',
+    custom_domain VARCHAR(255),
+    custom_css TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
 
+CREATE TRIGGER update_workspace_branding_updated_at BEFORE UPDATE ON workspace_branding FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE INDEX idx_workspace_branding_workspace_id ON workspace_branding(workspace_id);
+CREATE INDEX idx_workspace_branding_custom_domain ON workspace_branding(custom_domain);
