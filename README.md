@@ -100,44 +100,6 @@
 | **CI/CD** | GitHub Actions |
 | **Container** | Docker + Docker Compose |
 
-## 📁 Project Structure
-
-```
-flux/
-├── backend/
-│   ├── src/
-│   │   ├── db/              # Schema, migrations
-│   │   ├── lib/             # Helpers, constants, schemas
-│   │   ├── middleware/       # Auth, rate limiter, permissions
-│   │   ├── routes/          # 47 route modules (OpenAPI/Zod)
-│   │   ├── services/        # Business logic layer
-│   │   └── websocket/       # WebSocket event handling
-│   └── tests/               # Backend test suites
-├── frontend/
-│   ├── src/
-│   │   ├── components/      # 118 React components
-│   │   │   ├── admin/       # Admin panel
-│   │   │   ├── auth/        # Login, 2FA, OAuth
-│   │   │   ├── board/       # Board, cards, views
-│   │   │   ├── chat/        # Team messaging
-│   │   │   ├── dashboard/   # Analytics charts
-│   │   │   ├── github/      # GitHub integration UI
-│   │   │   ├── goals/       # OKR tracking
-│   │   │   ├── settings/    # User & workspace settings
-│   │   │   └── shared/      # Reusable components
-│   │   ├── hooks/           # Custom React hooks
-│   │   ├── i18n/            # Translations (id, en)
-│   │   ├── lib/             # Types, helpers, constants
-│   │   ├── pages/           # Page components
-│   │   └── stores/          # 7 Zustand stores
-│   └── tests/               # Frontend test suites
-├── issues/                  # 59 issue specifications
-├── .github/workflows/       # CI + CD pipelines
-├── docker-compose.yml       # Production setup
-├── docker-compose.dev.yml   # Development setup
-└── CONVENTIONS.md           # Code standards
-```
-
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -149,17 +111,13 @@ flux/
 ### With Docker (Recommended)
 
 ```bash
-# Clone the repository
 git clone git@github.com:wardix/flux.git
 cd flux
-
-# Copy environment file
 cp .env.example .env
 
 # Start all services (frontend, backend, database)
 docker compose up -d
 
-# Access the application
 # Frontend: http://localhost:8080
 # Backend API: http://localhost:3000
 # API Docs: http://localhost:3000/docs
@@ -190,101 +148,27 @@ bun install
 bun run dev              # http://localhost:5173
 ```
 
-## ⚙️ Environment Variables
+> See [`.env.example`](./.env.example) for all available environment variables (OAuth, AI, Unsplash, email inbound, etc.).
 
-```bash
-# Required
-DATABASE_URL=postgres://flux_user:secret123@localhost:5432/flux
-JWT_SECRET=your-jwt-secret-here
-PORT=3000
-
-# OAuth (optional)
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-GITHUB_CLIENT_ID=
-GITHUB_CLIENT_SECRET=
-
-# AI Suggestions (optional)
-OPENAI_API_KEY=
-OPENAI_MODEL=gpt-4o-mini
-
-# Unsplash Backgrounds (optional)
-UNSPLASH_ACCESS_KEY=
-
-# Email-to-Board (optional)
-INBOUND_EMAIL_DOMAIN=inbound.flux.app
-WEBHOOK_EMAIL_SECRET=your-webhook-secret
-```
-
-## 🧪 Testing
+## 🛠️ Development
 
 ```bash
 # Backend tests
-cd backend
-bun test
+cd backend && bun test
 
 # Frontend tests
-cd frontend
-bun run test
-```
+cd frontend && bun run test
 
-## 🔍 Linting & Formatting
-
-```bash
-# Check (lint + format)
+# Lint & format check
 bunx biome check ./src
 
 # Auto-fix
 bunx biome check --write ./src
 ```
 
-## 📖 API Documentation
-
 Interactive OpenAPI documentation is available at `/docs` when the backend is running.
 
-The API covers 47 route modules including:
-
-| Category | Endpoints |
-|----------|-----------|
-| **Auth** | Login, register, 2FA, OAuth, PAT |
-| **Boards** | CRUD, members, templates, stars, backgrounds |
-| **Cards** | CRUD, move, dependencies, mirrors, batch |
-| **Lists** | CRUD, reorder |
-| **Labels** | CRUD, card-label associations |
-| **Comments** | CRUD with @mentions |
-| **Checklists** | Items with assignee & due date |
-| **Attachments** | File upload & management |
-| **Time Tracking** | Start/stop timer, manual entry |
-| **Sprints** | Planning, tracking, completion |
-| **Epics** | CRUD, card assignment, progress |
-| **Goals** | OKRs, key results, card linking |
-| **Custom Fields** | Field definitions & card values |
-| **Automations** | Rule engine (trigger → action) |
-| **Search** | Global search with filters |
-| **Analytics** | Charts, workload, velocity |
-| **Chat** | Channels, messages, presence |
-| **Notifications** | In-app notification system |
-| **Webhooks** | Outbound with HMAC signing |
-| **GitHub** | Webhook receiver, installations |
-| **AI** | Label, assignee, summarize suggestions |
-| **Import/Export** | Trello, Jira, CSV, JSON |
-| **Admin** | User management, system stats |
-
-## 🗺️ Roadmap
-
-| Phase | Focus | Status |
-|-------|-------|--------|
-| Phase 1 | Foundation (Setup, DB, CRUD, Kanban, DnD) | ✅ Complete |
-| Phase 2 | Core (Auth, Workspaces, Roles, Labels) | ✅ Complete |
-| Phase 3 | Productivity (Search, Notifications, Views) | ✅ Complete |
-| Phase 4 | Agile (Sprints, Epics, Automations) | ✅ Complete |
-| Phase 5 | Real-time (WebSocket, Chat, Time Tracking) | ✅ Complete |
-| Phase 6 | Integrations (Rich Editor, GitHub, Webhooks) | ✅ Complete |
-| Phase 7 | Enterprise (SSO, Admin, i18n) | ✅ Complete |
-| Phase 8 | Platform (PWA, AI, Import/Export) | ✅ Complete |
-| Phase 9 | DevOps (CI/CD, Docker) | ✅ Complete |
-
-## 📋 Project Documentation
+## 📋 Documentation
 
 - [📄 PRD (Product Requirements Document)](./PRD.md)
 - [📖 User Stories](./USER-STORIES.md)
