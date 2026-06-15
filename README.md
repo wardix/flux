@@ -288,7 +288,6 @@ The API covers 47 route modules including:
 
 - [📄 PRD (Product Requirements Document)](./PRD.md)
 - [📖 User Stories](./USER-STORIES.md)
-- [📁 Issue Specifications](./issues/)
 - [📐 Code Conventions](./CONVENTIONS.md)
 
 ## 📄 License
