@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, test } from 'bun:test'
 import { sign } from 'hono/jwt'
 import { db } from '../../src/db/index'
-import app from '../../src/index'
+import { app } from '../../src/index'
 import { limitMap } from '../../src/middleware/rateLimit'
 
 async function makeRequest(

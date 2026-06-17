@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import { sign } from 'hono/jwt'
 import { db } from '../../src/db/index'
-import app from '../../src/index'
+import { app } from '../../src/index'
 
 describe('Workspaces Route', () => {
   let userId: number
@@ -21,7 +21,7 @@ describe('Workspaces Route', () => {
       email: 'workspaces_route_test@example.com',
       exp: Math.floor(Date.now() / 1000) + 60 * 60,
     }
-    token = await sign(tokenPayload, 'your-jwt-secret-here-change-in-production')
+    token = await sign(tokenPayload, process.env.JWT_SECRET || 'your-jwt-secret-here-change-in-production', 'HS256')
   })
 
   afterAll(async () => {

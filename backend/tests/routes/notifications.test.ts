@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeAll, afterAll } from 'bun:test'
-import app from '../../src/index'
+import { app } from '../../src/index'
 import { db } from '../../src/db'
 
 let testToken: string
@@ -24,9 +24,9 @@ describe('Notifications API', () => {
 
     // Setup token (mock/create a real token)
     const { sign } = await import('hono/jwt')
-    testToken = await sign({ sub: String(testUserId), exp: Math.floor(Date.now() / 1000) + 3600 }, 'secret-key-123') // Adjust to your actual JWT secret if needed, though for standard tests this might need the real env var. Let's assume standard auth.
+    testToken = await sign({ sub: String(testUserId), exp: Math.floor(Date.now() / 1000) + 3600 }, process.env.JWT_SECRET || 'your-jwt-secret-here-change-in-production', 'HS256') // Adjust to your actual JWT secret if needed, though for standard tests this might need the real env var. Let's assume standard auth.
     // wait, what's the jwt secret? let's use process.env.JWT_SECRET || 'secret'
-    testToken = await sign({ sub: String(testUserId), exp: Math.floor(Date.now() / 1000) + 3600 }, process.env.JWT_SECRET || 'secret-key-123')
+    testToken = await sign({ sub: String(testUserId), exp: Math.floor(Date.now() / 1000) + 3600 }, process.env.JWT_SECRET || 'your-jwt-secret-here-change-in-production', 'HS256')
 
     // Create workspace, board, list, card
     const w = await db`INSERT INTO workspaces (name, owner_id) VALUES ('W1', ${testUserId}) RETURNING id`

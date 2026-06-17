@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeAll, afterAll } from 'bun:test'
-import app from '../../src/index'
+import { app } from '../../src/index'
 import { db } from '../../src/db'
 
 let testToken: string
@@ -23,8 +23,8 @@ describe('Chat API', () => {
     user2Id = u2[0].id
 
     const { sign } = await import('hono/jwt')
-    testToken = await sign({ sub: String(user1Id), exp: Math.floor(Date.now() / 1000) + 3600 }, process.env.JWT_SECRET || 'secret-key-123')
-    nonMemberToken = await sign({ sub: String(user2Id), exp: Math.floor(Date.now() / 1000) + 3600 }, process.env.JWT_SECRET || 'secret-key-123')
+    testToken = await sign({ sub: String(user1Id), exp: Math.floor(Date.now() / 1000) + 3600 }, process.env.JWT_SECRET || 'your-jwt-secret-here-change-in-production', 'HS256')
+    nonMemberToken = await sign({ sub: String(user2Id), exp: Math.floor(Date.now() / 1000) + 3600 }, process.env.JWT_SECRET || 'your-jwt-secret-here-change-in-production', 'HS256')
   })
 
   afterAll(async () => {

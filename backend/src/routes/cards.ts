@@ -509,7 +509,7 @@ cardRoutes.openapi(updateCardPositionsRoute, async (c) => {
       })
     }
 
-    return c.json({ data: { success: true }, warning: warningMsg }, 200)
+    return c.json({ success: true, warning: warningMsg }, 200)
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Internal Server Error'
     return c.json({ error: message }, 500)

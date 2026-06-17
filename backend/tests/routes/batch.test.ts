@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeAll, afterAll } from 'bun:test'
 import { sign } from 'hono/jwt'
 import { db } from '../../src/db/index'
-import app from '../../src/index'
+import { app } from '../../src/index'
 
 describe('POST /api/cards/batch', () => {
   let userId: number
@@ -110,8 +110,8 @@ describe('POST /api/cards/batch', () => {
     card5 = c5[0]
 
     // Tokens
-    testToken = await sign({ sub: userId, email: 'batch_user@example.com' }, 'your-jwt-secret-here-change-in-production')
-    otherUserToken = await sign({ sub: otherUserId, email: 'batch_other@example.com' }, 'your-jwt-secret-here-change-in-production')
+    testToken = await sign({ sub: userId, email: 'batch_user@example.com' }, process.env.JWT_SECRET || 'your-jwt-secret-here-change-in-production', 'HS256')
+    otherUserToken = await sign({ sub: otherUserId, email: 'batch_other@example.com' }, process.env.JWT_SECRET || 'your-jwt-secret-here-change-in-production', 'HS256')
   })
 
   afterAll(async () => {
