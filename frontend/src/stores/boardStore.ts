@@ -745,7 +745,10 @@ export const useBoardStore = create<BoardState>((set, get) => ({
         return
       }
 
-      await api.put('/cards/positions', { cards: cardsToUpdate })
+      const res = await api.put<{ success: boolean; warning?: string }>('/cards/positions', { cards: cardsToUpdate })
+      if (res && res.warning) {
+        alert(res.warning)
+      }
     } catch (error) {
       console.error('Failed to update card positions:', error)
       if (activeBoard.id) {
