@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { api } from '../../lib/api'
 import type { Card, CardMirror, CreateSubtaskRequest, Epic, SubtaskCard } from '../../lib/types'
 import { useBoardStore } from '../../stores/boardStore'
-import { useUIStore } from '../../stores/uiStore'
+import { useUiStore } from '../../stores/uiStore'
 import { AISuggestButton } from './AISuggestButton'
 import { AISuggestionPanel } from './AISuggestionPanel'
 import type { AISuggestionResult } from '../../lib/types'
@@ -89,7 +89,7 @@ export function CardItem({
   const [refreshActivitiesTrigger, setRefreshActivitiesTrigger] = useState(0)
   const [isEditingDescription, setIsEditingDescription] = useState(false)
   const activeCardId = useBoardStore((s) => s.activeCardId)
-  const aiFeaturesEnabled = useUIStore((s) => s.aiFeaturesEnabled)
+  const aiFeaturesEnabled = useUiStore((s) => s.aiFeaturesEnabled)
   const [aiSuggestion, setAiSuggestion] = useState<AISuggestionResult | null>(null)
 
   const [timeLogs, setTimeLogs] = useState<any[]>([])

@@ -4,7 +4,7 @@ import { PersonalAccessTokens } from '../components/settings/PersonalAccessToken
 import { TwoFactorSetup } from '../components/settings/TwoFactorSetup'
 import { AISettingsToggle } from '../components/settings/AISettingsToggle'
 import { BrandingSettings } from '../components/settings/BrandingSettings'
-import { useUIStore } from '../stores/uiStore'
+import { useUiStore } from '../stores/uiStore'
 import { useBoardStore } from '../stores/boardStore'
 
 interface SettingsPageProps {
@@ -13,7 +13,7 @@ interface SettingsPageProps {
 
 export function SettingsPage({ onBack }: SettingsPageProps) {
   const { t } = useTranslation()
-  const { aiFeaturesEnabled, setAiFeaturesEnabled } = useUIStore()
+  const { aiFeaturesEnabled, setAiFeaturesEnabled } = useUiStore()
   const { activeWorkspace } = useBoardStore()
 
   return (

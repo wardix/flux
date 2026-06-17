@@ -1,8 +1,8 @@
 import { useEffect } from 'react'
-import { type Theme, useUIStore } from '../stores/uiStore'
+import { type Theme, useUiStore } from '../stores/uiStore'
 
 export function useTheme() {
-  const { theme, setTheme, accentColor, setAccentColor } = useUIStore()
+  const { theme, setTheme, accentColor, setAccentColor } = useUiStore()
 
   useEffect(() => {
     const root = document.documentElement
