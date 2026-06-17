@@ -30,9 +30,9 @@ describe('Approval Workflow API', () => {
     const [u3] = await db`INSERT INTO users (email, password_hash) VALUES ('app_reviewer1@test.com', 'hash') RETURNING id`
     adminId = u1.id; memberId = u2.id; reviewer1Id = u3.id;
 
-    adminToken = await sign({ sub: adminId, email: 'app_admin@test.com', exp: Math.floor(Date.now()/1000) + 3600 }, 'your-jwt-secret-here-change-in-production', 'HS256')
-    memberToken = await sign({ sub: memberId, email: 'app_member@test.com', exp: Math.floor(Date.now()/1000) + 3600 }, 'your-jwt-secret-here-change-in-production', 'HS256')
-    reviewer1Token = await sign({ sub: reviewer1Id, email: 'app_reviewer1@test.com', exp: Math.floor(Date.now()/1000) + 3600 }, 'your-jwt-secret-here-change-in-production', 'HS256')
+    adminToken = await sign({ sub: adminId, email: 'app_admin@test.com', exp: Math.floor(Date.now()/1000) + 3600 }, process.env.JWT_SECRET || 'your-jwt-secret-here-change-in-production', 'HS256')
+    memberToken = await sign({ sub: memberId, email: 'app_member@test.com', exp: Math.floor(Date.now()/1000) + 3600 }, process.env.JWT_SECRET || 'your-jwt-secret-here-change-in-production', 'HS256')
+    reviewer1Token = await sign({ sub: reviewer1Id, email: 'app_reviewer1@test.com', exp: Math.floor(Date.now()/1000) + 3600 }, process.env.JWT_SECRET || 'your-jwt-secret-here-change-in-production', 'HS256')
 
     // Workspace & Board
     const [w] = await db`INSERT INTO workspaces (name, owner_id) VALUES ('App WS', ${adminId}) RETURNING id`

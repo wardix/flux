@@ -48,7 +48,7 @@ export async function getUserChannels(userId: number) {
       ) as unread_count,
       (
         SELECT row_to_json(msg) FROM (
-          SELECT m2.id, m2.content, m2.created_at, u.name as user_name 
+          SELECT m2.id, m2.content, m2.created_at, SPLIT_PART(u.email, '@', 1) as user_name 
           FROM chat_messages m2 
           JOIN users u ON m2.user_id = u.id 
           WHERE m2.channel_id = c.id AND m2.deleted_at IS NULL 
@@ -56,7 +56,7 @@ export async function getUserChannels(userId: number) {
         ) msg
       ) as last_message,
       (
-        SELECT json_agg(json_build_object('id', u.id, 'name', u.name, 'avatar_url', u.avatar_url, 'email', u.email))
+        SELECT json_agg(json_build_object('id', u.id, 'name', SPLIT_PART(u.email, '@', 1), 'avatar_url', u.avatar_url, 'email', u.email))
         FROM chat_channel_members cmem
         JOIN users u ON cmem.user_id = u.id
         WHERE cmem.channel_id = c.id
@@ -84,16 +84,18 @@ export async function createMessage(channelId: number, userId: number, content: 
   
   const result = await db`
     INSERT INTO chat_messages (channel_id, user_id, content, mentions, card_links)
-    VALUES (${channelId}, ${userId}, ${content}, ${JSON.stringify(mentions)}, ${JSON.stringify(cardLinks)})
+    VALUES (${channelId}, ${userId}, ${content}, ${JSON.stringify(mentions)}::jsonb, ${JSON.stringify(cardLinks)}::jsonb)
     RETURNING *
   `
   const msg = result[0]
+  if (typeof msg.mentions === 'string') msg.mentions = JSON.parse(msg.mentions)
+  if (typeof msg.card_links === 'string') msg.card_links = JSON.parse(msg.card_links)
   
   // Update channel updated_at
   await db`UPDATE chat_channels SET updated_at = NOW() WHERE id = ${channelId}`
   
   // Fetch user details for the message
-  const userResult = await db`SELECT id, name, avatar_url, email FROM users WHERE id = ${userId}`
+  const userResult = await db`SELECT id, SPLIT_PART(email, '@', 1) as name, avatar_url, email FROM users WHERE id = ${userId}`
   const user = userResult[0]
   const enrichedMsg = { ...msg, user }
   
@@ -135,7 +137,7 @@ export async function getMessages(channelId: number, limit: number = 20, cursor?
     query = db`
       SELECT m.*, row_to_json(u) as user
       FROM chat_messages m
-      JOIN (SELECT id, name, avatar_url, email FROM users) u ON m.user_id = u.id
+      JOIN (SELECT id, SPLIT_PART(email, '@', 1) as name, avatar_url, email FROM users) u ON m.user_id = u.id
       WHERE m.channel_id = ${channelId} AND m.id < ${cursor} AND m.deleted_at IS NULL
       ORDER BY m.id DESC
       LIMIT ${limit + 1}
@@ -144,7 +146,7 @@ export async function getMessages(channelId: number, limit: number = 20, cursor?
     query = db`
       SELECT m.*, row_to_json(u) as user
       FROM chat_messages m
-      JOIN (SELECT id, name, avatar_url, email FROM users) u ON m.user_id = u.id
+      JOIN (SELECT id, SPLIT_PART(email, '@', 1) as name, avatar_url, email FROM users) u ON m.user_id = u.id
       WHERE m.channel_id = ${channelId} AND m.deleted_at IS NULL
       ORDER BY m.id DESC
       LIMIT ${limit + 1}
@@ -152,6 +154,10 @@ export async function getMessages(channelId: number, limit: number = 20, cursor?
   }
   
   const messages = await query
+  for (const m of messages) {
+    if (typeof m.mentions === 'string') m.mentions = JSON.parse(m.mentions)
+    if (typeof m.card_links === 'string') m.card_links = JSON.parse(m.card_links)
+  }
   
   const hasMore = messages.length > limit
   if (hasMore) {
@@ -175,7 +181,9 @@ export async function updateMessage(id: number, channelId: number, userId: numbe
   if (result.length === 0) return null
   
   const msg = result[0]
-  const userResult = await db`SELECT id, name, avatar_url, email FROM users WHERE id = ${userId}`
+  if (typeof msg.mentions === 'string') msg.mentions = JSON.parse(msg.mentions)
+  if (typeof msg.card_links === 'string') msg.card_links = JSON.parse(msg.card_links)
+  const userResult = await db`SELECT id, SPLIT_PART(email, '@', 1) as name, avatar_url, email FROM users WHERE id = ${userId}`
   const enrichedMsg = { ...msg, user: userResult[0] }
 
   broadcastToChat(channelId, {

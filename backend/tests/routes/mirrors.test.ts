@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import { sign } from 'hono/jwt'
 import { db } from '../../src/db/index'
-import app from '../../src/index'
+import { app } from '../../src/index'
 
 describe('Mirrors Route', () => {
   let userId1: number
@@ -81,14 +81,14 @@ describe('Mirrors Route', () => {
       exp: Math.floor(Date.now() / 1000) + 3600,
     }
     const secret = process.env.JWT_SECRET || 'your-jwt-secret-here-change-in-production'
-    token1 = await sign(payload1, secret)
+    token1 = await sign(payload1, secret, 'HS256')
 
     const payloadNo = {
       sub: userId2,
       email: 'mirror_u2@example.com',
       exp: Math.floor(Date.now() / 1000) + 3600,
     }
-    tokenNoAccess = await sign(payloadNo, secret)
+    tokenNoAccess = await sign(payloadNo, secret, 'HS256')
   })
 
   afterAll(async () => {

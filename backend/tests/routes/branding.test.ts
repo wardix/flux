@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import { sign } from 'hono/jwt'
 import { db } from '../../src/db/index'
-import app from '../../src/index'
+import { app } from '../../src/index'
 
 describe('Branding Routes', () => {
   let adminId: number
@@ -44,14 +44,8 @@ describe('Branding Routes', () => {
     `
 
     // Generate tokens
-    adminToken = await sign(
-      { sub: adminId, email: 'branding_admin@example.com' },
-      'your-jwt-secret-here-change-in-production'
-    )
-    memberToken = await sign(
-      { sub: memberId, email: 'branding_member@example.com' },
-      'your-jwt-secret-here-change-in-production'
-    )
+    adminToken = await sign({ sub: adminId, email: 'branding_admin@example.com' }, process.env.JWT_SECRET || 'your-jwt-secret-here-change-in-production', 'HS256')
+    memberToken = await sign({ sub: memberId, email: 'branding_member@example.com' }, process.env.JWT_SECRET || 'your-jwt-secret-here-change-in-production', 'HS256')
   })
 
   afterAll(async () => {

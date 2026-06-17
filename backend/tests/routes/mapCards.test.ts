@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeAll, afterAll } from 'bun:test'
 import { sign } from 'hono/jwt'
-import app from '../../src/index'
+import { app } from '../../src/index'
 import { db } from '../../src/db/index'
 
 describe('Map Cards API', () => {
@@ -20,7 +20,7 @@ describe('Map Cards API', () => {
       email: 'map_test@example.com',
       exp: Math.floor(Date.now() / 1000) + 60 * 60,
     }
-    testToken = await sign(tokenPayload, 'your-jwt-secret-here-change-in-production', 'HS256')
+    testToken = await sign(tokenPayload, process.env.JWT_SECRET || 'your-jwt-secret-here-change-in-production', 'HS256')
 
     // Setup basic board and list
     const [workspace] = await db`INSERT INTO workspaces (name, owner_id) VALUES ('Map Workspace', ${userId}) RETURNING id`

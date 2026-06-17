@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeAll, afterAll } from 'bun:test'
-import app from '../../src/index'
+import { app } from '../../src/index'
 import { db } from '../../src/db'
 
 let testToken: string
@@ -17,7 +17,7 @@ describe('Email to Board Webhooks', () => {
     testUserId = u1[0].id
 
     const { sign } = await import('hono/jwt')
-    testToken = await sign({ sub: String(testUserId), exp: Math.floor(Date.now() / 1000) + 3600 }, process.env.JWT_SECRET || 'secret-key-123')
+    testToken = await sign({ sub: String(testUserId), exp: Math.floor(Date.now() / 1000) + 3600 }, process.env.JWT_SECRET || 'your-jwt-secret-here-change-in-production', 'HS256')
 
     const w = await db`INSERT INTO workspaces (name, owner_id) VALUES ('W1', ${testUserId}) RETURNING id`
     const b = await db`INSERT INTO boards (workspace_id, title) VALUES (${w[0].id}, 'B1') RETURNING id`

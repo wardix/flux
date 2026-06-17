@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import { sign } from 'hono/jwt'
 import { db } from '../../src/db/index'
-import app from '../../src/index'
+import { app } from '../../src/index'
 
 describe('Comments & Activity API', () => {
   let userId: number
@@ -53,7 +53,7 @@ describe('Comments & Activity API', () => {
       email: 'comment_test_user@example.com',
       exp: Math.floor(Date.now() / 1000) + 60 * 60,
     }
-    testToken = await sign(tokenPayload, 'your-jwt-secret-here-change-in-production', 'HS256')
+    testToken = await sign(tokenPayload, process.env.JWT_SECRET || 'your-jwt-secret-here-change-in-production', 'HS256')
   })
 
   afterAll(async () => {

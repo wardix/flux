@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import { sign } from 'hono/jwt'
 import { db } from '../../src/db/index'
-import app from '../../src/index'
+import { app } from '../../src/index'
 
 describe('Goals Routes', () => {
   let userId: number
@@ -59,7 +59,7 @@ describe('Goals Routes', () => {
       exp: Math.floor(Date.now() / 1000) + 3600,
     }
     const secret = process.env.JWT_SECRET || 'your-jwt-secret-here-change-in-production'
-    token = await sign(payload, secret)
+    token = await sign(payload, secret, 'HS256')
   })
 
   afterAll(async () => {
