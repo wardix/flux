@@ -69,12 +69,12 @@ describe('Board Members & Roles API', () => {
     // Generate tokens
     adminToken = await sign(
       { sub: adminUserId, email: 'admin_collab_test@example.com' },
-      'your-jwt-secret-here-change-in-production',
+      process.env.JWT_SECRET || 'your-jwt-secret-here-change-in-production',
       'HS256',
     )
     observerToken = await sign(
       { sub: observerUserId, email: 'observer_collab_test@example.com' },
-      'your-jwt-secret-here-change-in-production',
+      process.env.JWT_SECRET || 'your-jwt-secret-here-change-in-production',
       'HS256',
     )
   })

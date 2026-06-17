@@ -37,7 +37,7 @@ describe('Board Stars & Favorites API', () => {
     // Generate token
     token = await sign(
       { sub: userId, email: 'star_test@example.com' },
-      'your-jwt-secret-here-change-in-production',
+      process.env.JWT_SECRET || 'your-jwt-secret-here-change-in-production',
       'HS256',
     )
   })
