@@ -63,11 +63,11 @@ export class DashboardPage extends BasePage {
   }
 
   async selectBoard(name: string) {
-    await this.page.locator('button').filter({ hasText: `📋 ${name}` }).first().click()
+    await this.page.locator('[role="button"], button').filter({ hasText: `📋 ${name}` }).first().click()
   }
 
   async getBoardNames(): Promise<string[]> {
-    const items = this.page.locator('button').filter({ hasText: /📋/ })
+    const items = this.page.locator('[role="button"], button').filter({ hasText: /📋/ })
     const count = await items.count()
     const names: string[] = []
     for (let i = 0; i < count; i++) {
@@ -78,7 +78,7 @@ export class DashboardPage extends BasePage {
   }
 
   async isBoardVisible(name: string): Promise<boolean> {
-    const board = this.page.locator('button').filter({ hasText: `📋 ${name}` }).first()
+    const board = this.page.locator('[role="button"], button').filter({ hasText: `📋 ${name}` }).first()
     return board.isVisible({ timeout: 2000 }).catch(() => false)
   }
 
@@ -87,7 +87,8 @@ export class DashboardPage extends BasePage {
   async getStarredBoardNames(): Promise<string[]> {
     const section = this.page.locator('div').filter({ hasText: '★ Starred Boards' })
     if (!(await section.isVisible().catch(() => false))) return []
-    const items = section.locator('button').filter({ hasText: /📋/ })
+    const items = section.locator('[role="button"], button').filter({ hasText: /📋/ })
+
     const count = await items.count()
     const names: string[] = []
     for (let i = 0; i < count; i++) {

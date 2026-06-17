@@ -87,11 +87,17 @@ export async function getById(id: number, userId?: number, sort?: string) {
             JOIN boards b_src ON l_src.board_id = b_src.id
             WHERE cm.mirror_card_id = c.id
             LIMIT 1
-          ) as source_board_id
+          ) as source_board_id,
+          (
+            SELECT json_agg(json_build_object('id', lbl.id, 'name', lbl.name, 'color', lbl.color, 'board_id', lbl.board_id))
+            FROM card_labels cl
+            JOIN labels lbl ON cl.label_id = lbl.id
+            WHERE cl.card_id = c.id
+          ) as labels
 
         FROM cards c
         LEFT JOIN users u ON c.assignee_id = u.id
-        WHERE c.list_id IN (${listIds}) AND c.parent_card_id IS NULL AND c.archived_at IS NULL AND c.deleted_at IS NULL 
+        WHERE c.list_id IN (SELECT id FROM lists WHERE board_id = ${id} AND archived_at IS NULL AND deleted_at IS NULL) AND c.parent_card_id IS NULL AND c.archived_at IS NULL AND c.deleted_at IS NULL 
         ORDER BY vote_count DESC, c.position ASC, c.id ASC
       `
     } else {
@@ -141,11 +147,17 @@ export async function getById(id: number, userId?: number, sort?: string) {
             JOIN boards b_src ON l_src.board_id = b_src.id
             WHERE cm.mirror_card_id = c.id
             LIMIT 1
-          ) as source_board_id
+          ) as source_board_id,
+          (
+            SELECT json_agg(json_build_object('id', lbl.id, 'name', lbl.name, 'color', lbl.color, 'board_id', lbl.board_id))
+            FROM card_labels cl
+            JOIN labels lbl ON cl.label_id = lbl.id
+            WHERE cl.card_id = c.id
+          ) as labels
 
         FROM cards c
         LEFT JOIN users u ON c.assignee_id = u.id
-        WHERE c.list_id IN (${listIds}) AND c.parent_card_id IS NULL AND c.archived_at IS NULL AND c.deleted_at IS NULL 
+        WHERE c.list_id IN (SELECT id FROM lists WHERE board_id = ${id} AND archived_at IS NULL AND deleted_at IS NULL) AND c.parent_card_id IS NULL AND c.archived_at IS NULL AND c.deleted_at IS NULL 
         ORDER BY c.position ASC, c.id ASC
       `
     }

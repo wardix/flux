@@ -93,6 +93,7 @@ export function ExportDialog({ boardId, boardTitle, isOpen, onClose }: ExportDia
               <input
                 type="radio"
                 name="export-format"
+                value="json"
                 className="radio radio-primary radio-sm"
                 checked={format === 'json'}
                 onChange={() => setFormat('json')}
@@ -104,6 +105,7 @@ export function ExportDialog({ boardId, boardTitle, isOpen, onClose }: ExportDia
               <input
                 type="radio"
                 name="export-format"
+                value="csv"
                 className="radio radio-primary radio-sm"
                 checked={format === 'csv'}
                 onChange={() => setFormat('csv')}

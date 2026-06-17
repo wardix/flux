@@ -29,7 +29,7 @@ export function FloatingActionBar({
 
         {/* Move Action */}
         <div className="dropdown dropdown-top">
-          <button tabIndex={0} type="button" className="btn btn-sm btn-ghost gap-1 font-medium text-xs">
+          <button id="batch-action-move" tabIndex={0} type="button" className="btn btn-sm btn-ghost gap-1 font-medium text-xs">
             📁 Move
           </button>
           <ul tabIndex={0} className="dropdown-content menu p-2 shadow-lg bg-base-200 rounded-box w-52 z-30 mb-2 border border-base-300 max-h-[300px] overflow-y-auto">

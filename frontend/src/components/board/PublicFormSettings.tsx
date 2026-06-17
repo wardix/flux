@@ -167,6 +167,7 @@ export function PublicFormSettings({ boardId, disabled }: PublicFormSettingsProp
           </label>
           <div className="flex gap-2">
             <input
+              id="public-form-share-url"
               type="text"
               readOnly
               value={shareUrl}

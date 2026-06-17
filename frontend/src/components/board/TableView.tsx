@@ -11,16 +11,11 @@ export function TableView({ cards, lists, onCardUpdate }: TableViewProps) {
   const [sortConfig, setSortConfig] = useState<{ key: keyof Card | 'list_title'; direction: 'asc' | 'desc' } | null>(null)
   const [editingCell, setEditingCell] = useState<{ id: number; field: keyof Card } | null>(null)
   const [editValue, setEditValue] = useState('')
-
-  if (cards.length === 0) {
-    return <div className="p-8 text-center text-base-content/50">No cards found</div>
-  }
-
   const getListTitle = (listId: number) => {
     return lists.find(l => l.id === listId)?.title || 'Unknown List'
   }
-
-  const sortedCards = [...cards].sort((a, b) => {
+  // Always render table so layout is correct even without cards
+  const sortedCards = cards.length > 0 ? [...cards].sort((a, b) => {
     if (!sortConfig) return 0
     const { key, direction } = sortConfig
     
@@ -42,7 +37,7 @@ export function TableView({ cards, lists, onCardUpdate }: TableViewProps) {
     if (aStr < bStr) return direction === 'asc' ? -1 : 1
     if (aStr > bStr) return direction === 'asc' ? 1 : -1
     return 0
-  })
+  }) : []
 
   const handleSort = (key: keyof Card | 'list_title') => {
     let direction: 'asc' | 'desc' = 'asc'

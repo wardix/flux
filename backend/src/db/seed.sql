@@ -1,9 +1,9 @@
 -- Insert mock users
 -- Password: password123 (hashed with argon2 or just dummy hash for development)
-INSERT INTO users (email, password_hash, avatar_url) VALUES
-('alice@example.com', '$argon2id$v=19$m=65536,t=3,p=4$q8QJpXp9m9S7uA2vU3oN+w$O2jY4vC/Hj4F+t8v5q/7Dw', 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alice'),
-('bob@example.com', '$argon2id$v=19$m=65536,t=3,p=4$q8QJpXp9m9S7uA2vU3oN+w$O2jY4vC/Hj4F+t8v5q/7Dw', 'https://api.dicebear.com/7.x/avataaars/svg?seed=Bob'),
-('charlie@example.com', '$argon2id$v=19$m=65536,t=3,p=4$q8QJpXp9m9S7uA2vU3oN+w$O2jY4vC/Hj4F+t8v5q/7Dw', 'https://api.dicebear.com/7.x/avataaars/svg?seed=Charlie');
+INSERT INTO users (email, password_hash, avatar_url, is_super_admin) VALUES
+('alice@example.com', '$argon2id$v=19$m=65536,t=3,p=4$8FMhxBm/aOn0pSafnjaHTg$qwhV76RsVZveZnFf1e0nNB2L8QF1nInxMdDIyCa508Y', 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alice', true),
+('bob@example.com', '$argon2id$v=19$m=65536,t=3,p=4$8FMhxBm/aOn0pSafnjaHTg$qwhV76RsVZveZnFf1e0nNB2L8QF1nInxMdDIyCa508Y', 'https://api.dicebear.com/7.x/avataaars/svg?seed=Bob', false),
+('charlie@example.com', '$argon2id$v=19$m=65536,t=3,p=4$8FMhxBm/aOn0pSafnjaHTg$qwhV76RsVZveZnFf1e0nNB2L8QF1nInxMdDIyCa508Y', 'https://api.dicebear.com/7.x/avataaars/svg?seed=Charlie', false);
 
 -- Insert workspaces
 INSERT INTO workspaces (name, owner_id) VALUES
