@@ -50,7 +50,11 @@ export class BoardPage extends BasePage {
   // --- Board Background ---
 
   async openBackgroundPicker() {
-    await this.page.getByTitle('Change Background').or(this.page.locator('button').filter({ hasText: /🎨/ })).first().click()
+    await this.page
+      .getByTitle('Change Background')
+      .or(this.page.locator('button').filter({ hasText: /🎨/ }))
+      .first()
+      .click()
   }
 
   async selectBackgroundColor(color: string) {
@@ -87,7 +91,11 @@ export class BoardPage extends BasePage {
   }
 
   async submitList() {
-    await this.page.locator('form').filter({ has: this.page.getByPlaceholder('Enter list title...') }).getByRole('button', { name: 'Add List' }).click()
+    await this.page
+      .locator('form')
+      .filter({ has: this.page.getByPlaceholder('Enter list title...') })
+      .getByRole('button', { name: 'Add List' })
+      .click()
   }
 
   async addList(title: string) {
@@ -119,8 +127,68 @@ export class BoardPage extends BasePage {
 
   async restoreListFromArchive(listTitle: string) {
     const archiveSection = this.page.locator('div').filter({ hasText: 'Archived Items' })
-    await archiveSection.getByRole('button', { name: /Restore/i }).filter({ hasText: listTitle }).or(
-      archiveSection.locator('div').filter({ hasText: listTitle }).getByRole('button', { name: /Restore/i })
-    ).first().click()
+    await archiveSection
+      .getByRole('button', { name: /Restore/i })
+      .filter({ hasText: listTitle })
+      .or(
+        archiveSection
+          .locator('div')
+          .filter({ hasText: listTitle })
+          .getByRole('button', { name: /Restore/i }),
+      )
+      .first()
+      .click()
+  }
+
+  // --- Card Management ---
+
+  async clickAddCard(listTitle: string) {
+    const list = this.page.locator('[data-list-id]').filter({ hasText: listTitle }).first()
+    await list.locator('[data-list-add-card]').click()
+  }
+
+  async fillCardTitle(listTitle: string, title: string) {
+    const list = this.page.locator('[data-list-id]').filter({ hasText: listTitle }).first()
+    await list.getByPlaceholder('Enter card title...').fill(title)
+  }
+
+  async submitCard(listTitle: string) {
+    const list = this.page.locator('[data-list-id]').filter({ hasText: listTitle }).first()
+    await list.getByRole('button', { name: 'Add' }).click()
+  }
+
+  async addCard(listTitle: string, title: string) {
+    await this.clickAddCard(listTitle)
+    await this.fillCardTitle(listTitle, title)
+    await this.submitCard(listTitle)
+  }
+
+  async clickCard(title: string) {
+    await this.page.locator('[data-card-id]').filter({ hasText: title }).first().click()
+  }
+
+  async isCardVisible(listTitle: string, cardTitle: string): Promise<boolean> {
+    const list = this.page.locator('[data-list-id]').filter({ hasText: listTitle }).first()
+    return await list
+      .locator('[data-card-id]')
+      .filter({ hasText: cardTitle })
+      .first()
+      .isVisible()
+      .catch(() => false)
+  }
+
+  async deleteCard(cardTitle: string) {
+    const card = this.page.locator('[data-card-id]').filter({ hasText: cardTitle }).first()
+    await card.hover()
+    await card.getByTitle('Delete Card').click()
+  }
+
+  async restoreCardFromArchive(cardTitle: string) {
+    const archiveSection = this.page.locator('div').filter({ hasText: 'Archived Items' }).first()
+    await archiveSection
+      .getByRole('button', { name: /Restore/i })
+      .filter({ hasText: cardTitle })
+      .first()
+      .click()
   }
 }
