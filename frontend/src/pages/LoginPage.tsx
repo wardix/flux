@@ -53,6 +53,8 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
         const msg = err?.response?.data?.error || err?.message || ''
         if (msg.includes('already registered') || msg.includes('409') || msg.includes('Conflict')) {
           setError('Email already registered.')
+        } else if (msg.includes('disabled') || msg.includes('403')) {
+          setError('Registration is currently disabled.')
         } else {
           setError('Registration failed. Please try again.')
         }

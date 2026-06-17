@@ -167,6 +167,10 @@ const getMeRoute = createRoute({
 
 // Register route definitions with OpenAPIHono handlers
 authRoutes.openapi(registerRoute, async (c) => {
+  if (process.env.DISABLE_REGISTRATION === 'true') {
+    return c.json({ error: 'Registration is currently disabled' }, 403)
+  }
+
   try {
     const body = await c.req.json()
     if (!body.email || !body.password) {
