@@ -93,3 +93,92 @@ jobs:
       - name: Run Frontend Tests
         working-directory: ./frontend
         run: bun run test
+
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: [test-backend, test-frontend]
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: flux_user
+          POSTGRES_PASSWORD: flux_password
+          POSTGRES_DB: flux_test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install Root dependencies
+        run: bun install
+
+      - name: Install Backend dependencies
+        working-directory: ./backend
+        run: bun install
+
+      - name: Install Frontend dependencies
+        working-directory: ./frontend
+        run: bun install
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
+      - name: Install Playwright browsers with deps
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: bunx playwright install --with-deps chromium firefox webkit
+
+      - name: Install Playwright system dependencies (if cache hit)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: bunx playwright install-deps chromium firefox webkit
+
+      - name: Migrate Database
+        working-directory: ./backend
+        env:
+          DATABASE_URL: postgres://flux_user:flux_password@localhost:5432/flux_test_db
+        run: bun run db:migrate --seed
+
+      - name: Start backend
+        env:
+          DATABASE_URL: postgres://flux_user:flux_password@localhost:5432/flux_test_db
+          JWT_SECRET: supersecretjwtkey
+          PORT: 3000
+        run: |
+          cd backend && bun run dev &
+
+      - name: Start frontend
+        run: |
+          cd frontend && bun run dev &
+
+      - name: Wait for services
+        run: |
+          bunx wait-on http://localhost:3000/api http://localhost:5173 --timeout 30000
+
+      - name: Run E2E tests
+        env:
+          DATABASE_URL: postgres://flux_user:flux_password@localhost:5432/flux_test_db
+          JWT_SECRET: supersecretjwtkey
+        run: bun run test:e2e
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
