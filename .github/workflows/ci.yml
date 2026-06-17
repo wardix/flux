@@ -100,7 +100,7 @@ jobs:
     needs: [test-backend, test-frontend]
     services:
       postgres:
-        image: postgres:15
+        image: postgres:16-alpine
         env:
           POSTGRES_USER: flux_user
           POSTGRES_PASSWORD: flux_password
