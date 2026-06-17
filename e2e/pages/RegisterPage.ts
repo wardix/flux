@@ -1,13 +1,17 @@
 import type { Page } from '@playwright/test'
 import { BasePage } from './BasePage'
 
-export class LoginPage extends BasePage {
+export class RegisterPage extends BasePage {
   constructor(page: Page) {
     super(page)
   }
 
   async goto() {
     await super.goto('/')
+  }
+
+  async switchToRegister() {
+    await this.page.getByRole('button', { name: /register/i }).click()
   }
 
   async fillEmail(email: string) {
@@ -19,11 +23,12 @@ export class LoginPage extends BasePage {
   }
 
   async submit() {
-    await this.page.locator('button[type="submit"]').click()
+    await this.page.getByRole('button', { name: /register/i, exact: false }).filter({ has: this.page.locator('[type="submit"]') }).or(this.page.locator('button[type="submit"]')).first().click()
   }
 
-  async login(email: string, password: string) {
+  async register(email: string, password: string) {
     await this.goto()
+    await this.switchToRegister()
     await this.fillEmail(email)
     await this.fillPassword(password)
     await this.submit()
@@ -31,12 +36,5 @@ export class LoginPage extends BasePage {
 
   async expectError(text: string | RegExp) {
     await this.page.getByRole('alert').filter({ hasText: text }).waitFor({ state: 'visible', timeout: 5000 })
-  }
-
-  async expectLoggedIn() {
-    // After login, the app should show the main dashboard (sidebar with boards)
-    await this.page.waitForFunction(() => {
-      return localStorage.getItem('token') !== null
-    }, { timeout: 5000 })
   }
 }

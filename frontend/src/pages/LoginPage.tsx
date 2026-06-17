@@ -18,6 +18,7 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
   const [error, setError] = useState('')
   const [tempToken, setTempToken] = useState('')
   const [requires2FA, setRequires2FA] = useState(false)
+  const [isRegisterMode, setIsRegisterMode] = useState(false)
 
   // Check query params for OAuth callbacks
   useEffect(() => {
@@ -38,6 +39,27 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+
+    if (isRegisterMode) {
+      if (password.length < 6) {
+        setError('Password must be at least 6 characters.')
+        return
+      }
+      try {
+        const res = await api.post<{ data: { token: string; user: any } }>('/auth/register', { email, password })
+        localStorage.setItem('token', res.data.token)
+        onLoginSuccess(res.data.token, res.data.user)
+      } catch (err: any) {
+        const msg = err?.response?.data?.error || err?.message || ''
+        if (msg.includes('already registered') || msg.includes('409') || msg.includes('Conflict')) {
+          setError('Email already registered.')
+        } else {
+          setError('Registration failed. Please try again.')
+        }
+      }
+      return
+    }
+
     try {
       const res = await api.post<{
         data: {
@@ -87,13 +109,15 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
                 </div>
               )}
               <h2 className="text-2xl font-bold tracking-tight">
-                {t('auth.welcomeBack')} to {appName}
+                {isRegisterMode ? `Create Account on ${appName}` : `${t('auth.welcomeBack')} to ${appName}`}
               </h2>
-              <p className="text-xs text-base-content/60">{t('auth.login')}</p>
+              <p className="text-xs text-base-content/60">
+                {isRegisterMode ? 'Register a new account' : t('auth.login')}
+              </p>
             </div>
 
             {error && (
-              <div className="alert alert-error text-sm rounded-xl py-2 px-3 flex items-center gap-2">
+              <div className="alert alert-error text-sm rounded-xl py-2 px-3 flex items-center gap-2" role="alert">
                 <span>⚠️</span>
                 <span>{error}</span>
               </div>
@@ -101,10 +125,11 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="form-control">
-                <label className="label">
+                <label className="label" htmlFor="email-input">
                   <span className="label-text font-semibold">{t('auth.email')}</span>
                 </label>
                 <input
+                  id="email-input"
                   type="email"
                   placeholder="your-email@example.com"
                   value={email}
@@ -115,10 +140,11 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
               </div>
 
               <div className="form-control">
-                <label className="label">
+                <label className="label" htmlFor="password-input">
                   <span className="label-text font-semibold">{t('auth.password')}</span>
                 </label>
                 <input
+                  id="password-input"
                   type="password"
                   placeholder="••••••••"
                   value={password}
@@ -129,19 +155,41 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
               </div>
 
               <button type="submit" className="btn btn-primary text-white w-full">
-                {t('auth.login')}
+                {isRegisterMode ? 'Register' : t('auth.login')}
               </button>
             </form>
 
-            <div className="relative flex py-2 items-center">
-              <div className="flex-grow border-t border-base-300"></div>
-              <span className="flex-shrink mx-4 text-base-content/40 text-xs font-semibold uppercase">
-                {t('auth.loginWith', { provider: 'OAuth' })}
-              </span>
-              <div className="flex-grow border-t border-base-300"></div>
+            <div className="text-center text-sm">
+              {isRegisterMode ? (
+                <span>
+                  Already have an account?{' '}
+                  <button type="button" className="link link-primary font-semibold" onClick={() => { setIsRegisterMode(false); setError('') }}>
+                    Log In
+                  </button>
+                </span>
+              ) : (
+                <span>
+                  Don't have an account?{' '}
+                  <button type="button" className="link link-primary font-semibold" onClick={() => { setIsRegisterMode(true); setError('') }}>
+                    Register
+                  </button>
+                </span>
+              )}
             </div>
 
-            <OAuthButtons mode="login" />
+            {!isRegisterMode && (
+              <>
+                <div className="relative flex py-2 items-center">
+                  <div className="flex-grow border-t border-base-300"></div>
+                  <span className="flex-shrink mx-4 text-base-content/40 text-xs font-semibold uppercase">
+                    {t('auth.loginWith', { provider: 'OAuth' })}
+                  </span>
+                  <div className="flex-grow border-t border-base-300"></div>
+                </div>
+
+                <OAuthButtons mode="login" />
+              </>
+            )}
           </>
         )}
       </div>
