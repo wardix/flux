@@ -3,25 +3,38 @@ import { fireEvent, render, screen, act } from '@testing-library/react'
 import React from 'react'
 import { describe, expect, test, vi } from 'vitest'
 import { SearchBar } from '../../src/components/shared/SearchBar'
+import { ShortcutProvider } from '../../src/components/shared/ShortcutProvider'
 
 describe('SearchBar', () => {
   vi.useFakeTimers()
 
   test('should render search input with placeholder', () => {
-    render(<SearchBar />)
+    render(
+      <ShortcutProvider>
+        <SearchBar />
+      </ShortcutProvider>
+    )
     const input = screen.getByPlaceholderText(/Search\.\.\./i)
     expect(input).toBeInTheDocument()
   })
 
   test('should show loading spinner when isLoading is true', () => {
-    render(<SearchBar isLoading={true} />)
+    render(
+      <ShortcutProvider>
+        <SearchBar isLoading={true} />
+      </ShortcutProvider>
+    )
     const spinner = screen.getByTestId('search-spinner')
     expect(spinner).toBeInTheDocument()
   })
 
   test('should call onSearch after 300ms debounce when typing', async () => {
     const onSearch = vi.fn()
-    render(<SearchBar onSearch={onSearch} />)
+    render(
+      <ShortcutProvider>
+        <SearchBar onSearch={onSearch} />
+      </ShortcutProvider>
+    )
     const input = screen.getByPlaceholderText(/Search\.\.\./i)
 
     fireEvent.change(input, { target: { value: 'react' } })
@@ -39,7 +52,11 @@ describe('SearchBar', () => {
 
   test('should clear search and close dropdown on Escape key', () => {
     const onSearch = vi.fn()
-    render(<SearchBar onSearch={onSearch} />)
+    render(
+      <ShortcutProvider>
+        <SearchBar onSearch={onSearch} />
+      </ShortcutProvider>
+    )
     const input = screen.getByPlaceholderText(/Search\.\.\./i)
 
     fireEvent.change(input, { target: { value: 'react' } })
