@@ -1,4 +1,4 @@
-import { DndContext, type DragEndEvent } from '@dnd-kit/core'
+import { DndContext, type DragEndEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Route, Routes, useLocation } from 'react-router-dom'
@@ -84,8 +84,16 @@ function App() {
   const [showAdminPage, setShowAdminPage] = useState(false)
   const [isExportOpen, setIsExportOpen] = useState(false)
   const [isImportOpen, setIsImportOpen] = useState(false)
+  const [showAutomations, setShowAutomations] = useState(false)
+  const [showPublicForm, setShowPublicForm] = useState(false)
   const { isFilterPanelOpen, toggleFilterPanel } = useSearchStore()
-
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  )
   const { theme, setTheme, accentColor, setAccentColor } = useTheme()
   const {
     boards,
@@ -259,7 +267,7 @@ function App() {
 
   useKeyboardShortcut('?', () => {
     openShortcutHelp()
-  }, { description: 'Show Keyboard Shortcuts', category: 'General', modifiers: { shift: true } })
+  }, { description: 'Show Keyboard Shortcuts', category: 'General' })
 
   useKeyboardShortcut('k', (e) => {
     e.preventDefault()
@@ -695,15 +703,24 @@ function App() {
               <ul className="menu menu-sm p-0 gap-1">
                 {starredBoards.map((b) => (
                   <li key={`starred-${b.id}`}>
-                    <button
-                      type="button"
+                    <div
+                      role="button"
+                      tabIndex={0}
                       onClick={() => {
                         setShow2FASettings(false)
                         setEpicViewEnabled(false)
                         setGoalsViewEnabled(false)
                         fetchBoard(b.id)
                       }}
-                      className={`flex items-center justify-between py-2 px-3 rounded-lg text-left ${
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          setShow2FASettings(false)
+                          setEpicViewEnabled(false)
+                          setGoalsViewEnabled(false)
+                          fetchBoard(b.id)
+                        }
+                      }}
+                      className={`flex items-center justify-between py-2 px-3 rounded-lg text-left cursor-pointer ${
                         !show2FASettings &&
                         !epicViewEnabled &&
                         !goalsViewEnabled &&
@@ -723,7 +740,7 @@ function App() {
                           ★
                         </button>
                       </div>
-                    </button>
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -799,15 +816,24 @@ function App() {
             <ul className="menu menu-sm p-0 gap-1">
               {filteredBoards.map((b) => (
                 <li key={b.id}>
-                  <button
-                    type="button"
+                  <div
+                    role="button"
+                    tabIndex={0}
                     onClick={() => {
                       setShow2FASettings(false)
                       setEpicViewEnabled(false)
                       setGoalsViewEnabled(false)
                       fetchBoard(b.id)
                     }}
-                    className={`flex items-center justify-between py-2 px-3 rounded-lg text-left ${
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        setShow2FASettings(false)
+                        setEpicViewEnabled(false)
+                        setGoalsViewEnabled(false)
+                        fetchBoard(b.id)
+                      }
+                    }}
+                    className={`flex items-center justify-between py-2 px-3 rounded-lg text-left cursor-pointer ${
                       !show2FASettings &&
                       !epicViewEnabled &&
                       !goalsViewEnabled &&
@@ -834,7 +860,7 @@ function App() {
                         {b.visibility === 'workspace-only' ? 'WS' : b.visibility}
                       </span>
                     </div>
-                  </button>
+                  </div>
                 </li>
               ))}
               {filteredBoards.length === 0 && (
@@ -1265,33 +1291,25 @@ function App() {
 
                 {/* Board Custom Fields Manager */}
                 {activeBoard && (
-                  <div className="dropdown dropdown-bottom">
-                    <button
-                      type="button"
-                      tabIndex={0}
-                      className="btn btn-outline btn-xs gap-1 font-semibold uppercase tracking-wider"
-                    >
+                  <details className="dropdown dropdown-bottom">
+                    <summary className="btn btn-outline btn-xs gap-1 font-semibold uppercase tracking-wider">
                       ⚙️ Custom Fields
-                    </button>
+                    </summary>
                     <div className="dropdown-content menu bg-base-200 rounded-box z-[1] w-80 p-3 shadow-lg gap-2 border border-base-300 mt-1 max-h-[400px] overflow-y-auto">
                       <CustomFieldEditor
                         boardId={activeBoard.id}
                         disabled={userRole === 'observer'}
                       />
                     </div>
-                  </div>
+                  </details>
                 )}
 
                 {/* Board Automations Manager */}
                 {activeBoard && (
-                  <div className="dropdown dropdown-bottom">
-                    <button
-                      type="button"
-                      tabIndex={0}
-                      className="btn btn-outline btn-xs gap-1 font-semibold uppercase tracking-wider"
-                    >
+                  <details className="dropdown dropdown-bottom">
+                    <summary className="btn btn-outline btn-xs gap-1 font-semibold uppercase tracking-wider">
                       🤖 Automations
-                    </button>
+                    </summary>
                     <div className="dropdown-content menu bg-base-200 rounded-box z-[1] w-96 p-3 shadow-lg gap-2 border border-base-300 mt-1 max-h-[500px] overflow-y-auto">
                       <AutomationList
                         boardId={activeBoard.id}
@@ -1301,36 +1319,28 @@ function App() {
                         disabled={userRole === 'observer'}
                       />
                     </div>
-                  </div>
+                  </details>
                 )}
 
                 {/* Board Webhooks Manager */}
                 {activeBoard && (
-                  <div className="dropdown dropdown-bottom">
-                    <button
-                      type="button"
-                      tabIndex={0}
-                      className="btn btn-outline btn-xs gap-1 font-semibold uppercase tracking-wider"
-                    >
+                  <details className="dropdown dropdown-bottom">
+                    <summary className="btn btn-outline btn-xs gap-1 font-semibold uppercase tracking-wider">
                       🔗 Webhooks
-                    </button>
+                    </summary>
                     <div className="dropdown-content menu bg-base-200 rounded-box z-[1] w-96 p-3 shadow-lg gap-2 border border-base-300 mt-1 max-h-[500px] overflow-y-auto">
                       <WebhookList boardId={activeBoard.id} disabled={userRole === 'observer'} />
                     </div>
-                  </div>
+                  </details>
                 )}
 
                 {/* Board GitHub Setup */}
                 {activeBoard && (
-                  <div className="dropdown dropdown-bottom">
-                    <button
-                      type="button"
-                      tabIndex={0}
-                      className="btn btn-outline btn-xs gap-1 font-semibold uppercase tracking-wider"
-                    >
+                  <details className="dropdown dropdown-bottom">
+                    <summary className="btn btn-outline btn-xs gap-1 font-semibold uppercase tracking-wider">
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.2c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></svg>
                       GitHub
-                    </button>
+                    </summary>
                     <div className="dropdown-content menu bg-base-200 rounded-box z-[1] w-96 p-3 shadow-lg gap-2 border border-base-300 mt-1 max-h-[500px] overflow-y-auto">
                       <GitHubSetupPanel 
                         boardId={activeBoard.id} 
@@ -1338,45 +1348,37 @@ function App() {
                         disabled={userRole === 'observer'} 
                       />
                     </div>
-                  </div>
+                  </details>
                 )}
 
                 {/* Board Public Form Settings */}
                 {activeBoard && (
-                  <div className="dropdown dropdown-bottom">
-                    <button
-                      type="button"
-                      tabIndex={0}
-                      className="btn btn-outline btn-xs gap-1 font-semibold uppercase tracking-wider"
-                    >
+                  <details className="dropdown dropdown-bottom">
+                    <summary className="btn btn-outline btn-xs gap-1 font-semibold uppercase tracking-wider">
                       📋 Public Form
-                    </button>
+                    </summary>
                     <div className="dropdown-content menu bg-base-200 rounded-box z-[1] w-80 p-3 shadow-lg gap-2 border border-base-300 mt-1">
                       <PublicFormSettings
                         boardId={activeBoard.id}
                         disabled={userRole === 'observer'}
                       />
                     </div>
-                  </div>
+                  </details>
                 )}
 
                 {/* Email to Board Settings */}
                 {activeBoard && userRole !== 'observer' && (
-                  <div className="dropdown dropdown-bottom">
-                    <button
-                      type="button"
-                      tabIndex={0}
-                      className="btn btn-outline btn-xs gap-1 font-semibold uppercase tracking-wider"
-                    >
+                  <details className="dropdown dropdown-bottom">
+                    <summary className="btn btn-outline btn-xs gap-1 font-semibold uppercase tracking-wider">
                       📧 Email
-                    </button>
+                    </summary>
                     <div className="dropdown-content menu bg-base-200 rounded-box z-[1] w-[600px] p-3 shadow-lg gap-2 border border-base-300 mt-1 max-h-[500px] overflow-y-auto">
                       <span className="text-[10px] font-bold text-base-content/50 uppercase tracking-wide mb-2 block">
                         Email to Board
                       </span>
                       <EmailSettings boardId={activeBoard.id} lists={activeBoard.lists || []} />
                     </div>
-                  </div>
+                  </details>
                 )}
 
                 {/* Approval Rules Manager */}
@@ -1884,7 +1886,7 @@ function App() {
             ) : (
               <>
                 {activeView === 'kanban' && (
-                  <DndContext onDragEnd={handleDragEnd}>
+                  <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
                     <div className="flex-1 overflow-x-auto p-6 flex gap-6 items-start">
                   {activeBoard?.lists?.map((list) => (
                     <BoardColumn key={list.id} list={list} />

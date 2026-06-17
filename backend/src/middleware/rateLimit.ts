@@ -46,7 +46,7 @@ export const rateLimitMiddleware = (): MiddlewareHandler => {
       limit = 1000
     }
 
-    if (process.env.NODE_ENV === 'test' && process.env.ENABLE_RATE_LIMIT !== 'true') {
+    if (process.env.ENABLE_RATE_LIMIT === 'false' || (process.env.NODE_ENV === 'test' && process.env.ENABLE_RATE_LIMIT !== 'true')) {
       limit = 100000
     }
 

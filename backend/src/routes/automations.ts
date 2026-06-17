@@ -179,11 +179,11 @@ automationRoutes.openapi(createRuleRoute, async (c) => {
   const boardId = Number(c.req.param('boardId'))
   if (Number.isNaN(boardId)) return c.json({ error: 'Invalid board ID' }, 400)
 
-  const user = c.get('user')
+  const userId = c.get('userId')
   const body = await c.req.json()
 
   try {
-    const rule = await automationService.createRule(boardId, user.id, body)
+    const rule = await automationService.createRule(boardId, userId, body)
     return c.json({ data: rule }, 201)
   } catch (err: any) {
     const status = err.status || 400

@@ -1,5 +1,7 @@
 import { db } from '../db'
 import { getBoardRole } from './boardService'
+import * as automationService from './automationService'
+
 
 export async function executeBatch(
   userId: number,
@@ -74,13 +76,26 @@ export async function executeBatch(
       let nextPos = Number(maxPosRes[0].max) + 1
 
       for (const cardId of cardIds) {
+        const cardObj = cards.find((c: any) => Number(c.id) === cardId)
+        const fromListId = cardObj ? Number(cardObj.list_id) : null
+
         const res = await db`
           UPDATE cards
           SET list_id = ${listId}, position = ${nextPos}, updated_at = NOW()
           WHERE id = ${cardId}
           RETURNING id
         `
-        if (res.length > 0) affectedCount++
+        if (res.length > 0) {
+          affectedCount++
+          if (fromListId && fromListId !== listId) {
+            await automationService.processAutomations({
+              type: 'card_moved',
+              boardId,
+              cardId,
+              data: { to_list_id: listId },
+            })
+          }
+        }
         nextPos++
       }
       break
