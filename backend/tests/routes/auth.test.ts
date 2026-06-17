@@ -116,4 +116,46 @@ describe('Auth Route', () => {
       process.env.DISABLE_REGISTRATION = originalValue
     }
   })
+
+  test('GET /api/auth/config - should return registrationEnabled true by default', async () => {
+    const originalValue = process.env.DISABLE_REGISTRATION
+    delete process.env.DISABLE_REGISTRATION
+
+    const res = await app.fetch(
+      new Request('http://localhost/api/auth/config', { method: 'GET' }),
+    )
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.registrationEnabled).toBe(true)
+
+    if (originalValue !== undefined) {
+      process.env.DISABLE_REGISTRATION = originalValue
+    }
+  })
+
+  test('GET /api/auth/config - should return registrationEnabled false when DISABLE_REGISTRATION=true', async () => {
+    const originalValue = process.env.DISABLE_REGISTRATION
+    process.env.DISABLE_REGISTRATION = 'true'
+
+    const res = await app.fetch(
+      new Request('http://localhost/api/auth/config', { method: 'GET' }),
+    )
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.registrationEnabled).toBe(false)
+
+    if (originalValue === undefined) {
+      delete process.env.DISABLE_REGISTRATION
+    } else {
+      process.env.DISABLE_REGISTRATION = originalValue
+    }
+  })
+
+  test('GET /api/auth/config - should not require authentication', async () => {
+    const res = await app.fetch(
+      new Request('http://localhost/api/auth/config', { method: 'GET' }),
+    )
+    // Should succeed without any Authorization header
+    expect(res.status).toBe(200)
+  })
 })

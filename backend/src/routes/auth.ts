@@ -215,4 +215,28 @@ authRoutes.openapi(getMeRoute, async (c) => {
   return c.json({ data: user }, 200)
 })
 
+const authConfigRoute = createRoute({
+  method: 'get',
+  path: '/config',
+  summary: 'Get auth configuration',
+  responses: {
+    200: {
+      description: 'Auth config',
+      content: {
+        'application/json': {
+          schema: z.object({
+            registrationEnabled: z.boolean(),
+          }),
+        },
+      },
+    },
+  },
+})
+
+authRoutes.openapi(authConfigRoute, async (c) => {
+  return c.json({
+    registrationEnabled: process.env.DISABLE_REGISTRATION !== 'true',
+  })
+})
+
 export { authRoutes }

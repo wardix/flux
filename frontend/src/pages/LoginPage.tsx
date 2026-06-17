@@ -19,6 +19,22 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
   const [tempToken, setTempToken] = useState('')
   const [requires2FA, setRequires2FA] = useState(false)
   const [isRegisterMode, setIsRegisterMode] = useState(false)
+  const [registrationEnabled, setRegistrationEnabled] = useState(true)
+
+  // Fetch auth config to check if registration is enabled
+  useEffect(() => {
+    api.get<{ registrationEnabled: boolean }>('/auth/config')
+      .then(res => setRegistrationEnabled(res.registrationEnabled))
+      .catch(() => {}) // default true if endpoint fails
+  }, [])
+
+  // Auto-switch back to login if registration gets disabled
+  useEffect(() => {
+    if (isRegisterMode && !registrationEnabled) {
+      setIsRegisterMode(false)
+      setError('Registration is currently disabled.')
+    }
+  }, [registrationEnabled, isRegisterMode])
 
   // Check query params for OAuth callbacks
   useEffect(() => {
@@ -169,14 +185,14 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
                     Log In
                   </button>
                 </span>
-              ) : (
+              ) : registrationEnabled ? (
                 <span>
                   Don't have an account?{' '}
                   <button type="button" className="link link-primary font-semibold" onClick={() => { setIsRegisterMode(true); setError('') }}>
                     Register
                   </button>
                 </span>
-              )}
+              ) : null}
             </div>
 
             {!isRegisterMode && (
