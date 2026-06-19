@@ -1304,7 +1304,7 @@ export function CardItem({
                 <DependencyBadge
                   blockingCount={dependencies.blocking.length}
                   blockedByCount={dependencies.blocked_by.length}
-                  isBlocked={dependencies.blocked_by.some(d => !d.card.is_completed)}
+                  isBlocked={dependencies.blocked_by.some(d => d.card && !d.card.is_completed)}
                   onClick={(e) => {
                     e.stopPropagation()
                     setShowDependencySelector(true)

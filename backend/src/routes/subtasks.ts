@@ -253,7 +253,11 @@ subtaskRoutes.openapi(getSubtasksRoute, async (c) => {
     if (Number.isNaN(id)) return c.json({ error: 'Invalid card ID' }, 400)
 
     const result = await subtaskService.getSubtasks(id)
-    return c.json(result, 200)
+    return c.json({
+      subtasks: result.data,
+      totalCount: result.meta.total,
+      completedCount: result.meta.completed
+    }, 200)
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Internal Server Error'
     return c.json({ error: message }, 500)

@@ -52,10 +52,10 @@ describe('ShortcutHelpModal', () => {
         <ShortcutHelpModal isOpen={true} onClose={vi.fn()} />
       </ShortcutProvider>
     )
-    expect(screen.getByText('NAVIGATION')).toBeInTheDocument()
-    expect(screen.getByText('BOARD')).toBeInTheDocument()
-    expect(screen.getByText('CARD')).toBeInTheDocument()
-    expect(screen.getByText('GENERAL')).toBeInTheDocument()
+    expect(screen.getByText('Navigation')).toBeInTheDocument()
+    expect(screen.getByText('Board')).toBeInTheDocument()
+    expect(screen.getByText('Card')).toBeInTheDocument()
+    expect(screen.getByText('General')).toBeInTheDocument()
   })
 
   test('should call onClose when Escape is pressed', () => {

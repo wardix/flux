@@ -28,10 +28,12 @@ export async function searchCards(
     return { data: [], total: 0 }
   }
 
+  const boardIdsStr = `{${boardIds.join(',')}}`
+
   // Define components for building dynamic query parts
   let whereClauses = [
     db`c.deleted_at IS NULL`,
-    db`l.board_id IN (${boardIds})`,
+    db`l.board_id = ANY(${boardIdsStr}::int[])`,
     db`(c.title ILIKE ${searchTerm} OR c.description ILIKE ${searchTerm})`
   ]
 

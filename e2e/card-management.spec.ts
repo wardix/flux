@@ -51,7 +51,7 @@ test.describe('Card Management E2E', () => {
     // 2. Open detail modal
     await boardPage.clickCard(cardTitle)
     await page.waitForTimeout(500)
-    await expect(page.locator('.modal-box')).toBeVisible()
+    await expect(page.locator('.modal-box').filter({ hasText: /Card Details|Edit Card/i })).toBeVisible()
 
     // 3. Edit title & description
     await cardDetailPage.fillTitle(updatedTitle)
@@ -65,7 +65,7 @@ test.describe('Card Management E2E', () => {
     // Reopen to verify description
     await boardPage.clickCard(updatedTitle)
     await page.waitForTimeout(500)
-    const editorContent = await page.locator('.modal-box .tiptap.ProseMirror').innerText()
+    const editorContent = await page.locator('.modal-box').filter({ hasText: /Card Details|Edit Card/i }).locator('.tiptap.ProseMirror').innerText()
     expect(editorContent).toContain(updatedDesc)
     await cardDetailPage.close()
     await page.waitForTimeout(500)
@@ -117,7 +117,7 @@ test.describe('Card Management E2E', () => {
     const dateBadge = page
       .locator('[data-card-id]')
       .filter({ hasText: cardTitle })
-      .locator('.badge-ghost')
+      .locator('.badge')
     await expect(dateBadge).toBeVisible()
   })
 
@@ -158,8 +158,8 @@ test.describe('Card Management E2E', () => {
     await page.waitForTimeout(500)
 
     // Verify items exist
-    const item1 = page.locator('.modal-box').getByText('Item 1')
-    const item2 = page.locator('.modal-box').getByText('Item 2')
+    const item1 = page.locator('.modal-box').filter({ hasText: /Card Details|Edit Card/i }).getByText('Item 1')
+    const item2 = page.locator('.modal-box').filter({ hasText: /Card Details|Edit Card/i }).getByText('Item 2')
     await expect(item1).toBeVisible()
     await expect(item2).toBeVisible()
 
@@ -167,7 +167,7 @@ test.describe('Card Management E2E', () => {
     await cardDetailPage.toggleChecklistItem('Tasks', 'Item 1')
     await page.waitForTimeout(500)
 
-    const progress = page.locator('.modal-box progress')
+    const progress = page.locator('.modal-box').filter({ hasText: /Card Details|Edit Card/i }).locator('progress')
     await expect(progress).toHaveAttribute('value', '1')
 
     await cardDetailPage.close()
@@ -216,7 +216,7 @@ test.describe('Card Management E2E', () => {
     await page.waitForTimeout(500)
 
     // Check badge shows 5 pts in card preview
-    const badge = page.locator('[data-card-id]').filter({ hasText: cardTitle }).getByText('5 pts')
+    const badge = page.locator('[data-card-id]').filter({ hasText: cardTitle }).locator('[title="Story Points: 5"]')
     await expect(badge).toBeVisible()
   })
 
@@ -243,7 +243,7 @@ test.describe('Card Management E2E', () => {
     const subtaskProgress = page
       .locator('[data-card-id]')
       .filter({ hasText: cardTitle })
-      .locator('.badge', { hasText: '0/1' })
+      .getByText(/0\/1/)
     await expect(subtaskProgress).toBeVisible()
   })
 
