@@ -164,7 +164,7 @@ export class BoardPage extends BasePage {
   }
 
   async clickCard(title: string) {
-    await this.page.locator('[data-card-id]').filter({ hasText: title }).first().click()
+    await this.page.locator('[data-card-id] h4').filter({ hasText: title }).first().click()
   }
 
   async isCardVisible(listTitle: string, cardTitle: string): Promise<boolean> {
@@ -185,10 +185,7 @@ export class BoardPage extends BasePage {
 
   async restoreCardFromArchive(cardTitle: string) {
     const archiveSection = this.page.locator('div').filter({ hasText: 'Archived Items' }).first()
-    await archiveSection
-      .getByRole('button', { name: /Restore/i })
-      .filter({ hasText: cardTitle })
-      .first()
-      .click()
+    const cardRow = archiveSection.locator('div').filter({ hasText: cardTitle }).first()
+    await cardRow.getByRole('button', { name: 'Restore', exact: true }).click()
   }
 }

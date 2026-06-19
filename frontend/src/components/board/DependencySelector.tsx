@@ -25,7 +25,7 @@ export function DependencySelector({
 }: DependencySelectorProps) {
   const [isAdding, setIsAdding] = useState(false)
   const [search, setSearch] = useState('')
-  const lists = useBoardStore((s) => s.lists)
+  const lists = useBoardStore((s) => s.activeBoard?.lists || [])
   
   const allCards = useMemo(() => {
     return lists.flatMap(l => l.cards || [])

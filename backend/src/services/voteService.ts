@@ -62,10 +62,11 @@ export async function getVotes(cardId: number, userId: number) {
 
 export async function getVoteCountsBatch(cardIds: number[]) {
   if (cardIds.length === 0) return []
+  const cardIdsStr = `{${cardIds.join(',')}}`
   const results = await db`
     SELECT card_id, COUNT(*)::INTEGER as count
     FROM card_votes
-    WHERE card_id IN (${cardIds})
+    WHERE card_id = ANY(${cardIdsStr}::int[])
     GROUP BY card_id
   `
   return results
@@ -73,10 +74,11 @@ export async function getVoteCountsBatch(cardIds: number[]) {
 
 export async function getUserVotesBatch(cardIds: number[], userId: number) {
   if (cardIds.length === 0) return []
+  const cardIdsStr = `{${cardIds.join(',')}}`
   const results = await db`
     SELECT card_id
     FROM card_votes
-    WHERE card_id IN (${cardIds}) AND user_id = ${userId}
+    WHERE card_id = ANY(${cardIdsStr}::int[]) AND user_id = ${userId}
   `
   return results.map((r) => Number(r.card_id))
 }

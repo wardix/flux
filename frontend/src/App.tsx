@@ -1,5 +1,5 @@
 import { DndContext, type DragEndEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Route, Routes, useLocation } from 'react-router-dom'
 import { BrandingProvider } from './components/shared/BrandingProvider'
@@ -415,8 +415,8 @@ function App() {
   }, [activeBoard?.id, fetchLabels])
 
   // Filter boards based on selected workspace
-  const filteredBoards = boards.filter((b) => b.workspace_id === activeWorkspace?.id)
-  const starredBoards = filteredBoards.filter((b) => b.is_starred)
+  const filteredBoards = useMemo(() => boards.filter((b) => b.workspace_id === activeWorkspace?.id), [boards, activeWorkspace?.id])
+  const starredBoards = useMemo(() => filteredBoards.filter((b) => b.is_starred), [filteredBoards])
 
   useEffect(() => {
     if (filteredBoards.length > 0 && !activeBoard) {

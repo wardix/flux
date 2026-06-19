@@ -118,10 +118,11 @@ export async function completeSprint(sprintId: number, moveIncompleteToSprintId?
   // Move incomplete cards to another sprint if specified
   if (moveIncompleteToSprintId && incompleteCards.length > 0) {
     const incompleteCardIds = incompleteCards.map((c) => c.id)
+    const incompleteCardIdsStr = `{${incompleteCardIds.join(',')}}`
     await db`
       UPDATE cards
       SET sprint_id = ${moveIncompleteToSprintId}, updated_at = NOW()
-      WHERE id IN (${incompleteCardIds})
+      WHERE id = ANY(${incompleteCardIdsStr}::int[])
     `
   }
 

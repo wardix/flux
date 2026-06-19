@@ -139,10 +139,10 @@ describe('Subtasks API', () => {
         }),
       )
       expect(res.status).toBe(200)
-      const { data, meta } = await res.json()
-      expect(Array.isArray(data)).toBe(true)
-      expect(meta.total).toBeGreaterThanOrEqual(1)
-      expect(typeof meta.completed).toBe('number')
+      const { subtasks, totalCount, completedCount } = await res.json()
+      expect(Array.isArray(subtasks)).toBe(true)
+      expect(totalCount).toBeGreaterThanOrEqual(1)
+      expect(typeof completedCount).toBe('number')
     })
 
     test('should return empty array for card without subtasks', async () => {
@@ -152,9 +152,9 @@ describe('Subtasks API', () => {
         }),
       )
       expect(res.status).toBe(200)
-      const { data, meta } = await res.json()
-      expect(data).toEqual([])
-      expect(meta.total).toBe(0)
+      const { subtasks, totalCount } = await res.json()
+      expect(subtasks).toEqual([])
+      expect(totalCount).toBe(0)
     })
   })
 

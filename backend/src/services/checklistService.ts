@@ -10,6 +10,7 @@ export async function getChecklists(cardId: number) {
   if (checklists.length === 0) return []
 
   const checklistIds = checklists.map((c) => c.id)
+  const checklistIdsStr = `{${checklistIds.join(',')}}`
   const items = await db`
     SELECT 
       ci.*,
@@ -19,7 +20,7 @@ export async function getChecklists(cardId: number) {
       END as assignee
     FROM checklist_items ci
     LEFT JOIN users u ON ci.assignee_id = u.id
-    WHERE ci.checklist_id IN (${checklistIds})
+    WHERE ci.checklist_id = ANY(${checklistIdsStr}::int[])
     ORDER BY ci.position ASC, ci.id ASC
   `
 

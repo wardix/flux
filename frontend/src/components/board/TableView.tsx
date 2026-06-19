@@ -81,38 +81,44 @@ export function TableView({ cards, lists, onCardUpdate }: TableViewProps) {
           </tr>
         </thead>
         <tbody>
-          {sortedCards.map(card => (
-            <tr key={card.id}>
-              <td onDoubleClick={() => handleDoubleClick(card, 'title')}>
-                {editingCell?.id === card.id && editingCell?.field === 'title' ? (
-                  <input
-                    type="text"
-                    className="input input-xs input-bordered w-full"
-                    value={editValue}
-                    onChange={(e) => setEditValue(e.target.value)}
-                    onBlur={handleSave}
-                    onKeyDown={handleKeyDown}
-                    autoFocus
-                  />
-                ) : (
-                  card.title
-                )}
-              </td>
-              <td>{getListTitle(card.list_id)}</td>
-              <td>{/* Assignees visual representation could go here */}</td>
-              <td>
-                <div className="flex gap-1 flex-wrap">
-                  {card.labels?.map(l => (
-                    <span key={l.id} className="badge badge-xs text-white" style={{ backgroundColor: l.color }}>
-                      {l.name}
-                    </span>
-                  ))}
-                </div>
-              </td>
-              <td>{card.due_date ? new Date(card.due_date).toLocaleDateString() : '-'}</td>
-              <td>{card.start_date ? new Date(card.start_date).toLocaleDateString() : '-'}</td>
+          {sortedCards.length === 0 ? (
+            <tr>
+              <td colSpan={6} className="text-center py-4 text-base-content/50">No cards</td>
             </tr>
-          ))}
+          ) : (
+            sortedCards.map(card => (
+              <tr key={card.id}>
+                <td onDoubleClick={() => handleDoubleClick(card, 'title')}>
+                  {editingCell?.id === card.id && editingCell?.field === 'title' ? (
+                    <input
+                      type="text"
+                      className="input input-xs input-bordered w-full"
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      onBlur={handleSave}
+                      onKeyDown={handleKeyDown}
+                      autoFocus
+                    />
+                  ) : (
+                    card.title
+                  )}
+                </td>
+                <td>{getListTitle(card.list_id)}</td>
+                <td>{/* Assignees visual representation could go here */}</td>
+                <td>
+                  <div className="flex gap-1 flex-wrap">
+                    {card.labels?.map(l => (
+                      <span key={l.id} className="badge badge-xs text-white" style={{ backgroundColor: l.color }}>
+                        {l.name}
+                      </span>
+                    ))}
+                  </div>
+                </td>
+                <td>{card.due_date ? new Date(card.due_date).toLocaleDateString() : '-'}</td>
+                <td>{card.start_date ? new Date(card.start_date).toLocaleDateString() : '-'}</td>
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
     </div>

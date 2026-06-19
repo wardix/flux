@@ -218,8 +218,22 @@ export async function create(
   // Add creator to board_members as 'admin'
   await db`
     INSERT INTO board_members (board_id, user_id, role)
-    VALUES (${board.id}, ${userId}, 'admin')
+    VALUES (${Number(board.id)}, ${userId}, 'admin')
   `
+
+  // Seed default labels for the new board
+  const defaultLabels = [
+    { name: 'Bug', color: '#ef4444' },
+    { name: 'Feature', color: '#3b82f6' },
+    { name: 'Urgent', color: '#f59e0b' },
+    { name: 'Refactor', color: '#10b981' }
+  ]
+  for (const label of defaultLabels) {
+    await db`
+      INSERT INTO labels (board_id, name, color)
+      VALUES (${Number(board.id)}, ${label.name}, ${label.color})
+    `
+  }
 
   return board
 }

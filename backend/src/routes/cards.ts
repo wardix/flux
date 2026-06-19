@@ -439,8 +439,9 @@ cardRoutes.openapi(updateCardPositionsRoute, async (c) => {
     if (firstCard) {
       boardId = await getBoardIdByListId(firstCard.list_id)
       const cardIds = body.cards.map((c: any) => c.id)
+      const cardIdsStr = `{${cardIds.join(',')}}`
       const existingCards =
-        await db`SELECT id, list_id, position FROM cards WHERE id IN (${cardIds})`
+        await db`SELECT id, list_id, position FROM cards WHERE id = ANY(${cardIdsStr}::int[])`
 
       for (const item of body.cards) {
         const existing = existingCards.find((c) => c.id === item.id)

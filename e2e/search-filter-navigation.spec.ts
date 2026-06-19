@@ -38,7 +38,8 @@ test.describe('Search, Filter & Navigation E2E', () => {
   test('TC1: Search card by title → click → navigate to card', async ({ page }) => {
     const cardTitle = `SearchTargetCard`
     await boardPage.addCard(listName, cardTitle)
-    await page.waitForTimeout(500)
+    // Wait for card to be visible on the board list to avoid race conditions
+    await expect(page.locator('[data-card-id]').filter({ hasText: cardTitle }).first()).toBeVisible()
 
     // Enter query in search bar
     const searchInput = page.locator('input[placeholder*="Search..."]')
@@ -51,8 +52,8 @@ test.describe('Search, Filter & Navigation E2E', () => {
     await page.waitForTimeout(500)
 
     // Should open card detail modal
-    await expect(page.locator('.modal-box')).toBeVisible()
-    const modalTitleInput = page.locator('.modal-box input[type="text"]').first()
+    await expect(page.locator('.modal-box').filter({ hasText: /Card Details|Edit Card/i })).toBeVisible()
+    const modalTitleInput = page.locator('.modal-box').filter({ hasText: /Card Details|Edit Card/i }).locator('input[type="text"]').first()
     await expect(modalTitleInput).toHaveValue(cardTitle)
 
     await cardDetailPage.close()
